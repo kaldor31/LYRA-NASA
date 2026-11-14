@@ -296,7 +296,7 @@ function renderIdle() {
   const box = $("#tab-session");
   box.innerHTML = `
     <div class="who"><h1>${esc(crewName(m))}</h1><span class="role">${esc(crewRole(m))}</span>
-      <span class="streak">${icon("CalendarCheck")}<span class="tnum">${m.streak}</span>-day scan streak</span></div>
+      <span class="streak">${icon("CalendarCheck")}<span class="tnum">${m.streak}-day scan streak</span></span></div>
     <div id="overview"></div>
     <div class="start">
       <div class="btn-row">
@@ -430,7 +430,7 @@ function metricsView(res) {
   for (const [g, title, sensor] of GROUPS) {
     const ms = res.metrics.filter((m) => m.group === g).sort((a, b) => order[a.status] - order[b.status]);
     if (!ms.length) continue;
-    html += `<h3 class="h-sub">${title}, ${sensor.toLowerCase()}</h3><div class="metrics">${ms.map(mRow).join("")}</div>`;
+    html += `<h3 class="h-sub">${title} <span class="faint" style="font-weight:400">${sensor}</span></h3><div class="metrics">${ms.map(mRow).join("")}</div>`;
   }
   html += `<p class="small faint" style="margin-top:var(--s4)">${esc(en(res.overall.disclaimer, "This is screening, not a diagnosis."))} Values are simulated along NASA expected-adaptation curves.</p>`;
   el.innerHTML = html;
@@ -751,7 +751,7 @@ function finishFlow(res) {
   const box = $("#tab-session");
   const m = member();
   box.innerHTML = `<div class="who"><h1>${esc(crewName(m))}</h1><span class="role">${esc(crewRole(m))}</span>
-    ${res.streak != null && !f.training ? `<span class="streak">${icon("CalendarCheck")}<span class="tnum">${res.streak}</span>-day scan streak</span>` : ""}</div>`;
+    ${res.streak != null && !f.training ? `<span class="streak">${icon("CalendarCheck")}<span class="tnum">${res.streak}-day scan streak</span></span>` : ""}</div>`;
   box.append(verdictView(res, true));
   const row = document.createElement("div");
   row.className = "btn-row start";

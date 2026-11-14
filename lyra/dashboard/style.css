@@ -90,8 +90,9 @@ kbd { font: 500 var(--fs-12)/1 var(--font); padding: 3px 6px; border: 1px solid 
 .layout {
   flex: 1; min-height: 0; display: grid;
   grid-template-columns: 248px minmax(320px, 0.9fr) minmax(0, 1.35fr);
-  gap: 0; height: calc(100dvh - 60px - 41px);
+  grid-template-rows: minmax(0, 1fr); gap: 0;
 }
+@media (min-width: 901px) { body { height: 100dvh; overflow: hidden; } }
 .crew-rail { border-right: 1px solid var(--line); padding: var(--s5) var(--s4); display: flex; flex-direction: column; gap: var(--s5); overflow-y: auto; min-height: 0; }
 .rail-h { font-size: var(--fs-13); font-weight: 500; color: var(--text-3); margin-bottom: var(--s2); padding-left: var(--s2); }
 .crew { display: flex; flex-direction: column; gap: 2px; }
@@ -155,7 +156,7 @@ kbd { font: 500 var(--fs-12)/1 var(--font); padding: 3px 6px; border: 1px solid 
 .faint { color: var(--text-3); }
 .small { font-size: var(--fs-13); }
 .h-section { font-size: var(--fs-16); font-weight: 600; margin: var(--s6) 0 var(--s3); }
-.h-sub { font-size: var(--fs-13); font-weight: 500; color: var(--text-3); margin: var(--s5) 0 var(--s1); }
+.h-sub { font-size: var(--fs-13); font-weight: 600; color: var(--text-2); margin: var(--s5) 0 var(--s1); }
 
 /* ---------- buttons ---------- */
 .btn {
@@ -225,7 +226,7 @@ kbd { font: 500 var(--fs-12)/1 var(--font); padding: 3px 6px; border: 1px solid 
 .colhead span:nth-child(2), .colhead span:nth-child(3) { text-align: right; }
 
 /* corridor gauge: where today's value sits in NASA's expected band */
-.gauge { position: relative; height: 18px; }
+.gauge { position: relative; display: block; height: 18px; }
 .gauge .track { position: absolute; left: 0; right: 0; top: 8px; height: 2px; background: var(--line-strong); }
 .gauge .band { position: absolute; top: 4px; height: 10px; background: var(--accent-weak); border-left: 1px solid rgba(143,178,232,.5); border-right: 1px solid rgba(143,178,232,.5); }
 .gauge .mid { position: absolute; top: 3px; width: 1px; height: 12px; background: var(--accent); opacity: .7; }
@@ -396,7 +397,6 @@ input[type="number"] { background: var(--raised); color: var(--text); border: 1p
   .top { flex-wrap: wrap; row-gap: var(--s2); }
   .scenarios { order: 3; flex-basis: 100%; }
   .scenarios button { flex: 1; }
-  .layout { height: calc(100dvh - 108px - 41px); }
 }
 @media (max-width: 1240px) {
   .layout { grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.3fr); grid-template-rows: auto minmax(0, 1fr); }
