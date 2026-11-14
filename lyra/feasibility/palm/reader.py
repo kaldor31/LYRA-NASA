@@ -1,6 +1,6 @@
-"""Станция ладони: чтение JSON-строк от ESP32 по USB-Serial (или симуляция).
+"""Palm station: reads JSON lines from the ESP32 over USB serial (or simulates them).
 
-Формат строки от прошивки (1 раз в секунду):
+Line format sent by the firmware (once per second):
 {"finger":1,"hr":72,"hr_ok":1,"spo2":98,"spo2_ok":1,"temp":33.21,"grip":0.12}
 """
 from __future__ import annotations
@@ -19,7 +19,7 @@ class SerialPalm:
         import serial
 
         self.ser = serial.Serial(port, baud, timeout=1.5)
-        time.sleep(2)  # ESP32 перезагружается при открытии порта
+        time.sleep(2)  # the ESP32 resets when the port is opened
         self.ser.reset_input_buffer()
 
     def _lines(self, duration: float, stop: threading.Event | None):
@@ -54,7 +54,7 @@ class SerialPalm:
                 on_update({"progress": round(elapsed / duration, 3), "finger": bool(d.get("finger")),
                            "hr": d.get("hr") if d.get("hr_ok") else None, "temp": d.get("temp")})
         n = max(n, 1)
-        # Первые секунды датчик «прогревается» — берём медиану второй половины, если хватает данных
+        # The sensor needs a few seconds to settle, so take the median of the second half when there is enough data
         def tail_median(xs):
             xs = xs[len(xs) // 2:] if len(xs) >= 6 else xs
             return float(statistics.median(xs)) if xs else None
@@ -74,12 +74,12 @@ class SerialPalm:
                 peak = max(peak, g)
             if on_update:
                 on_update({"progress": round(elapsed / duration, 3), "grip": g, "peak": peak})
-        ok = n > 0 and peak > 3  # меньше 3 кг — скорее всего рукоять не сжимали
+        ok = n > 0 and peak > 3  # under 3 kg most likely means the handle was not squeezed
         return {"grip_strength": (peak if ok else None, 1.0 if ok else 0.0)}
 
 
 class SimPalm:
-    """Без железа: прогресс-бар и заранее рассчитанные значения из симуляции."""
+    """No hardware: a progress bar and precomputed values from the simulation."""
 
     def __init__(self, values: dict[str, tuple[float, float]]):
         self.values = values

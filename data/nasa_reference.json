@@ -1,0 +1,1024 @@
+{
+  "_status": "v1, verified by Agent B on 2026-11-14: URLs are real, basis set per source (cited = the figure appears directly in the source). Metric keys and schema (DECISIONS section 11) unchanged. Details: docs/research/nasa_sources.md",
+  "sources": [
+    {
+      "id": "hrp-hazards",
+      "title": "5 Hazards of Human Spaceflight",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/hrp/hazards/",
+      "note_ru": "Challenge resource. Five hazards; Mars: on average 140 million miles away, about 3 years, up to 2 years at 3/8 g.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-gravity",
+      "title": "Hazard: Gravity Fields",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/hrp/hazard-gravity-fields/",
+      "note_ru": "Bone loss 1 to 1.5%/month; fluids shift toward the head, causing pressure on the eyes; kidney stones; three gravity fields.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-distance",
+      "title": "Hazard: Distance From Earth",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/hrp/hazard-distance-from-earth/",
+      "note_ru": "Mars: 140 million miles, communication delay up to 20 min one way, about 3 years.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-isolation",
+      "title": "Hazard: Isolation and Confinement",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/hrp/hazard-isolation-and-confinement/",
+      "note_ru": "Sleep loss, circadian desynchronization, work overload; development of behavioral health monitoring methods.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-hostile",
+      "title": "Hazard: Hostile/Closed Environments",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/hrp/hazard-hostile-closed-environments/",
+      "note_ru": "Increased stress hormones, immune changes, microbial transfer, temperature/pressure/lighting/noise.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-radiation",
+      "title": "Hazard: Space Radiation",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/hrp/hazard-space-radiation/",
+      "note_ru": "Cancer, CNS damage, cognitive/motor function, behavior; NSRL. No doses in mSv given.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-risks",
+      "title": "Risks of Human Spaceflight",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/hrp/risks/",
+      "note_ru": "Challenge resource. 17 HRP risks (immune, sensorimotor, cardiovascular, SANS, bone, sleep, behavioral, team, cancer, and others).",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-ongoing",
+      "title": "Ongoing HRP Research in Space",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/hrp/ongoing-hrp-research/",
+      "note_ru": "Challenge resource. Catalog of current HRP research (individual studies listed below).",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "csa-radiation",
+      "title": "Monitoring radiation for astronaut health",
+      "publisher": "CSA",
+      "url": "https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp",
+      "note_ru": "Challenge resource. Neutrons make up about 30% of total radiation on the ISS; CANS (Bubble Technology Industries, $5.5 million); MOSFET, EVARM, Radi-N, Radi-N2.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "csa-why",
+      "title": "Why do we conduct science experiments in space?",
+      "publisher": "CSA",
+      "url": "https://www.asc-csa.gc.ca/eng/iss/science/why-do-we-conduct-science-experiments-in-space.asp",
+      "note_ru": "Challenge resource. Effects of weightlessness resemble accelerated aging; benefits on Earth (osteoporosis, balance, cardiovascular disease, type 2 diabetes).",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "csa-why-infographic",
+      "title": "Infographic text version: effects of spaceflight on the body",
+      "publisher": "CSA",
+      "url": "https://www.asc-csa.gc.ca/eng/multimedia/search/image/8056",
+      "note_ru": "Text version of the infographic: bone loss up to 1.5%/month (people over 50 on Earth lose about 1%/year), blood vessels stiffen and age faster, insulin resistance, muscles, blood, radiation.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-risk-bone",
+      "title": "Risk of Spaceflight-Induced Bone Changes",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/risk-of-spaceflight-induced-bone-changes/",
+      "note_ru": "Bone loss 1 to 1.5%/month (4-6 month missions); height can increase by up to 3%.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "nasa-spinal-ultrasound",
+      "title": "Spinal Ultrasound Investigation",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/image-article/spinal-ultrasound-investigation/",
+      "note_ru": "Crew members grow up to 3% taller on long-duration ISS missions; height returns to normal on Earth.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "skylab-anthropometry",
+      "title": "Anthropometric changes and fluid shifts (Skylab 4; Thornton, Hoffler, Rummel, 1974)",
+      "publisher": "NASA",
+      "url": "https://ntrs.nasa.gov/citations/19750006319",
+      "note_ru": "NTRS. By day 3, each crew member had lost more than 2 L of extravascular fluid from the calves and thighs; height increased; trunk girth decreased.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "nasa-bedrest-faq",
+      "title": "Bedrest FAQs",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/hrp/bedrest-faqs/",
+      "note_ru": "\"Puffy-head, bird-legs\" syndrome: without gravity, fluid moves from the legs toward the head.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-thigh-cuff",
+      "title": "Thigh Cuff (Mitigating Headward Fluid Shifts with Veno-constrictive Thigh Cuffs)",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/thigh-cuff/",
+      "note_ru": "Thigh cuffs keep fluid in the legs to counter SANS; ultrasound of blood flow in leg and neck veins; 2 sessions of 6 h each.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-venous-haemostasis",
+      "title": "Venous Haemostasis (NASA/ESA)",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/venous-haemostasis/",
+      "note_ru": "Why venous blood flow changes in some astronauts and the risk of blood clots rises; jugular vein ultrasound, MRI, blood, blood pressure.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-spinal-health",
+      "title": "Spinal Health (Astronauts' Spines Under Scrutiny)",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/missions/station/astronauts-spines-under-scrutiny/",
+      "note_ru": "qCT and MRI of the spine in 9 astronauts (more than 6 months on the ISS): link between bone loss and muscle loss.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-standard-measures",
+      "title": "Standard Measures",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/standard-measures/",
+      "note_ru": "A common set of measurements before, during, and after flight: activity and light (wristband), sleep, cognition, sensorimotor function, strength, blood, saliva.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-artemis2-standard-measures",
+      "title": "Artemis II Standard Measures",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/artemis-ii-standard-measures/",
+      "note_ru": "Standard set of Artemis II crew health data in a shared data repository.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-cipher",
+      "title": "CIPHER",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/cipher/",
+      "note_ru": "14 studies of different body systems (bone, muscle, heart/blood vessels, vision, brain), missions up to 1 year.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-brain-fluid-pressure",
+      "title": "Brain Fluid Pressure",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/brain-fluid-pressure/",
+      "note_ru": "Link between intracranial pressure and changes in the eyes and brain (SANS).",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-spinal-fluid-biomarkers",
+      "title": "Spinal Fluid Biomarkers",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/spinal-fluid-biomarkers/",
+      "note_ru": "Markers in cerebrospinal fluid associated with changes in the brain and eyes.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-b-complex",
+      "title": "B-Complex",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/b-complex/",
+      "note_ru": "Whether a daily B vitamin can prevent changes in the brain and eyes.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-archer",
+      "title": "ARCHeR (Artemis Research for Crew Health & Readiness)",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/archer/",
+      "note_ru": "Well-being, activity, sleep (actigraphy), and crew interaction on Artemis II.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-immune-biomarkers",
+      "title": "Immune Biomarkers",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/immune-biomarkers/",
+      "note_ru": "Blood and saliva of the Artemis II crew: how deep space affects the immune system.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-zero-t2",
+      "title": "Zero T2",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/zero-t2/",
+      "note_ru": "How exercise without a treadmill affects health and performance.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-tempus-pro",
+      "title": "Tempus Pro",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/tempus-pro/",
+      "note_ru": "Commercial telemedicine device: collects health data for remote assessment in near real time.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-omics-archive",
+      "title": "Omics Archive",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/omics-archive/",
+      "note_ru": "Samples for tracking flight-related molecular changes over time.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "hrp-space-radiation-element",
+      "title": "Space Radiation (HRP element, incl. NSRL)",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/hrp/radiation/",
+      "note_ru": "HRP radiation element; NSRL (Brookhaven) is a ground laboratory for assessing space radiation risks.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "ntrs-iss-dose",
+      "title": "Moon 2 Mars Space Radiation Protection: “Buying Down” Risks to Crew (Simonsen, ASCEND draft)",
+      "publisher": "NASA",
+      "url": "https://ntrs.nasa.gov/api/citations/20250006168/downloads/ASCEND%20Simonsen%20draft%201.pdf",
+      "note_ru": "NTRS, draft. Effective dose on the ISS is about 0.2 to 0.5 mSv/day, about 40 to 90 mSv per 6 months. Figures found via search; the PDF text has not been rechecked manually.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "nasa-std-3001-radiation",
+      "title": "NASA-STD-3001 Technical Brief: Radiation Protection (OCHMO)",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf",
+      "note_ru": "Career effective dose limit of 600 mSv (NASA-STD-3001).",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "nasa-mars-comm-delay",
+      "title": "Mars Communications Disruption and Delay",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/wp-content/uploads/2024/01/mars-communications-disruption-and-delay.pdf",
+      "note_ru": "Delay from the Martian surface: just over 3 min at closest approach, more than 20 min at maximum distance (from search; PDF text not extracted).",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "nssdc-planet-ratio",
+      "title": "Planetary Fact Sheet: Ratio to Earth Values",
+      "publisher": "NASA",
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/planet_table_ratio.html",
+      "note_ru": "Gravity: Moon 0.166, Mars 0.380 of Earth's.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "astrobee-picoflexx",
+      "title": "Astrobee Robot Software: PicoFlexx (HazCam/PerchCam)",
+      "publisher": "NASA",
+      "url": "https://nasa.github.io/astrobee/v/master/picoflexx_python.html",
+      "note_ru": "ToF flight heritage on the ISS: Astrobee's HazCam and PerchCam are pmd PicoFlexx ToF depth cameras.",
+      "accessed": "2026-11-14"
+    },
+    {
+      "id": "mit-bioadhesive-ultrasound",
+      "title": "Bioadhesive ultrasound for long-term continuous imaging of diverse organs (Wang et al., Science 377:517, 2022)",
+      "publisher": "MIT",
+      "url": "https://news.mit.edu/2022/ultrasound-stickers-0728",
+      "note_ru": "Not NASA/CSA (publisher outside the schema, for reference only). Solid hydrogel-elastomer instead of liquid gel, worn for 48 h or more. Rationale for the solid hydrogel cartridge in the LYRA handle.",
+      "accessed": "2026-11-14"
+    }
+  ],
+  "hazards": [
+    {
+      "id": "radiation",
+      "name_ru": "Space radiation",
+      "name_en": "Space radiation",
+      "source_ids": [
+        "hrp-hazards",
+        "hrp-radiation",
+        "hrp-space-radiation-element"
+      ]
+    },
+    {
+      "id": "isolation",
+      "name_ru": "Isolation and confinement",
+      "name_en": "Isolation and confinement",
+      "source_ids": [
+        "hrp-hazards",
+        "hrp-isolation"
+      ]
+    },
+    {
+      "id": "distance",
+      "name_ru": "Distance from Earth",
+      "name_en": "Distance from Earth",
+      "source_ids": [
+        "hrp-hazards",
+        "hrp-distance",
+        "nasa-mars-comm-delay"
+      ]
+    },
+    {
+      "id": "gravity",
+      "name_ru": "Gravity fields",
+      "name_en": "Gravity fields",
+      "source_ids": [
+        "hrp-hazards",
+        "hrp-gravity"
+      ]
+    },
+    {
+      "id": "hostile",
+      "name_ru": "Hostile/closed environments",
+      "name_en": "Hostile/closed environments",
+      "source_ids": [
+        "hrp-hazards",
+        "hrp-hostile"
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "id": "bone_muscle",
+      "name_ru": "Bone and muscle loss",
+      "name_en": "Bone and muscle loss",
+      "hazard_ids": [
+        "gravity"
+      ],
+      "summary_ru": "Weight-bearing bones lose on average 1 to 1.5% of mineral density per month of flight (NASA); people over 50 on Earth lose about 1% per year (CSA). Muscles lose mass and strength.",
+      "source_ids": [
+        "hrp-gravity",
+        "hrp-risk-bone",
+        "csa-why-infographic",
+        "hrp-spinal-health",
+        "hrp-cipher",
+        "hrp-zero-t2"
+      ]
+    },
+    {
+      "id": "fluid_shift_eyes",
+      "name_ru": "Headward fluid shift and vision changes",
+      "name_en": "Headward fluid shift / SANS (Spaceflight Associated Neuro-ocular Syndrome)",
+      "hazard_ids": [
+        "gravity"
+      ],
+      "summary_ru": "Fluids shift toward the head, put pressure on the eyes, and can cause vision problems (NASA). NASA calls SANS a leading in-flight health risk. Skylab: more than 2 L of fluid left the calves and thighs by day 3.",
+      "source_ids": [
+        "hrp-gravity",
+        "hrp-risks",
+        "skylab-anthropometry",
+        "hrp-thigh-cuff",
+        "hrp-brain-fluid-pressure",
+        "hrp-spinal-fluid-biomarkers",
+        "hrp-b-complex"
+      ]
+    },
+    {
+      "id": "cardiovascular",
+      "name_ru": "Cardiovascular adaptations",
+      "name_en": "Cardiovascular adaptations",
+      "hazard_ids": [
+        "gravity",
+        "radiation"
+      ],
+      "summary_ru": "Weightlessness changes circulation and the function of the heart and blood vessels (NASA); blood vessels stiffen and \"age\" faster, and insulin resistance is possible (CSA). The risk of venous blood clots is under study (Venous Haemostasis).",
+      "source_ids": [
+        "hrp-risks",
+        "csa-why-infographic",
+        "hrp-venous-haemostasis",
+        "hrp-cipher"
+      ]
+    },
+    {
+      "id": "sensorimotor",
+      "name_ru": "Sensorimotor and vestibular disturbances",
+      "name_en": "Sensorimotor/vestibular function",
+      "hazard_ids": [
+        "gravity"
+      ],
+      "summary_ru": "Dizziness and impaired coordination when transitioning between gravity fields.",
+      "source_ids": [
+        "hrp-risks",
+        "hrp-gravity",
+        "hrp-standard-measures"
+      ]
+    },
+    {
+      "id": "immune",
+      "name_ru": "Altered immune response",
+      "name_en": "Altered immune response",
+      "hazard_ids": [
+        "hostile",
+        "isolation"
+      ],
+      "summary_ru": "Flight stress can reactivate dormant viruses (NASA); stress hormones rise, immunity changes, and microbes spread more easily in a closed environment.",
+      "source_ids": [
+        "hrp-risks",
+        "hrp-hostile",
+        "hrp-immune-biomarkers",
+        "hrp-omics-archive"
+      ]
+    },
+    {
+      "id": "behavioral",
+      "name_ru": "Behavioral health",
+      "name_en": "Behavioral changes and psychiatric disorders",
+      "hazard_ids": [
+        "isolation",
+        "distance",
+        "radiation"
+      ],
+      "summary_ru": "Isolation, radiation, and distance affect crew mental health.",
+      "source_ids": [
+        "hrp-risks",
+        "hrp-isolation",
+        "hrp-archer",
+        "hrp-standard-measures"
+      ]
+    },
+    {
+      "id": "sleep",
+      "name_ru": "Inadequate sleep and irregular schedules",
+      "name_en": "Inadequate sleep and irregular schedules",
+      "hazard_ids": [
+        "isolation",
+        "hostile"
+      ],
+      "summary_ru": "Chronic sleep loss, high workload, and a disrupted internal clock (NASA: \"sleep loss, circadian desynchronization, and work overload\").",
+      "source_ids": [
+        "hrp-risks",
+        "hrp-isolation",
+        "hrp-archer",
+        "hrp-standard-measures"
+      ]
+    },
+    {
+      "id": "radiation_cancer",
+      "name_ru": "Radiation risks",
+      "name_en": "Radiation-induced risks",
+      "hazard_ids": [
+        "radiation"
+      ],
+      "summary_ru": "Radiation increases cancer risk, damages the CNS, can impair cognitive and motor function, and can change behavior (NASA); it causes cataracts and DNA damage (CSA). Neutrons make up about 30% of radiation on the ISS (CSA).",
+      "source_ids": [
+        "hrp-radiation",
+        "hrp-risks",
+        "csa-radiation",
+        "csa-why-infographic",
+        "hrp-space-radiation-element",
+        "ntrs-iss-dose",
+        "nasa-std-3001-radiation"
+      ]
+    }
+  ],
+  "metrics": {
+    "face_volume_ml": {
+      "name_ru": "Face volume",
+      "unit": "mL",
+      "risk_ids": [
+        "fluid_shift_eyes"
+      ],
+      "expected": {
+        "model": "saturating",
+        "rate": 4.0,
+        "rate_unit": "% of baseline to plateau",
+        "tau_days": 3,
+        "band": 2.0,
+        "basis": "estimated",
+        "note_ru": "Qualitative support from NASA (headward fluid shift, \"puffy face\"). The +4% magnitude and tau = 3 days are our estimate; NASA resources give no direct figures for face volume.",
+        "source_ids": [
+          "hrp-gravity",
+          "nasa-bedrest-faq",
+          "skylab-anthropometry"
+        ]
+      },
+      "why_ru": "The face swells because in weightlessness fluid moves from the legs toward the head, the same mechanism NASA links to vision problems (SANS). LYRA watches whether the swelling grows faster than expected adaptation; this is screening, not a diagnosis."
+    },
+    "periorbital_puffiness_mm": {
+      "name_ru": "Periorbital puffiness",
+      "unit": "mm",
+      "risk_ids": [
+        "fluid_shift_eyes"
+      ],
+      "expected": {
+        "model": "saturating",
+        "rate": 1.0,
+        "rate_unit": "mm to plateau",
+        "tau_days": 3,
+        "band": 0.6,
+        "basis": "estimated",
+        "note_ru": "Team estimate: about 1 mm to plateau over about 3 days. The source confirms only the mechanism (fluid toward the head, pressure on the eyes).",
+        "source_ids": [
+          "hrp-gravity",
+          "hrp-thigh-cuff",
+          "hrp-brain-fluid-pressure"
+        ]
+      },
+      "why_ru": "Puffiness around the eyes is a visible sign of the headward fluid shift that NASA links to pressure on the eyes and SANS. If the puffiness increases, the system suggests repeating the measurement and notifies the physician; this is screening, not a diagnosis."
+    },
+    "blink_rate": {
+      "name_ru": "Blink rate",
+      "unit": "/min",
+      "risk_ids": [
+        "sleep"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-isolation",
+          "hrp-risks"
+        ],
+        "note_ru": "No expected trajectory in the sources; compared with the personal baseline."
+      },
+      "why_ru": "Blink rate changes with fatigue and sleep loss; NASA lists sleep loss and disrupted circadian rhythms among isolation risks. LYRA compares it with your personal baseline; this is screening, not a diagnosis."
+    },
+    "perclos": {
+      "name_ru": "Eye closure (PERCLOS)",
+      "unit": "%",
+      "risk_ids": [
+        "sleep",
+        "behavioral"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-isolation",
+          "hrp-risks"
+        ],
+        "note_ru": "No expected trajectory in the sources; compared with the personal baseline."
+      },
+      "why_ru": "PERCLOS is the fraction of time the eyes are mostly closed, a known sign of drowsiness. It helps catch the NASA risk \"Inadequate Sleep and Irregular Schedules\" early; this is screening, not a diagnosis."
+    },
+    "yawn_count": {
+      "name_ru": "Yawning",
+      "unit": "count",
+      "risk_ids": [
+        "sleep"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-isolation",
+          "hrp-risks"
+        ],
+        "note_ru": "No expected trajectory in the sources; compared with the personal baseline."
+      },
+      "why_ru": "Frequent yawning is a simple sign of fatigue. Together with the sleep self-rating, it points to the risk of sleep loss that NASA links to isolation and workload; this is screening, not a diagnosis."
+    },
+    "facial_tension": {
+      "name_ru": "Signs of tension (facial expression)",
+      "unit": "index 0-1",
+      "risk_ids": [
+        "behavioral"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-isolation",
+          "hrp-archer"
+        ],
+        "note_ru": "No expected trajectory in the sources; personal baseline only. Wording: \"possible signs of tension\"."
+      },
+      "why_ru": "Facial expression can show possible signs of tension. NASA is developing methods for monitoring behavioral health in isolation (see ARCHeR); LYRA does not determine mental state. This is screening, not a diagnosis."
+    },
+    "hr_rppg": {
+      "name_ru": "Heart rate (camera)",
+      "unit": "bpm",
+      "risk_ids": [
+        "cardiovascular"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-risks"
+        ],
+        "note_ru": "Personal baseline; cross-checked against the handle heart rate."
+      },
+      "why_ru": "Video heart rate is measured without contact from subtle changes in skin color and is cross-checked against the heart rate from the handles. Weightlessness changes how the heart and blood vessels work (NASA risk \"Cardiovascular Adaptations\"); this is screening, not a diagnosis."
+    },
+    "leg_volume_ml": {
+      "name_ru": "Lower leg volume",
+      "unit": "mL",
+      "risk_ids": [
+        "bone_muscle",
+        "fluid_shift_eyes"
+      ],
+      "expected": {
+        "model": "saturating",
+        "rate": -8.0,
+        "rate_unit": "% to plateau",
+        "tau_days": 2,
+        "band": 3.0,
+        "basis": "estimated",
+        "note_ru": "Cited: Skylab 4, more than 2 L of fluid lost from the calves and thighs by day 3 (NTRS 19750006319). Converting this to -8% lower leg volume and tau = 2 days is our estimate. Followed by slow muscle atrophy (no figure).",
+        "source_ids": [
+          "skylab-anthropometry",
+          "nasa-bedrest-faq",
+          "hrp-gravity",
+          "hrp-thigh-cuff"
+        ]
+      },
+      "why_ru": "The lower legs get thinner (\"bird legs\"): in the first days fluid leaves (on Skylab, more than 2 L from the calves and thighs by day 3), then muscles may lose mass. LYRA distinguishes the expected early drop from ongoing loss; this is screening, not a diagnosis."
+    },
+    "body_volume_l": {
+      "name_ru": "Total body volume",
+      "unit": "L",
+      "risk_ids": [
+        "bone_muscle"
+      ],
+      "expected": {
+        "model": "linear",
+        "rate": -0.5,
+        "rate_unit": "%/month",
+        "basis": "estimated",
+        "source_ids": [
+          "skylab-anthropometry",
+          "hrp-risk-bone"
+        ],
+        "note_ru": "Team estimate. Scales do not work in weightlessness; on the ISS body mass is measured with dedicated devices, not scales."
+      },
+      "why_ru": "Scales do not work in weightlessness, so 3D body volume serves as an indirect substitute for weighing."
+    },
+    "height_cm": {
+      "name_ru": "Height",
+      "unit": "cm",
+      "risk_ids": [
+        "bone_muscle"
+      ],
+      "expected": {
+        "model": "saturating",
+        "rate": 2.0,
+        "rate_unit": "% to plateau",
+        "tau_days": 5,
+        "band": 1.0,
+        "basis": "estimated",
+        "note_ru": "Cited: height increases by up to 3% (NASA, Risk of Bone Changes; Spinal Ultrasound). 3% is the upper bound; we use a typical 2% (estimate). Height returns after landing.",
+        "source_ids": [
+          "hrp-risk-bone",
+          "nasa-spinal-ultrasound",
+          "skylab-anthropometry",
+          "hrp-spinal-health"
+        ]
+      },
+      "why_ru": "In weightlessness the spine straightens and lengthens; NASA reports height increases of up to 3%. A change that is too fast or too large is a reason to check the spine (see Spinal Health); this is screening, not a diagnosis."
+    },
+    "head_forward_deg": {
+      "name_ru": "Forward head tilt",
+      "unit": "°",
+      "risk_ids": [
+        "bone_muscle"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-spinal-health",
+          "skylab-anthropometry"
+        ],
+        "note_ru": "No expected trajectory in the sources; personal baseline."
+      },
+      "why_ru": "In weightlessness the body's neutral posture changes and the back and neck muscles weaken. Forward head tilt is a functional sign associated with the risk of bone and muscle loss (see Spinal Health); this is screening, not a diagnosis."
+    },
+    "shoulder_asym_deg": {
+      "name_ru": "Shoulder asymmetry",
+      "unit": "°",
+      "risk_ids": [
+        "bone_muscle"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-spinal-health",
+          "skylab-anthropometry"
+        ],
+        "note_ru": "No expected trajectory in the sources; personal baseline."
+      },
+      "why_ru": "Shoulder asymmetry shows whether one side is loaded more than the other. It is a functional marker for the risk of bone and muscle loss, not a measurement of bone density; this is screening, not a diagnosis."
+    },
+    "grip_left_kg": {
+      "name_ru": "Grip strength (left)",
+      "unit": "kg",
+      "risk_ids": [
+        "bone_muscle"
+      ],
+      "expected": {
+        "model": "linear",
+        "rate": -1.0,
+        "rate_unit": "%/month",
+        "basis": "estimated",
+        "note_ru": "Cited for bone only: 1 to 1.5%/month loss (NASA). The -1%/month for grip strength is our estimate; NASA reports loss of muscle strength without a figure for the hand.",
+        "source_ids": [
+          "hrp-gravity",
+          "hrp-risk-bone",
+          "csa-why-infographic",
+          "hrp-standard-measures",
+          "hrp-cipher",
+          "hrp-zero-t2"
+        ]
+      },
+      "why_ru": "Grip strength is a simple functional marker of the strength of muscles that lose mass and strength in weightlessness (CSA, NASA). LYRA does not measure bone density; it watches whether strength drops faster than expected. This is screening, not a diagnosis."
+    },
+    "grip_right_kg": {
+      "name_ru": "Grip strength (right)",
+      "unit": "kg",
+      "risk_ids": [
+        "bone_muscle"
+      ],
+      "expected": {
+        "model": "linear",
+        "rate": -1.0,
+        "rate_unit": "%/month",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-gravity",
+          "hrp-risk-bone",
+          "csa-why-infographic",
+          "hrp-standard-measures",
+          "hrp-cipher",
+          "hrp-zero-t2"
+        ],
+        "note_ru": "Cited for bone only: 1 to 1.5%/month loss (NASA). The -1%/month for grip strength is our estimate; NASA reports loss of muscle strength without a figure for the hand."
+      },
+      "why_ru": "Right-hand grip strength is compared with the left hand and with your baseline: a sharp drop or asymmetry is a reason to repeat the measurement. It is a functional marker of the risk of muscle and bone loss; this is screening, not a diagnosis."
+    },
+    "doppler_flow_left_cms": {
+      "name_ru": "Blood flow (left palm)",
+      "unit": "cm/s",
+      "risk_ids": [
+        "cardiovascular"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-venous-haemostasis",
+          "hrp-thigh-cuff",
+          "hrp-cipher"
+        ],
+        "note_ru": "No trajectory for palm blood flow in the sources; personal baseline."
+      },
+      "why_ru": "Ultrasound Doppler measures blood flow velocity in the palmar arteries without needles or electrodes. NASA studies in-flight changes in blood flow with ultrasound (Thigh Cuff, Venous Haemostasis); this is screening, not a diagnosis."
+    },
+    "doppler_flow_right_cms": {
+      "name_ru": "Blood flow (right palm)",
+      "unit": "cm/s",
+      "risk_ids": [
+        "cardiovascular"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-venous-haemostasis",
+          "hrp-thigh-cuff",
+          "hrp-cipher"
+        ],
+        "note_ru": "No trajectory for palm blood flow in the sources; personal baseline."
+      },
+      "why_ru": "Right palm blood flow is compared with the left and with the personal baseline. Vascular changes in weightlessness fall under the NASA risk \"Cardiovascular Adaptations\"; this is screening, not a diagnosis."
+    },
+    "flow_asymmetry_pct": {
+      "name_ru": "Blood flow asymmetry L/R",
+      "unit": "%",
+      "risk_ids": [
+        "cardiovascular"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-venous-haemostasis"
+        ],
+        "note_ru": "Personal baseline; the asymmetry threshold is our estimate."
+      },
+      "why_ru": "A noticeable difference in blood flow between the left and right hand is a reason to repeat the measurement and show the data to a physician. NASA and ESA study changes in venous blood flow and the risk of blood clots in flight (Venous Haemostasis); this is screening, not a diagnosis."
+    },
+    "hr_palm": {
+      "name_ru": "Heart rate (palm)",
+      "unit": "bpm",
+      "risk_ids": [
+        "cardiovascular"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-risks"
+        ],
+        "note_ru": "Personal baseline."
+      },
+      "why_ru": "Resting heart rate from the fingertip sensor is a reference cardiac indicator. A shift from your baseline relates to the NASA risk \"Cardiovascular Adaptations\"; this is screening, not a diagnosis."
+    },
+    "hrv_rmssd_ms": {
+      "name_ru": "Heart rate variability (RMSSD)",
+      "unit": "ms",
+      "risk_ids": [
+        "cardiovascular",
+        "behavioral"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-risks",
+          "hrp-isolation"
+        ],
+        "note_ru": "Personal baseline; HRV from PPG/Doppler, without electrodes."
+      },
+      "why_ru": "Heart rate variability reflects the balance of the heart's nervous regulation and decreases with stress and sleep loss. It connects the NASA cardiovascular and behavioral health risks; this is screening, not a diagnosis."
+    },
+    "spo2": {
+      "name_ru": "Blood oxygen SpO₂",
+      "unit": "%",
+      "risk_ids": [
+        "cardiovascular",
+        "immune"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-risks"
+        ],
+        "note_ru": "Normal on Earth is usually 95 to 100% (general medical reference, not from NASA); here the personal baseline is used."
+      },
+      "why_ru": "Blood oxygen saturation shows whether the body is getting enough oxygen. NASA lists hypoxia as one of its risks (for example, during preparation for a spacewalk); this is screening, not a diagnosis."
+    },
+    "skin_temp": {
+      "name_ru": "Palm temperature",
+      "unit": "°C",
+      "risk_ids": [
+        "immune"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-hostile"
+        ],
+        "note_ru": "Personal baseline; palm temperature depends on the module environment."
+      },
+      "why_ru": "Palm temperature changes with blood flow, cooling, or an incipient illness. Together with symptoms, it helps notice the immune changes NASA warns about earlier; this is screening, not a diagnosis."
+    },
+    "handgrip_hr_response_bpm": {
+      "name_ru": "Heart rate response to handgrip test",
+      "unit": "bpm",
+      "risk_ids": [
+        "cardiovascular"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-risks",
+          "hrp-cipher"
+        ],
+        "note_ru": "Classic isometric test; NASA resources give no expected values, so the personal baseline is used."
+      },
+      "why_ru": "During the handgrip test, heart rate and blood pressure rise; this checks how the heart and blood vessels respond to load. A change in this response relates to the NASA risk \"Cardiovascular Adaptations\"; this is screening, not a diagnosis."
+    },
+    "handgrip_recovery_s": {
+      "name_ru": "Recovery after handgrip test",
+      "unit": "s",
+      "risk_ids": [
+        "cardiovascular"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-risks",
+          "hrp-cipher"
+        ],
+        "note_ru": "Classic isometric test; NASA resources give no expected values, so the personal baseline is used."
+      },
+      "why_ru": "The time for heart rate to return to rest after the test shows how quickly the circulatory system recovers. Longer recovery is a reason to repeat the test and consult a physician; this is screening, not a diagnosis."
+    },
+    "sleep_score": {
+      "name_ru": "Sleep (self-rating)",
+      "unit": "1-5",
+      "risk_ids": [
+        "sleep"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-isolation",
+          "hrp-standard-measures",
+          "hrp-archer"
+        ],
+        "note_ru": "Self-report; similar to the Standard Measures / ARCHeR questionnaires."
+      },
+      "why_ru": "A short sleep self-rating complements the camera data. NASA collects such reports in Standard Measures and ARCHeR because sleep loss is one of the flight risks; this is screening, not a diagnosis."
+    },
+    "wellbeing_score": {
+      "name_ru": "Well-being (self-rating)",
+      "unit": "1-5",
+      "risk_ids": [
+        "behavioral"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-isolation",
+          "hrp-archer"
+        ],
+        "note_ru": "Self-report."
+      },
+      "why_ru": "Well-being in your own words is an important signal for behavioral health in isolation. A sharp decline is passed to the physician along with the data; this is screening, not a diagnosis."
+    },
+    "symptoms_flag": {
+      "name_ru": "Symptoms (self-report)",
+      "unit": "yes/no",
+      "risk_ids": [
+        "immune"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-hostile",
+          "hrp-risks"
+        ],
+        "note_ru": "Self-report."
+      },
+      "why_ru": "Reported symptoms (for example, rash, runny nose) matter because flight stress can reactivate dormant viruses (NASA). The flag goes straight to the flight surgeon; this is screening, not a diagnosis."
+    },
+    "radiation_dose_msv": {
+      "name_ru": "Cumulative dose (station dosimeter)",
+      "unit": "mSv",
+      "risk_ids": [
+        "radiation_cancer"
+      ],
+      "expected": {
+        "model": "linear",
+        "rate": 0.35,
+        "rate_unit": "mSv/day (ISS)",
+        "basis": "estimated",
+        "source_ids": [
+          "csa-radiation",
+          "ntrs-iss-dose",
+          "nasa-std-3001-radiation",
+          "hrp-radiation"
+        ],
+        "note_ru": "Cited range: ISS about 0.2 to 0.5 mSv/day, about 40 to 90 mSv per 6 months (NASA/NTRS); 0.35 is the midpoint of the range (estimate). NASA career limit is 600 mSv. Doses are higher for the Moon/Mars; LYRA uses the station dosimeter values."
+      },
+      "why_ru": "LYRA does not measure radiation; it imports the cumulative dose from the station dosimeter. This helps the physician relate changes in well-being to the NASA radiation risk (cancer, CNS, cataracts); this is screening, not a diagnosis."
+    }
+  },
+  "environments": {
+    "iss": {
+      "name_ru": "ISS (low Earth orbit)",
+      "gravity_g": 0.0,
+      "comm_delay_one_way_s": [
+        0,
+        1
+      ],
+      "source_ids": [
+        "hrp-distance"
+      ]
+    },
+    "moon": {
+      "name_ru": "Moon / Gateway",
+      "gravity_g": 0.166,
+      "comm_delay_one_way_s": [
+        1,
+        2
+      ],
+      "source_ids": [
+        "nssdc-planet-ratio"
+      ]
+    },
+    "mars": {
+      "name_ru": "Mars",
+      "gravity_g": 0.38,
+      "comm_delay_one_way_s": [
+        180,
+        1200
+      ],
+      "source_ids": [
+        "hrp-distance",
+        "nasa-mars-comm-delay",
+        "nssdc-planet-ratio",
+        "hrp-gravity"
+      ]
+    }
+  },
+  "radiation": {
+    "note_ru": "Neutrons account for about 30% of total radiation on the ISS (CSA, 2026; CANS instrument). LYRA does not measure radiation itself; it imports the station dosimeter data.",
+    "neutron_share_iss": 0.3,
+    "source_ids": [
+      "csa-radiation"
+    ]
+  }
+}

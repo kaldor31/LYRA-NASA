@@ -1,19 +1,19 @@
-"""rPPG — пульс по видео: микро-изменения цвета кожи при каждом ударе сердца.
+"""rPPG: heart rate from video, via subtle skin color changes with each heartbeat.
 
-Метод POS (Wang et al., 2017, «Algorithmic Principles of Remote PPG»):
-средний RGB кожи → проекция, подавляющая блики и освещение → полоса 0,7–3 Гц → пик спектра.
+POS method (Wang et al., 2017, "Algorithmic Principles of Remote PPG"):
+mean skin RGB → projection that suppresses specular glare and lighting → 0.7 to 3 Hz band → spectral peak.
 """
 from __future__ import annotations
 
 import numpy as np
 from scipy.signal import butter, filtfilt
 
-LOW_HZ, HIGH_HZ = 0.7, 3.0  # 42–180 уд/мин
+LOW_HZ, HIGH_HZ = 0.7, 3.0  # 42 to 180 bpm
 FS = 30.0
 
 
 def resample(rgb: np.ndarray, t: np.ndarray, fs: float = FS) -> np.ndarray:
-    """Кадры приходят неравномерно — переводим на ровную сетку fs Гц."""
+    """Frames arrive at uneven intervals, so resample onto a uniform fs Hz grid."""
     grid = np.arange(t[0], t[-1], 1 / fs)
     return np.stack([np.interp(grid, t, rgb[:, c]) for c in range(3)], axis=1)
 
@@ -35,8 +35,8 @@ def pos(rgb: np.ndarray, fs: float = FS) -> np.ndarray:
 
 
 def estimate_hr(rgb: np.ndarray, t: np.ndarray) -> tuple[float | None, float]:
-    """rgb: (N, 3) средний цвет кожи по кадрам, t: время кадров в секундах.
-    Возвращает (пульс уд/мин | None, качество 0…1)."""
+    """rgb: (N, 3) mean skin color per frame, t: frame times in seconds.
+    Returns (heart rate in bpm | None, quality 0 to 1)."""
     rgb, t = np.asarray(rgb, float), np.asarray(t, float)
     if len(t) < 2 or t[-1] - t[0] < 8:
         return None, 0.0
@@ -45,7 +45,7 @@ def estimate_hr(rgb: np.ndarray, t: np.ndarray) -> tuple[float | None, float]:
     b, a = butter(3, [LOW_HZ / (FS / 2), HIGH_HZ / (FS / 2)], btype="band")
     sig = filtfilt(b, a, sig)
 
-    n = 1 << int(np.ceil(np.log2(len(sig) * 4)))  # дополнение нулями — точнее частота
+    n = 1 << int(np.ceil(np.log2(len(sig) * 4)))  # zero padding for finer frequency resolution
     spec = np.abs(np.fft.rfft(sig * np.hanning(len(sig)), n)) ** 2
     freqs = np.fft.rfftfreq(n, 1 / FS)
     band = (freqs >= LOW_HZ) & (freqs <= HIGH_HZ)
@@ -54,6 +54,6 @@ def estimate_hr(rgb: np.ndarray, t: np.ndarray) -> tuple[float | None, float]:
     f_band, p_band = freqs[band], spec[band]
     peak = f_band[np.argmax(p_band)]
     near = np.abs(f_band - peak) <= 0.1
-    snr = p_band[near].sum() / p_band.sum()  # доля мощности у пика
+    snr = p_band[near].sum() / p_band.sum()  # fraction of power near the peak
     quality = float(np.clip((snr - 0.15) / 0.35, 0, 1))
     return float(peak * 60), quality

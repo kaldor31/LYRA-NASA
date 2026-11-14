@@ -1,339 +1,80 @@
-# LYRA — план на NASA Space Apps Challenge
+# LYRA: plan for NASA Space Apps Challenge 2026 (hackathon in progress)
 
-> **LYRA** — умное зеркало для ежедневного мониторинга состояния астронавта: лицо, осанка, ладонь → понятный статус относительно *личной нормы*.
-> Рабочая расшифровка: **Life-signs & Yield-based Readiness Analytics** (или просто LYRA без расшифровки).
+> **LYRA: 3D health scan for long-duration missions.** "Step in. Grip. Know."
+> Challenge: **Create Health Monitoring Software for Astronauts on Space Missions**: https://www.spaceappschallenge.org/2026/challenges/health-monitoring-software/
+> Source of decisions: `docs/DECISIONS.md`. Concept: `docs/CONCEPT.md`. NASA data: `data/nasa_reference.json`, `docs/research/nasa_sources.md`.
 
-Команда: **Участник A** — ________ · **Участник B** — ________
-Даты хакатона: ________ (сверить на spaceappschallenge.org) · Локация / онлайн: ________
+## 0. Scope (from DECISIONS)
 
----
+- We are building a **concept**: drawings + presentation + a **web app running on simulation**. No hardware.
+- Judging focuses first of all on **software**. Criteria: Impact, Creativity, Validity, Relevance (NASA data), Presentation.
+- Everywhere: "screening, not a diagnosis".
+- All materials, UI and docs are in English (official Space Apps rule).
 
-## 0. Как пользоваться этим планом
+## 1. Submission deadlines (official)
 
-- Отмечайте `[x]` по ходу — файл общий, держите его в репозитории.
-- Время указано как **Ч+N** — часы от официального старта (Space Apps обычно идёт 48 часов).
-- Роли — стартовое предложение, меняйтесь задачами свободно. Главное правило: **у каждой задачи один владелец**.
-- Всё, что помечено ⚠️, — проверить в официальных правилах текущего года.
+Source: Project Submission Guide (as of 2026-11-13): https://www.spaceappschallenge.org/resources/project-submission-guide/
 
----
+- Submission opens: **Sat, November 14, 9:00** team Local Event time.
+- **Deadline: Sun, November 15, 23:59** Local Event time (for the Universal Event, the Team Owner's local time of residence). Anything saved/submitted after the deadline is **not judged**.
+- You can resubmit as many times as you like; the **last saved** version is judged. Judges look mainly at the **project page**; the demo mostly affects Presentation.
 
-## 1. Что именно мы строим (рамки)
+## 2. Timeline (H+0 = now, Sat 11/14; deadline about H+30 to H+38, check against local time)
 
-### MVP — то, что ОБЯЗАНО работать на демо
-
-| # | Модуль | Что измеряет | Как |
-|---|---|---|---|
-| 1 | **Лицо** | индекс отёчности лица (перераспределение жидкости в невесомости), частота моргания, зевота, PERCLOS (признаки усталости) | веб-камера + MediaPipe Face Landmarker |
-| 2 | **Верх тела** | наклон плеч, наклон головы вперёд, симметрия | MediaPipe Pose |
-| 3 | **Пульс по видео** | ЧСС бесконтактно | rPPG (изменение цвета кожи лица) |
-| 4 | **Станция ладони** | пульс, SpO₂, температура кожи, сила хвата | ESP32 + MAX30102 + MLX90614 + тензодатчик |
-| 5 | **Панель статуса** | сравнение с личной нормой → 🟢 стабильно / 🟡 повторить / 🔴 возможное отклонение + объяснение простым языком | Python backend + веб-интерфейс за зеркалом |
-
-### Дорожная карта — только на слайдах, НЕ строим
-
-- Доплеровский / ультразвуковой модуль кровотока
-- Одноотведённая ЭКГ и HRV (AD8232) — *если останется время, это первое расширение*
-- ИК-камера глубины (как Face ID) для точного 3D-объёма лица
-- Синхронизация с бортовой медициной, отчёт для лётного врача
-- Многопользовательский режим для экипажа
-
-### Формулировки (важно для судей)
-
-| ❌ Не пишем | ✅ Пишем |
-|---|---|
-| «диагностирует болезни сердца» | «выделяет отклонения сердечно-сосудистых показателей для повторной проверки» |
-| «определяет психическое состояние» | «оценивает вероятные признаки усталости и напряжения» |
-| «измеряет плотность костей» | «отслеживает силу хвата и осанку — функциональные маркеры, связанные с потерей костной и мышечной массы» |
-| «медицинское устройство» | «система скрининга и самоконтроля; результат — не диагноз» |
-
----
-
-## 2. Роли
-
-### Участник A — «Зрение и мозг»
-- Пайплайн камеры: MediaPipe лицо + поза
-- rPPG (пульс по видео)
-- Backend: сбор всех метрик, хранение, **движок личной нормы** и статусов
-- Генератор синтетической истории (14–40 «дней полёта»)
-- Технический монтаж демо-видео
-
-### Участник B — «Железо, интерфейс и история»
-- Станция ладони: ESP32 + датчики, прошивка, передача данных
-- Панель (dashboard) за зеркалом: дизайн, статусы, объяснения
-- Сборка физического зеркала
-- Исследование: данные NASA, ссылки, научное обоснование
-- Слайды, текст заявки, сценарий видео
-
-### Вместе
-- Старт, финальная интеграция, репетиция демо, сдача проекта
-
----
-
-## 3. ДО хакатона (подготовка)
-
-⚠️ Проверить в правилах, какая предварительная работа разрешена (обычно идею, исследования и закупки можно делать заранее, а код проекта пишется во время хакатона).
-
-### Регистрация и организация
-- [ ] Оба зарегистрированы на spaceappschallenge.org, команда создана, выбрана локация / онлайн
-- [ ] Прочитаны правила, критерии оценки и требования к сдаче ⚠️
-- [ ] Найден челлендж про здоровье астронавтов в списке этого года, сохранён его текст и ссылки на ресурсы
-- [ ] Общий чат + общий репозиторий GitHub (пустой, с README)
-- [ ] Договорились о графике сна на 48 часов (см. раздел 5)
-
-### Железо и чертежи
-Чертежи зеркала, станции ладони и схема проводки — в [docs/drawings/](docs/drawings/). Код — в [lyra/](lyra/), запуск описан в [README.md](README.md).
-
-**Компьютер:** ноутбук, а не Raspberry Pi — MediaPipe + rPPG на Pi могут тормозить. Pi — в дорожной карте.
-
-### Окружение (проверить, что ставится, — это не код проекта)
-- [ ] Python 3.11, `opencv-python`, `mediapipe`, `numpy`, `scipy`, `fastapi`, `uvicorn` ставятся без ошибок на ноутбуке A
-- [ ] Arduino IDE / PlatformIO + драйвер ESP32 работают на ноутбуке B
-- [ ] Камера видится в OpenCV, датчики по отдельности отвечают (тестовые скетчи из библиотек)
-
-### Исследование (B) — собрать ссылки заранее
-- [ ] NASA Human Research Program — риски: потеря костной ткани, SANS, поведенческое здоровье
-- [ ] NASA Open Science Data Repository (OSDR: GeneLab + ALSDA) — найти наборы данных, которые можно использовать или процитировать
-- [ ] NASA Twins Study — изменения у астронавта за год полёта
-- [ ] Цифры для слайдов: потеря плотности опорных костей ~1–1,5 % в месяц; перераспределение жидкости к голове; SANS
-- [ ] 2–3 научные статьи про rPPG и про силу хвата как маркер здоровья
-- [ ] Существующие аналоги (умные зеркала, AstroGuard AI и т.п.) — 1 строка, чем мы отличаемся
-
----
-
-## 4. Архитектура (одна страница)
-
-```
- ┌──────────── ЗЕРКАЛО ────────────┐
- │ веб-камера ─► vision.py          │
- │   • Face Landmarker → отёк лица, │
- │     моргание, зевота, PERCLOS     │
- │   • Pose → плечи, голова          │
- │   • rPPG → ЧСС                    │
- └───────────────┬──────────────────┘
-                 │ метрики (JSON)
- ESP32 ──serial─►│
- ладонь:         ▼
- пульс, SpO₂,  backend (FastAPI)
- t°, хват      • сессия измерения
-               • SQLite: история
-               • baseline.py: личная норма
-               • status.py: 🟢🟡🔴 + объяснения
-                 │ WebSocket
-                 ▼
-          dashboard (HTML/JS, полный экран за зеркалом)
-```
-
-### Структура репозитория
-Каркас уже лежит в репозитории — подробности в [README.md](README.md):
-```
-lyra/
-  core/          metrics.py, assess.py (норма + статусы + объяснения), db.py, engine.py
-  vision/        face.py, pose.py, rppg.py, capture.py
-  palm/          reader.py (Serial → JSON), firmware/lyra_palm/lyra_palm.ino
-  sim/           history.py (синтетическая история и сценарии day1 / day20 / day40)
-  dashboard/     index.html, app.js, style.css
-  server.py      FastAPI + WebSocket
-docs/drawings/   mirror_assembly.svg, palm_station.svg, wiring.svg
-tests/
-```
-
-### Договорённость о данных (решить в первый час!)
-Одна метрика = одна запись:
-```json
-{ "metric": "hr_palm", "value": 72, "unit": "bpm", "source": "palm", "ts": "2026-10-04T08:01:12Z", "quality": 0.9 }
-```
-Список метрик: `face_puffiness`, `blink_rate`, `perclos`, `yawn_count`, `shoulder_tilt`, `head_forward`, `hr_rppg`, `hr_palm`, `spo2`, `skin_temp`, `grip_strength`.
-
-### Логика статуса
-- Личная норма = среднее и σ по последним 7–14 измерениям этого человека
-- `z = (значение − среднее) / σ`
-- |z| < 2 → 🟢 · 2 ≤ |z| < 3 → 🟡 «повторите измерение» · |z| ≥ 3 **или** ≥ 2 метрик в 🟡 → 🔴 «возможное отклонение»
-- Метрика с низким `quality` (движение, плохой свет) не влияет на статус → просим повторить
-- Объяснение по шаблону: *«Пульс в покое 88 уд/мин — на 14 выше вашей нормы (74). Повторите измерение через 10 минут в спокойном состоянии. Это предварительная оценка, а не диагноз.»*
-
-### Синтетическая история — обязательно
-Реальной истории за 40 дней полёта у нас не будет. `sim/generate_history.py` создаёт правдоподобные данные «День 1…40» (лёгкий рост отёчности лица, медленное падение силы хвата, шум) — на них строится личная норма и графики. **На демо честно подписываем: «смоделированные данные».**
-
----
-
-## 5. Таймлайн хакатона (48 часов)
-
-### График сна (не пропускать!)
-- **A спит Ч+16 … Ч+22**, **B спит Ч+20 … Ч+26** — всегда кто-то бодрствует, пересменка с коротким созвоном
-- Вторая ночь: оба спят минимум 4 часа где-то в Ч+38 … Ч+44, если сдача готова
-
----
-
-### Ч+0 … Ч+2 · Старт
-**Вместе**
-- [ ] Прочитать финальный текст челленджа — подтвердить, что LYRA в него попадает; переформулировать 1 абзац под формулировки челленджа
-- [ ] Утвердить MVP (раздел 1) и формат данных (раздел 4)
-- [ ] Создать структуру репозитория, README с одной фразой о проекте
-- [ ] Раздать задачи по этому плану
-
-🏁 **Чекпоинт Ч+2:** репозиторий есть, каждый знает свои первые 6 часов.
-
----
-
-### Ч+2 … Ч+8 · Каркас
-**A**
-- [ ] Камера → MediaPipe Face Landmarker → точки лица на экране
-- [ ] MediaPipe Pose → плечи и голова
-- [ ] Первые метрики: EAR (моргание), MAR (зевота), наклон плеч
-- [ ] Каркас FastAPI: endpoint приёма метрик + WebSocket
-
-**B**
-- [ ] ESP32 + MAX30102 → пульс и SpO₂ в Serial
-- [ ] + MLX90614 → температура
-- [ ] + тензодатчик/HX711 → сила хвата (калибровка грузом известной массы)
-- [ ] Прошивка выдаёт одну JSON-строку раз в секунду
-- [ ] Каркас dashboard: тёмный фон, крупный шрифт, 3 карточки статуса
-
-🏁 **Чекпоинт Ч+8 (созвон 15 мин):** камера показывает точки, ESP32 выдаёт числа, dashboard открывается.
-**Если ESP32 не заработал → сразу включаем режим имитации датчиков и чиним параллельно.**
-
----
-
-### Ч+8 … Ч+16 · Метрики и мозг
-**A**
-- [ ] rPPG: ROI лба и щёк → сигнал зелёного канала (или метод POS/CHROM) → полосовой фильтр 0,7–3 Гц → ЧСС через FFT; окно 10–15 с
-- [ ] Индекс отёчности лица: расстояния между точками щёк/скул, нормированные на межзрачковое расстояние
-- [ ] PERCLOS и частота моргания за окно 30–60 с
-- [ ] `baseline.py` + `status.py` по логике из раздела 4
-- [ ] `sim/generate_history.py` → SQLite с 40 «днями»
-
-**B**
-- [ ] `palm/reader.py`: Serial → JSON → backend
-- [ ] Dashboard: экран «Встаньте перед зеркалом» → «Сканирование лица» → «Положите ладонь и сожмите рукоять» → «Результат»
-- [ ] Карточки метрик: значение, личная норма, мини-график тренда
-- [ ] Шаблоны объяснений простым языком (по 1–2 на метрику, 🟢/🟡/🔴)
-
-🏁 **Чекпоинт Ч+16:** все метрики приходят в backend, статус считается на синтетической истории.
-
----
-
-### Ч+16 … Ч+26 · Пересменка и интеграция
-**A (после сна, с Ч+22)**
-- [ ] Сквозной поток: камера + ладонь → одна «сессия измерения» → статус
-- [ ] Индикатор качества: «слишком темно / не двигайтесь» вместо мусорных значений
-- [ ] Режим сценариев: `--scenario day1` / `--scenario day40`
-
-**B (до сна, Ч+16 … Ч+20)**
-- [ ] Собрать зеркало: плёнка на акрил / стекло, монитор сзади, камера сверху по центру
-- [ ] Корпус / держатель для станции ладони (рукоять с тензодатчиком, площадка для пальца)
-- [ ] Начать `docs/references.md` с источниками NASA
-
-🏁 **Чекпоинт Ч+26 (обязательный созвон):** полный сценарий проходит от начала до конца хотя бы один раз.
-
----
-
-### Ч+26 … Ч+36 · Полировка
-**A**
-- [ ] Сравнить ЧСС по видео и по ладони → показать расхождение (сильный аргумент про проверку несколькими источниками)
-- [ ] Исправить самые раздражающие баги, стабильность 5 прогонов подряд
-- [ ] *(если всё стабильно)* AD8232 + HRV
-
-**B**
-- [ ] Анимация «пробуждения» зеркала, понятные переходы
-- [ ] Экран «Тренд за полёт»: отёчность лица и сила хвата по 40 дням
-- [ ] Слайды: черновик (структура в разделе 7)
-- [ ] Сценарий видео (раздел 6)
-
-🔒 **Ч+36 — ЗАМОРОЗКА ФУНКЦИЙ.** После этого только баги и материалы для сдачи.
-
----
-
-### Ч+36 … Ч+44 · Материалы для сдачи
-**A**
-- [ ] Записать экран + камеру по сценарию (2–3 дубля)
-- [ ] Смонтировать видео ⚠️ (уточнить требование по длительности, обычно ~30 с)
-- [ ] README: установка, запуск, режим имитации, скриншоты
-
-**B**
-- [ ] Финальные слайды ⚠️ (уточнить лимит количества)
-- [ ] Текст заявки (раздел 8)
-- [ ] Раздел «Использованные данные NASA» и «Использование ИИ» ⚠️
-
-**Вместе**
-- [ ] Репетиция питча вслух, 2 раза, с таймером
-
----
-
-### Ч+44 … Ч+48 · Сдача
-- [ ] **Отправить к Ч+45** — не в последние минуты
-- [ ] Проверить, что ссылки открываются в режиме инкогнито (репозиторий публичный, видео доступно)
-- [ ] Записать, что и когда отправили
-- [ ] Спать 😴
-
----
-
-## 6. Демо-сценарий (видео и живой показ)
-
-1. **Утро, «День 1».** Астронавт подходит → зеркало просыпается → сетка точек лица и осанки → «Положите ладонь» → сжатие рукояти → 🟢 «Все показатели в пределах вашей нормы».
-2. **«День 40».** Переключаем сценарий → тренд показывает рост отёчности лица и падение силы хвата → 🟡 с объяснением: *«Отёчность лица выросла на 8 % от вашей нормы — ожидаемый эффект перераспределения жидкости. Сила хвата снизилась на 12 %. Рекомендуем выполнить комплекс упражнений и повторить измерение завтра.»*
-3. **Финал:** «Одно зеркало вместо нескольких устройств. Работает без связи с Землёй. Предварительная оценка, не диагноз».
-
-В кадре и на слайдах подписываем: **«данные Дней 2–40 смоделированы»**.
-
----
-
-## 7. Структура слайдов
-
-1. **Проблема** — астронавт месяцами без врача рядом; потеря кости ~1–1,5 %/мес; перераспределение жидкости; усталость и стресс; связь с Землёй с задержкой
-2. **Решение** — LYRA: утренняя проверка за 60 секунд перед зеркалом
-3. **Как работает** — схема: камера + ладонь → личная норма → статус
-4. **Что уникально** — отёк лица в невесомости по 3D-карте, проверка пульса двумя способами, всё по личной норме, работа без сети
-5. **Демо / скриншоты**
-6. **Данные NASA и научная основа** + ограничения (честно: не диагноз, синтетическая история)
-7. **Дорожная карта** — ЭКГ/HRV, ультразвук, ИК-камера, панель для лётного врача, Луна/Марс
-
----
-
-## 8. Чек-лист сдачи ⚠️ (сверить с актуальной формой)
-
-- [ ] Название проекта + выбранный челлендж
-- [ ] Краткое описание (≈ 1 абзац)
-- [ ] Видео-демо и/или слайды
-- [ ] Ссылка на проект (GitHub)
-- [ ] Подробное описание: что делает, как работает, польза, инструменты
-- [ ] **Использованные данные и ресурсы NASA** — обязательно, с ссылками
-- [ ] Другие источники и библиотеки (MediaPipe, OpenCV и т.д.)
-- [ ] Раскрытие использования ИИ (если требуется)
-- [ ] Оба участника указаны в команде
-
----
-
-## 9. Риски и план Б
-
-| Риск | Признак | План Б |
+| When | A: software (`lyra/`, `tests/`, `README.md`) | B: concept (`docs/`, `PLAN.md`, `data/nasa_reference.json`) |
 |---|---|---|
-| rPPG шумит | ЧСС по видео скачет | равномерный свет, неподвижность; основной пульс — с ладони, rPPG как «второе мнение» |
-| ESP32 / датчик не работает | нет данных к Ч+8 | режим имитации датчиков, честно сказать на демо |
-| Плёнка-зеркало не приехала | — | показываем на экране; макет зеркала на слайде |
-| Ноутбук тормозит | < 15 fps | уменьшить разрешение до 640×480, считать позу реже |
-| Не успеваем | к Ч+26 нет сквозного прогона | вырезать позу и PERCLOS, оставить лицо + ладонь + статус |
-| Видео не загружается | | загрузить заранее, иметь запасную ссылку |
-| Выгорание | | график сна из раздела 5 — соблюдать |
+| H+0 to H+2 | Reads `nasa_reference.json` v1; "expected adaptation" model, day 1/40/180 scenarios | Done: NASA data checked, 5 drawings, CONCEPT.md, this plan |
+| H+2 to H+8 | 3D point cloud (Three.js), express scan + weekly test with voice, "you vs NASA" chart | Done: draft deck (7 slides), 30 s video script, form texts |
+| H+8 to H+12 | Normal/Recheck/Deviation statuses, HRP risk cards, queue to the doctor (ISS/Moon/Mars) | App screenshots → into the deck; text edits based on the actual demo |
+| H+12 to H+20 | Sleep / buffer. Deployment (GitHub Pages or similar, **public link**), README in English | Screen recording for the video (30 s), editing, **English subtitles** |
+| H+20 to H+26 | Fixes, tests, check the link in a private window | Fill in the project page (all fields, English), upload images |
+| H+26 to H+28 | **Together:** run-through, final checklist pass, **Submit for Judging** | |
+| Buffer | 4 h or more before the deadline: do not touch unless needed; resubmit after any edits | |
 
----
+## 3. Submission checklist (exactly per Project Submission Guide 2026)
 
-## 10. Вопросы судей — подготовить ответы
+Source: https://www.spaceappschallenge.org/resources/project-submission-guide/ · criteria: 2026 Judging & Awards Guide: https://www.spaceappschallenge.org/resources/judging-awards-guide/
 
-- **Чем вы отличаетесь от существующих умных зеркал?** → космическая специфика (отёк лица, сила хвата при потере кости), несколько источников, личная норма, работа без сети.
-- **Насколько точен rPPG?** → в контролируемых условиях близок к контактному датчику, поэтому сверяем с ладонью и отбрасываем измерения низкого качества.
-- **Это медицинское устройство?** → нет, скрининг и самоконтроль; помогает решить, когда повторить проверку или связаться с врачом.
-- **Откуда личная норма в первый день?** → калибровочный период первых 7 измерений; до этого показываем общие референсные диапазоны.
-- **Где данные NASA?** → раздел 6 слайдов + `docs/references.md`.
-- **Конфиденциальность?** → всё обрабатывается локально, видео не сохраняется — только числовые метрики.
+**General**
+- [ ] All members are confirmed participants of **the same Local Event**.
+- [ ] **All form content and all related materials are in English.** Slides in English only. The video may be voiced in another language, but **English subtitles are required**.
+- [ ] **All required fields** are filled in (otherwise the button will not work).
+- [ ] No images/video/audio of people **under 18**.
+- [ ] "Terms and Conditions" and "Confirm All Work is Original" checked → **Submit for Judging** → confirmation banner.
 
----
+**Form fields** (ready texts: `docs/presentation/submission_form.md`)
+- [ ] Project Name
+- [ ] High-Level Project Summary (what we built, how it addresses the challenge, why it matters)
+- [ ] Link to Project Demo: **7 slides maximum (including the title and intro slides) OR a video of 30 s or less**. Exceeding this → **not eligible for Global Judging**. External hosting (YouTube, Google Drive, GitHub, ...), **public link with no login/password/permissions**; video/slides are not uploaded to the Space Apps site.
+- [ ] Link to Final Project: public link (website / repository), check in a private window.
+- [ ] Detailed Project Description (what it does, how it works, benefits, goals, tools/languages/hardware/software).
+- [ ] **Use of Super Intelligence (SI)**: this is what the site calls AI (ML, chatbots, image generation, LLMs). Allowed as a tool; state where and how. Rules: SI images and video need a **visible watermark**; audio, code and data must be **disclosed in the description and metadata**. Generated content **must not use/modify NASA branding** (logos, flags, mission identifiers). Judges do not see the answer to this question, but they do see the labels in the project. The page also says SI must not be used to come up with the solution idea itself.
+- [ ] **NASA Data**: specifically which NASA data and resources. **A Global Award requires at least one NASA resource.**
+- [ ] Space Agency Partner Data and Other References: all data, resources, tools, code, texts, images (for us: CSA, a 2026 partner).
+- [ ] Images on the page: JPG/PNG/GIF up to 10 MB (drawings → PNG, see `docs/drawings/png/`).
 
-## 11. Ссылки (заполнить)
+**Demo (if a deck)**: team, member names, chosen challenge; project image; user experience; how NASA/partner data make the solution possible.
+**Demo (if a video, 30 s or less)**: 0:00 who you are → 0:02 the challenge → 0:05 name and tagline → 0:10 the idea, how it works, NASA data → 0:20-0:30 the future.
 
-- Space Apps: https://www.spaceappschallenge.org
-- Текст челленджа: ________
-- NASA OSDR: https://osdr.nasa.gov
-- NASA Human Research Program: ________
-- NASA Twins Study: ________
-- MediaPipe Face Landmarker / Pose: ________
-- Статьи по rPPG: ________
+**Team decision:** we submit a **7-slide deck** as the Project Demo (`docs/presentation/LYRA_deck.pptx` → PDF/Google Slides, public link); a 30 s video if possible, with its link in the Detailed Description.
+
+## 4. Where things are
+
+| What | File |
+|---|---|
+| Decisions | `docs/DECISIONS.md` |
+| Concept | `docs/CONCEPT.md` |
+| NASA/CSA sources | `docs/research/nasa_sources.md`, `data/nasa_reference.json` |
+| Drawings (5 sheets) | `docs/drawings/01...05_*.svg` (English, primary); PNG exports in `docs/drawings/png/`; Russian originals in `docs/drawings/ru/`; old ones in `docs/drawings/archive/` |
+| Presentation, video, form | `docs/presentation/` |
+| Software | `lyra/`, `tests/`, `README.md` (Agent A) |
+
+## 5. Wording rules
+
+| Do not write | Write instead |
+|---|---|
+| "diagnoses" | "flags deviations for a recheck and for the doctor" |
+| "measures bone density" | "functional markers (grip strength, posture, leg volume) associated with bone and muscle loss" |
+| "determines mental state" | "likely signs of fatigue and strain" |
+| "medical device" | "screening and self-monitoring; the result is not a diagnosis" |
+| an estimate presented as a citation | `cited` only if the number is directly in the source, otherwise "team estimate" |

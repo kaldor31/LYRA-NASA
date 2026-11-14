@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "lyra-sim",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": ["-m", "lyra.server", "--port", "8765"],
+      "port": 8765
+    },
+    {
+      "name": "lyra-sim-fast",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": ["-m", "lyra.server", "--fast", "--port", "8766"],
+      "port": 8766
+    }
+  ]
+}

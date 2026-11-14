@@ -1,0 +1,196 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 990" width="1400" height="990">
+<title>LYRA — лист 1: Общий вид станции</title>
+
+<defs>
+  <marker id="da" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,1.5 L10,5 L0,8.5 z" fill="#222"/></marker>
+  <marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#222"/></marker>
+  <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#555" stroke-width="1"/></pattern>
+  <style>
+    text{font-family:Arial,Helvetica,sans-serif}
+    .t{font-size:13px;fill:#111}
+    .s{font-size:11px;fill:#333}
+    .b{font-size:13px;fill:#111;font-weight:bold}
+    .h{font-size:20px;fill:#111;font-weight:bold}
+    .vh{font-size:15px;fill:#111;font-weight:bold}
+    .dl{font-size:12px;fill:#111}
+    .o{stroke:#1a1a1a;stroke-width:1.6;fill:none}
+    .of{stroke:#1a1a1a;stroke-width:1.6;fill:#f2f2f2}
+    .ofd{stroke:#1a1a1a;stroke-width:1.6;fill:#d9d9d9}
+    .thick{stroke:#1a1a1a;stroke-width:3;fill:none}
+    .post{stroke:#1a1a1a;stroke-width:1.4;fill:#bdbdbd}
+    .thin{stroke:#333;stroke-width:1;fill:none}
+    .hid{stroke:#444;stroke-width:1.1;fill:none;stroke-dasharray:6 4}
+    .ctr{stroke:#666;stroke-width:0.9;fill:none;stroke-dasharray:14 3 3 3}
+    .ex{stroke:#555;stroke-width:0.8;fill:none}
+    .dim{stroke:#222;stroke-width:0.9;fill:none;marker-start:url(#da);marker-end:url(#da)}
+    .ld{stroke:#333;stroke-width:0.9;fill:none}
+    .fl{stroke:#222;stroke-width:1.5;fill:none}
+    .fld{stroke:#222;stroke-width:1.5;fill:none;stroke-dasharray:7 4}
+    .sl{fill:#c0392b;fill-opacity:0.13;stroke:#c0392b;stroke-width:1;stroke-dasharray:5 3}
+    .tof{fill:#1f5fa8;fill-opacity:0.10;stroke:#1f5fa8;stroke-width:1;stroke-dasharray:5 3}
+    .hum{stroke:#777;stroke-width:1.2;fill:none;stroke-dasharray:3 3}
+    .gel{stroke:#1a7a4a;stroke-width:3;fill:none}
+    .frame{stroke:#111;stroke-width:2;fill:none}
+    .blk{stroke:#1a1a1a;stroke-width:1.5;fill:#fafafa}
+    .grp{stroke:#555;stroke-width:1;fill:none;stroke-dasharray:6 4}
+  </style>
+</defs>
+
+<rect x="0" y="0" width="1400" height="990" fill="#fff"/>
+<rect x="15.0" y="15.0" width="1370.0" height="960.0" rx="0" class="frame" />
+<rect x="25.0" y="25.0" width="1350.0" height="940.0" rx="0" class="thin" />
+<text x="45.0" y="60.0" class="h" text-anchor="start" >Лист 1. Общий вид станции</text>
+<text x="45.0" y="82.0" class="s" text-anchor="start" >Концепция LYRA. Размеры в мм — ориентировочные (не рабочий чертёж).</text>
+<rect x="985" y="845" width="390" height="120" fill="#fff" stroke="#111" stroke-width="1.6"/>
+<line x1="985.0" y1="881.0" x2="1375.0" y2="881.0" class="thin" />
+<line x1="985.0" y1="911.0" x2="1375.0" y2="911.0" class="thin" />
+<line x1="985.0" y1="939.0" x2="1375.0" y2="939.0" class="thin" />
+<line x1="1095.0" y1="845.0" x2="1095.0" y2="881.0" class="thin" />
+<line x1="1235.0" y1="911.0" x2="1235.0" y2="965.0" class="thin" />
+<text x="1040.0" y="871.0" class="h" text-anchor="middle" >LYRA</text>
+<text x="1105.0" y="868.0" class="b" text-anchor="start" >Общий вид станции</text>
+<text x="995.0" y="901.0" class="t" text-anchor="start" >Концепция, NASA Space Apps 2026</text>
+<text x="995.0" y="930.0" class="t" text-anchor="start" >Масштаб: б/м</text>
+<text x="1245.0" y="930.0" class="b" text-anchor="start" >Лист 1/5</text>
+<text x="995.0" y="956.0" class="s" text-anchor="start" >Размеры в мм, ориентировочные</text>
+<text x="1245.0" y="956.0" class="s" text-anchor="start" >Формат: альбом</text>
+<text x="60.0" y="125.0" class="vh" text-anchor="start" >Вид сверху (план), рабочее положение</text>
+<line x1="140.0" y1="292.5" x2="520.0" y2="292.5" class="thick" />
+<rect x="140.0" y="285.0" width="380.0" height="7.5" rx="0" class="o" fill="url(#hatch)" stroke="none"/>
+<text x="520.0" y="279.0" class="s" text-anchor="end" >стена модуля</text>
+<rect x="180.0" y="300.0" width="300.0" height="300.0" rx="0" class="hid" />
+<rect x="267.5" y="300.0" width="125.0" height="10.0" rx="0" class="ofd" />
+<rect x="187.5" y="320.0" width="10.0" height="10.0" rx="0" class="post" />
+<rect x="462.5" y="320.0" width="10.0" height="10.0" rx="0" class="post" />
+<rect x="325.0" y="582.5" width="10.0" height="10.0" rx="0" class="post" />
+<line x1="193.8" y1="325.0" x2="247.5" y2="365.0" class="thick" />
+<rect x="241.5" y="356.0" width="12.0" height="18.0" rx="3" class="ofd" />
+<line x1="466.2" y1="325.0" x2="412.5" y2="365.0" class="thick" />
+<rect x="406.5" y="356.0" width="12.0" height="18.0" rx="3" class="ofd" />
+<ellipse cx="330.0" cy="440.0" rx="56.25" ry="30.0" class="hum"/>
+<circle cx="330.0" cy="430.0" r="20.0" class="hum" />
+<rect x="290.5" y="416.0" width="24.0" height="40.0" rx="3" class="thin" stroke-dasharray="2 2"/>
+<rect x="345.5" y="416.0" width="24.0" height="40.0" rx="3" class="thin" stroke-dasharray="2 2"/>
+<rect x="217.5" y="293.8" width="10.0" height="10.0" rx="0" class="hid" />
+<rect x="432.5" y="293.8" width="10.0" height="10.0" rx="0" class="hid" />
+<rect x="407.5" y="293.8" width="10.0" height="10.0" rx="0" class="hid" />
+<path d="M192.5,325.0 A 32.5 32.5 0 0 1 222.5,295.0" class="hid" />
+<path d="M467.5,325.0 A 32.5 32.5 0 0 0 437.5,295.0" class="hid" />
+<line x1="180.0" y1="600.0" x2="180.0" y2="622.5" class="ex" />
+<line x1="480.0" y1="600.0" x2="480.0" y2="622.5" class="ex" />
+<line x1="180.0" y1="617.5" x2="480.0" y2="617.5" class="dim"/>
+<text x="330.0" y="611.5" class="dl" text-anchor="middle" >1200</text>
+<line x1="480.0" y1="300.0" x2="505.0" y2="300.0" class="ex" />
+<line x1="480.0" y1="600.0" x2="505.0" y2="600.0" class="ex" />
+<line x1="500.0" y1="300.0" x2="500.0" y2="600.0" class="dim"/>
+<text x="492.0" y="450.0" class="dl" text-anchor="middle" transform="rotate(-90 492.0 450.0)">1200</text>
+<line x1="267.5" y1="300.0" x2="267.5" y2="246.2" class="ex" />
+<line x1="392.5" y1="300.0" x2="392.5" y2="246.2" class="ex" />
+<line x1="267.5" y1="250.0" x2="392.5" y2="250.0" class="dim"/>
+<text x="330.0" y="244.0" class="dl" text-anchor="middle" >500</text>
+<line x1="180.0" y1="425.0" x2="140.0" y2="425.0" class="ex" />
+<line x1="180.0" y1="300.0" x2="140.0" y2="300.0" class="ex" />
+<line x1="145.0" y1="300.0" x2="145.0" y2="425.0" class="dim"/>
+<text x="137.0" y="362.5" class="dl" text-anchor="middle" transform="rotate(-90 137.0 362.5)">≈500 до лица</text>
+<circle cx="280.0" cy="305.0" r="2.2" fill="#222"/>
+<line x1="280.0" y1="305.0" x2="60.0" y2="205.0" class="ld" />
+<text x="64.0" y="209.0" class="t" text-anchor="start" >зеркальная панель</text>
+<text x="64.0" y="223.0" class="t" text-anchor="start" >≈500×900 с экраном</text>
+<circle cx="191.2" cy="326.2" r="2.2" fill="#222"/>
+<line x1="191.2" y1="326.2" x2="135.0" y2="460.0" class="ld" />
+<text x="131.0" y="464.0" class="t" text-anchor="end" >передняя</text>
+<text x="131.0" y="478.0" class="t" text-anchor="end" >стойка 40×40</text>
+<circle cx="331.2" cy="587.5" r="2.2" fill="#222"/>
+<line x1="331.2" y1="587.5" x2="367.5" y2="575.0" class="ld" />
+<text x="371.5" y="579.0" class="t" text-anchor="start" >задняя стойка 40×40</text>
+<circle cx="412.5" cy="365.0" r="2.2" fill="#222"/>
+<line x1="412.5" y1="365.0" x2="447.5" y2="395.0" class="ld" />
+<text x="451.5" y="399.0" class="t" text-anchor="start" >рукоять П</text>
+<text x="451.5" y="413.0" class="t" text-anchor="start" >(на кронштейне)</text>
+<circle cx="357.5" cy="432.5" r="2.2" fill="#222"/>
+<line x1="357.5" y1="432.5" x2="447.5" y2="480.0" class="ld" />
+<text x="451.5" y="484.0" class="t" text-anchor="start" >фиксаторы ног</text>
+<circle cx="330.0" cy="450.0" r="2.2" fill="#222"/>
+<line x1="330.0" y1="450.0" x2="255.0" y2="515.0" class="ld" />
+<text x="251.0" y="519.0" class="t" text-anchor="end" >астронавт</text>
+<circle cx="437.5" cy="295.0" r="2.2" fill="#222"/>
+<line x1="437.5" y1="295.0" x2="540.0" y2="225.0" class="ld" />
+<text x="544.0" y="229.0" class="t" text-anchor="start" >сложено: стойки</text>
+<text x="544.0" y="243.0" class="t" text-anchor="start" >на петлях у стены</text>
+<text x="60.0" y="760.0" class="t" text-anchor="start" >Рабочая зона 1200×1200 (пунктир). Обзор 360°: две передние стойки + задняя.</text>
+<text x="60.0" y="778.0" class="t" text-anchor="start" >Стойки крепятся к полу и потолку модуля (на МКС — штатные рельсы), без ножек.</text>
+<text x="60.0" y="796.0" class="t" text-anchor="start" >Пунктир у стены — сложенное положение (глубина ≈100).</text>
+<text x="700.0" y="125.0" class="vh" text-anchor="start" >Изометрия (вид сзади-справа)</text>
+<polygon points="976.1,590.0 1183.9,710.0 976.1,830.0 768.2,710.0" class="hid" />
+<polygon points="976.1,190.0 1183.9,310.0 976.1,430.0 768.2,310.0" class="hid" />
+<polygon points="953.6,571.0 1216.8,723.0 1216.8,323.0 953.6,171.0" class="thin" stroke-dasharray="1 4"/>
+<line x1="989.9" y1="686.0" x2="989.9" y2="412.0" class="hum" />
+<line x1="955.3" y1="396.0" x2="1024.6" y2="436.0" class="hum" />
+<line x1="955.3" y1="396.0" x2="976.1" y2="434.0" class="hum" />
+<line x1="1024.6" y1="436.0" x2="1073.1" y2="490.0" class="hum" />
+<line x1="972.6" y1="502.0" x2="970.9" y2="675.0" class="hum" />
+<line x1="1007.3" y1="522.0" x2="1009.0" y2="697.0" class="hum" />
+<circle cx="989.9" cy="376.0" r="20.0" class="hum" />
+<polygon points="976.1,676.0 996.9,688.0 965.7,706.0 944.9,694.0" class="thin" />
+<line x1="960.5" y1="685.0" x2="960.5" y2="673.0" class="thin" />
+<line x1="981.3" y1="697.0" x2="981.3" y2="685.0" class="thin" />
+<line x1="960.5" y1="673.0" x2="981.3" y2="685.0" class="thin" />
+<polygon points="1014.2,698.0 1035.0,710.0 1003.8,728.0 983.0,716.0" class="thin" />
+<line x1="998.6" y1="707.0" x2="998.6" y2="695.0" class="thin" />
+<line x1="1019.4" y1="719.0" x2="1019.4" y2="707.0" class="thin" />
+<line x1="998.6" y1="695.0" x2="1019.4" y2="707.0" class="thin" />
+<polygon points="1036.7,445.0 1123.3,495.0 1123.3,315.0 1036.7,265.0" class="ofd" fill-opacity="0.85"/>
+<polygon points="1041.9,440.0 1118.1,484.0 1118.1,332.0 1041.9,288.0" class="thin" />
+<line x1="967.4" y1="605.0" x2="967.4" y2="205.0" stroke="#1a1a1a" stroke-width="5"/>
+<rect x="961.4" y="506.0" width="12.0" height="18.0" rx="0" class="of" />
+<rect x="961.4" y="346.0" width="12.0" height="18.0" rx="0" class="of" />
+<rect x="961.4" y="266.0" width="12.0" height="18.0" rx="0" class="of" />
+<line x1="1157.9" y1="715.0" x2="1157.9" y2="315.0" stroke="#1a1a1a" stroke-width="5"/>
+<rect x="1151.9" y="616.0" width="12.0" height="18.0" rx="0" class="of" />
+<rect x="1151.9" y="456.0" width="12.0" height="18.0" rx="0" class="of" />
+<rect x="1151.9" y="376.0" width="12.0" height="18.0" rx="0" class="of" />
+<line x1="880.8" y1="765.0" x2="880.8" y2="365.0" stroke="#1a1a1a" stroke-width="5"/>
+<rect x="874.8" y="666.0" width="12.0" height="18.0" rx="0" class="of" />
+<rect x="874.8" y="506.0" width="12.0" height="18.0" rx="0" class="of" />
+<rect x="874.8" y="426.0" width="12.0" height="18.0" rx="0" class="of" />
+<line x1="967.4" y1="385.0" x2="977.8" y2="423.0" class="thick" />
+<line x1="983.0" y1="420.0" x2="972.6" y2="426.0" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round"/>
+<line x1="1157.9" y1="495.0" x2="1092.1" y2="489.0" class="thick" />
+<line x1="1097.3" y1="486.0" x2="1086.9" y2="492.0" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round"/>
+<circle cx="1157.9" cy="385.0" r="2.2" fill="#222"/>
+<line x1="1157.9" y1="385.0" x2="1225.0" y2="200.0" class="ld" />
+<text x="1229.0" y="204.0" class="t" text-anchor="start" >модуль «голова»</text>
+<text x="1229.0" y="218.0" class="t" text-anchor="start" >ИК-точки + ИК-камера</text>
+<text x="1229.0" y="232.0" class="t" text-anchor="start" >+ RGB</text>
+<circle cx="1157.9" cy="465.0" r="2.2" fill="#222"/>
+<line x1="1157.9" y1="465.0" x2="1225.0" y2="330.0" class="ld" />
+<text x="1229.0" y="334.0" class="t" text-anchor="start" >модуль «корпус»</text>
+<text x="1229.0" y="348.0" class="t" text-anchor="start" >ToF + RGB</text>
+<circle cx="1157.9" cy="625.0" r="2.2" fill="#222"/>
+<line x1="1157.9" y1="625.0" x2="1225.0" y2="600.0" class="ld" />
+<text x="1229.0" y="604.0" class="t" text-anchor="start" >модуль «ноги»</text>
+<text x="1229.0" y="618.0" class="t" text-anchor="start" >ToF</text>
+<circle cx="1092.1" cy="489.0" r="2.2" fill="#222"/>
+<line x1="1092.1" y1="489.0" x2="1225.0" y2="450.0" class="ld" />
+<text x="1229.0" y="454.0" class="t" text-anchor="start" >рукоять П</text>
+<text x="1229.0" y="468.0" class="t" text-anchor="start" >(уровень локтя)</text>
+<circle cx="1036.7" cy="265.0" r="2.2" fill="#222"/>
+<line x1="1036.7" y1="265.0" x2="780.0" y2="175.0" class="ld" />
+<text x="776.0" y="179.0" class="t" text-anchor="end" >зеркальная</text>
+<text x="776.0" y="193.0" class="t" text-anchor="end" >панель</text>
+<circle cx="880.8" cy="385.0" r="2.2" fill="#222"/>
+<line x1="880.8" y1="385.0" x2="760.0" y2="300.0" class="ld" />
+<text x="756.0" y="304.0" class="t" text-anchor="end" >задняя</text>
+<text x="756.0" y="318.0" class="t" text-anchor="end" >стойка</text>
+<circle cx="955.3" cy="694.0" r="2.2" fill="#222"/>
+<line x1="955.3" y1="694.0" x2="840.0" y2="790.0" class="ld" />
+<text x="836.0" y="794.0" class="t" text-anchor="end" >фиксаторы ног</text>
+<circle cx="768.2" cy="710.0" r="2.2" fill="#222"/>
+<line x1="768.2" y1="710.0" x2="760.0" y2="720.0" class="ld" />
+<text x="756.0" y="724.0" class="t" text-anchor="end" >рабочая зона</text>
+<text x="756.0" y="738.0" class="t" text-anchor="end" >1200×1200</text>
+<line x1="872.8" y1="765.0" x2="810.8" y2="765.0" class="ex" />
+<line x1="872.8" y1="365.0" x2="810.8" y2="365.0" class="ex" />
+<line x1="820.8" y1="765.0" x2="820.8" y2="365.0" class="dim"/>
+<text x="812.8" y="565.0" class="dl" text-anchor="middle" transform="rotate(-90 812.8 565.0)">пол–потолок ≈2000</text>
+</svg>

@@ -1,4 +1,4 @@
-"""Сканирование перед зеркалом: камера → лицо + поза + rPPG за `duration` секунд."""
+"""Scan in front of the mirror: camera → face + pose + rPPG over `duration` seconds."""
 from __future__ import annotations
 
 import math
@@ -25,7 +25,7 @@ def camera_scan(duration: float = 20.0, camera_index: int = 0, on_frame: OnFrame
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     cap.set(cv2.CAP_PROP_FPS, 30)
     if not cap.isOpened():
-        raise RuntimeError(f"Камера {camera_index} не открылась")
+        raise RuntimeError(f"Camera {camera_index} failed to open")
 
     face_frames, pose_frames, rgb, times = [], [], [], []
     n_total = 0
@@ -58,7 +58,7 @@ def camera_scan(duration: float = 20.0, camera_index: int = 0, on_frame: OnFrame
                 if n_total % 3 == 0:
                     msg["face"] = face.preview_points(p, w, h)
 
-            if n_total % 2 == 0:  # поза медленнее и меняется медленно
+            if n_total % 2 == 0:  # pose is slower to compute and changes slowly
                 pr = pm.process(frame)
                 if pr.pose_landmarks:
                     pf = pose.frame_metrics(pr.pose_landmarks.landmark, w, h)
@@ -81,7 +81,7 @@ def camera_scan(duration: float = 20.0, camera_index: int = 0, on_frame: OnFrame
 
 def simulated_scan(duration: float, values: dict[str, tuple[float, float]], on_frame: OnFrame | None = None,
                    stop: threading.Event | None = None) -> dict[str, tuple[float, float]]:
-    """Без камеры: анимированная «сетка» лица и готовые значения из симуляции."""
+    """No camera: an animated face "mesh" and precomputed values from the simulation."""
     t0 = time.monotonic()
     base = [(math.cos(a), math.sin(a)) for a in np.linspace(0, 2 * math.pi, 48, endpoint=False)]
     eyes = [(-0.38, -0.15), (0.38, -0.15), (0, 0.1), (-0.2, 0.42), (0, 0.48), (0.2, 0.42)]

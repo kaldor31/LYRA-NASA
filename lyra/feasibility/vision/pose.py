@@ -1,4 +1,4 @@
-"""Осанка по MediaPipe Pose: наклон плеч и положение головы (камера спереди)."""
+"""Posture from MediaPipe Pose: shoulder tilt and head position (front-facing camera)."""
 from __future__ import annotations
 
 import math
@@ -18,7 +18,7 @@ def frame_metrics(landmarks, w: int, h: int) -> dict | None:
     if width < 1:
         return None
     tilt = math.degrees(math.atan2(abs(ly - ry), abs(lx - rx)))
-    # Расстояние «нос — линия плеч» относительно ширины плеч: меньше = голова опущена/выдвинута вперёд
+    # Nose-to-shoulder-line distance relative to shoulder width: smaller means the head is lowered or pushed forward
     head = ((ly + ry) / 2 - nose.y * h) / width
     return {
         "tilt": tilt,

@@ -1,19 +1,19 @@
-"""Метрики лица по 478 точкам MediaPipe Face Mesh (refine_landmarks=True даёт зрачки).
+"""Face metrics from the 478 MediaPipe Face Mesh landmarks (refine_landmarks=True adds the irises).
 
-Индексы точек: https://github.com/google-ai-edge/mediapipe (canonical_face_model_uv_visualization.png)
+Landmark indices: https://github.com/google-ai-edge/mediapipe (canonical_face_model_uv_visualization.png)
 """
 from __future__ import annotations
 
 import numpy as np
 
-LEFT_EYE = [33, 160, 158, 133, 153, 144]  # p1..p6 для EAR
+LEFT_EYE = [33, 160, 158, 133, 153, 144]  # p1..p6 for EAR
 RIGHT_EYE = [362, 385, 387, 263, 373, 380]
 IRIS_L, IRIS_R = 468, 473
-CHEEK_L, CHEEK_R = 234, 454  # ширина лица на уровне скул
-JAW_L, JAW_R = 93, 323  # ширина на уровне нижней части щёк
+CHEEK_L, CHEEK_R = 234, 454  # face width at cheekbone level
+JAW_L, JAW_R = 93, 323  # width at the level of the lower cheeks
 NOSE_TIP = 1
 MOUTH_TOP, MOUTH_BOTTOM, MOUTH_L, MOUTH_R = 13, 14, 78, 308
-# Точки для участков кожи под rPPG: лоб и две щеки
+# Landmarks for rPPG skin patches: forehead and both cheeks
 ROI_FOREHEAD, ROI_CHEEK_L, ROI_CHEEK_R = 151, 50, 280
 
 
@@ -31,10 +31,10 @@ def eye_aspect_ratio(p: np.ndarray, idx: list[int]) -> float:
 
 
 def frame_metrics(p: np.ndarray) -> dict:
-    """Метрики одного кадра. p — (478, 2) в пикселях."""
-    ipd = _d(p, IRIS_L, IRIS_R)  # межзрачковое расстояние — «линейка», не меняется от отёка
+    """Metrics for a single frame. p is (478, 2) in pixels."""
+    ipd = _d(p, IRIS_L, IRIS_R)  # interpupillary distance: the reference "ruler", unaffected by swelling
     width = (_d(p, CHEEK_L, CHEEK_R) + _d(p, JAW_L, JAW_R)) / 2
-    # фронтальность: нос посередине между скулами (0,5 = анфас)
+    # frontality: nose midway between the cheekbones (0.5 = facing straight on)
     span = p[CHEEK_R, 0] - p[CHEEK_L, 0]
     yaw = (p[NOSE_TIP, 0] - p[CHEEK_L, 0]) / span if abs(span) > 1e-6 else 0.0
     return {
@@ -47,7 +47,7 @@ def frame_metrics(p: np.ndarray) -> dict:
 
 
 def skin_rgb(frame_rgb: np.ndarray, p: np.ndarray, ipd: float) -> np.ndarray | None:
-    """Средний цвет кожи по трём участкам (лоб, щёки)."""
+    """Mean skin color over three patches (forehead, cheeks)."""
     h, w = frame_rgb.shape[:2]
     patches = []
     for idx, hw, hh in ((ROI_FOREHEAD, 0.35, 0.15), (ROI_CHEEK_L, 0.18, 0.18), (ROI_CHEEK_R, 0.18, 0.18)):
@@ -62,7 +62,7 @@ def skin_rgb(frame_rgb: np.ndarray, p: np.ndarray, ipd: float) -> np.ndarray | N
 
 
 def summarize(frames: list[dict], t: np.ndarray, duration_s: float) -> dict[str, tuple[float | None, float]]:
-    """Итог за сканирование: отёчность, моргание, PERCLOS, зевота."""
+    """Scan summary: puffiness, blinking, PERCLOS, yawning."""
     if len(frames) < 10:
         return {k: (None, 0.0) for k in ("face_puffiness", "blink_rate", "perclos", "yawn_count")}
 
@@ -71,7 +71,7 @@ def summarize(frames: list[dict], t: np.ndarray, duration_s: float) -> dict[str,
     puff = float(np.median([f["puffiness"] for f in frontal])) if frontal else None
 
     ear = np.array([f["ear"] for f in frames])
-    open_level = float(np.percentile(ear, 80))  # «открытые глаза» этого человека
+    open_level = float(np.percentile(ear, 80))  # this person's "eyes open" level
     closed = ear < 0.6 * open_level
     blinks = int(np.sum(closed[1:] & ~closed[:-1]))
     minutes = max(duration_s, 1e-6) / 60
@@ -89,7 +89,7 @@ def summarize(frames: list[dict], t: np.ndarray, duration_s: float) -> dict[str,
     if start is not None and t[-1] - start >= 1.5:
         yawns += 1
 
-    q_eyes = min(1.0, len(frames) / (duration_s * 15))  # нужно ≥ 15 кадров/с
+    q_eyes = min(1.0, len(frames) / (duration_s * 15))  # requires ≥ 15 frames/s
     return {
         "face_puffiness": (puff, q_face),
         "blink_rate": (blinks / minutes, q_eyes),
@@ -99,5 +99,5 @@ def summarize(frames: list[dict], t: np.ndarray, duration_s: float) -> dict[str,
 
 
 def preview_points(p: np.ndarray, w: int, h: int, step: int = 4) -> list[list[float]]:
-    """Прореженные нормированные точки для «сетки» на зеркале."""
+    """Subsampled normalized points for the mirror's face "mesh"."""
     return [[round(x / w, 3), round(y / h, 3)] for x, y in p[:468:step]]

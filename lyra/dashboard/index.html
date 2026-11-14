@@ -1,56 +1,91 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LYRA</title>
+  <meta name="theme-color" content="#0D1114">
+  <meta name="color-scheme" content="dark">
+  <title>LYRA 3D Health Scan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+  <script type="importmap">
+  {"imports": {"three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+  </script>
 </head>
 <body>
-  <!-- Чёрный фон = отражение в зеркале. Всё яркое «просвечивает» сквозь плёнку. -->
-  <canvas id="mesh"></canvas>
+  <a class="skip" href="#main">Skip to main content</a>
 
-  <header>
-    <div class="brand">LYRA</div>
-    <div id="day" class="muted"></div>
-    <div id="modes" class="badges"></div>
-    <div id="clock" class="muted"></div>
+  <header class="top">
+    <div class="brand">
+      <span class="wordmark" translate="no">LYRA</span>
+      <span class="tagline">3D health scan</span>
+    </div>
+    <nav id="scenarios" class="scenarios" aria-label="Demo scenario"></nav>
+    <div class="top-right">
+      <span id="env" class="env"></span>
+      <span class="sim-tag" title="History and sessions are simulated from NASA adaptation curves"><span data-icon="FlaskConical"></span>Simulated data</span>
+      <button id="btn-voice" class="icon-btn" type="button" aria-pressed="true" aria-label="Voice prompts on"></button>
+      <button id="btn-mic" class="icon-btn" type="button" aria-pressed="false" aria-label="Voice commands off"></button>
+    </div>
   </header>
 
-  <main>
-    <section id="overall" class="panel hidden">
-      <div class="status-badge"><span id="ov-icon" class="icon"></span><span id="ov-title"></span></div>
-      <p id="ov-summary"></p>
-      <p id="ov-sim" class="muted small"></p>
+  <div class="layout">
+    <aside class="crew-rail" aria-labelledby="crew-h">
+      <h2 id="crew-h" class="rail-h">Crew</h2>
+      <div id="crew" class="crew"></div>
+      <div class="scenario-note">
+        <h2 class="rail-h">Scenario</h2>
+        <p id="scenario-sub"></p>
+      </div>
+    </aside>
+
+    <section class="body-panel" aria-label="3D body scan">
+      <div id="body3d" class="body3d" role="img" aria-label="3D point cloud of the astronaut's body with changing zones highlighted"></div>
+      <div id="mirror-text" class="mirror-text" hidden aria-hidden="true"></div>
+      <div class="body-foot">
+        <div class="views" role="group" aria-label="3D view">
+          <button type="button" data-view="front" aria-pressed="true">Front</button>
+          <button type="button" data-view="side" aria-pressed="false">Side</button>
+          <button type="button" data-view="top" aria-pressed="false">Top</button>
+          <button type="button" data-view="orbit" aria-pressed="false">Rotate</button>
+        </div>
+        <p class="body-caption">Face: structured light. Body: time-of-flight. Highlighted zones are changing.</p>
+      </div>
     </section>
 
-    <section id="metrics" class="panel hidden"></section>
-  </main>
+    <main id="main" class="panel" tabindex="-1">
+      <div class="tabs" role="tablist" aria-label="Views">
+        <button role="tab" type="button" id="t-session" aria-controls="tab-session" aria-selected="true" data-tab="session">Today</button>
+        <button role="tab" type="button" id="t-chart" aria-controls="tab-chart" aria-selected="false" tabindex="-1" data-tab="chart">You vs NASA</button>
+        <button role="tab" type="button" id="t-link" aria-controls="tab-link" aria-selected="false" tabindex="-1" data-tab="link">Downlink <span id="link-badge" class="count" hidden></span></button>
+        <button role="tab" type="button" id="t-risks" aria-controls="tab-risks" aria-selected="false" tabindex="-1" data-tab="risks">Why It Matters</button>
+      </div>
+      <div id="tab-session" class="tab" role="tabpanel" aria-labelledby="t-session"></div>
+      <div id="tab-chart" class="tab" role="tabpanel" aria-labelledby="t-chart" hidden></div>
+      <div id="tab-link" class="tab" role="tabpanel" aria-labelledby="t-link" hidden></div>
+      <div id="tab-risks" class="tab" role="tabpanel" aria-labelledby="t-risks" hidden></div>
+    </main>
+  </div>
 
-  <section id="phase" class="phase">
-    <div id="phase-text" class="phase-text">Подойдите к зеркалу</div>
-    <div id="phase-sub" class="muted">Пробел — начать проверку</div>
-    <div class="bar"><div id="bar-fill"></div></div>
-    <div id="live" class="live"></div>
-  </section>
-
-  <section id="trends" class="trends hidden">
-    <h2>Тренды за полёт <span class="muted small">— пунктир: норма до полёта</span></h2>
-    <div id="trend-grid" class="trend-grid"></div>
-  </section>
-
-  <div id="toast" class="toast hidden"></div>
-
-  <footer>
-    <button data-act="measure">Пробел · проверка</button>
-    <button data-act="calibrate">C · калибровка</button>
-    <button data-act="day1">1 · день 1</button>
-    <button data-act="day20">2 · день 20</button>
-    <button data-act="day40">3 · день 40</button>
-    <button data-act="trends">T · тренды</button>
+  <footer class="foot">
+    <p>Screening and self-monitoring, not a diagnosis. Every session is sent to the flight surgeon automatically.</p>
+    <p class="keys"><kbd>Enter</kbd> start <kbd>Space</kbd> squeeze <kbd>Esc</kbd> stop. Voice: “start”, “repeat”, “stop”.</p>
   </footer>
 
-  <div id="tip" class="tip hidden"></div>
-  <script src="/static/app.js"></script>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="modal" class="modal" aria-labelledby="modal-title">
+    <div class="modal-head">
+      <h2 id="modal-title"></h2>
+      <button type="button" class="icon-btn" id="modal-close" aria-label="Close"></button>
+    </div>
+    <div id="modal-body" class="modal-body"></div>
+  </dialog>
+
+  <script type="module" src="/static/app.js"></script>
 </body>
 </html>

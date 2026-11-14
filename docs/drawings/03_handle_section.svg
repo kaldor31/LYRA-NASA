@@ -1,0 +1,208 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 990" width="1400" height="990">
+<title>LYRA sheet 3: Handle cross-section</title>
+
+<defs>
+  <marker id="da" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,1.5 L10,5 L0,8.5 z" fill="#222"/></marker>
+  <marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#222"/></marker>
+  <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#555" stroke-width="1"/></pattern>
+  <style>
+    text{font-family:Arial,Helvetica,sans-serif}
+    .t{font-size:13px;fill:#111}
+    .s{font-size:11px;fill:#333}
+    .b{font-size:13px;fill:#111;font-weight:bold}
+    .h{font-size:20px;fill:#111;font-weight:bold}
+    .vh{font-size:15px;fill:#111;font-weight:bold}
+    .dl{font-size:12px;fill:#111}
+    .o{stroke:#1a1a1a;stroke-width:1.6;fill:none}
+    .of{stroke:#1a1a1a;stroke-width:1.6;fill:#f2f2f2}
+    .ofd{stroke:#1a1a1a;stroke-width:1.6;fill:#d9d9d9}
+    .thick{stroke:#1a1a1a;stroke-width:3;fill:none}
+    .post{stroke:#1a1a1a;stroke-width:1.4;fill:#bdbdbd}
+    .thin{stroke:#333;stroke-width:1;fill:none}
+    .hid{stroke:#444;stroke-width:1.1;fill:none;stroke-dasharray:6 4}
+    .ctr{stroke:#666;stroke-width:0.9;fill:none;stroke-dasharray:14 3 3 3}
+    .ex{stroke:#555;stroke-width:0.8;fill:none}
+    .dim{stroke:#222;stroke-width:0.9;fill:none;marker-start:url(#da);marker-end:url(#da)}
+    .ld{stroke:#333;stroke-width:0.9;fill:none}
+    .fl{stroke:#222;stroke-width:1.5;fill:none}
+    .fld{stroke:#222;stroke-width:1.5;fill:none;stroke-dasharray:7 4}
+    .sl{fill:#c0392b;fill-opacity:0.13;stroke:#c0392b;stroke-width:1;stroke-dasharray:5 3}
+    .tof{fill:#1f5fa8;fill-opacity:0.10;stroke:#1f5fa8;stroke-width:1;stroke-dasharray:5 3}
+    .hum{stroke:#777;stroke-width:1.2;fill:none;stroke-dasharray:3 3}
+    .gel{stroke:#1a7a4a;stroke-width:3;fill:none}
+    .frame{stroke:#111;stroke-width:2;fill:none}
+    .blk{stroke:#1a1a1a;stroke-width:1.5;fill:#fafafa}
+    .grp{stroke:#555;stroke-width:1;fill:none;stroke-dasharray:6 4}
+  </style>
+</defs>
+
+<rect x="0" y="0" width="1400" height="990" fill="#fff"/>
+<rect x="15.0" y="15.0" width="1370.0" height="960.0" rx="0" class="frame" />
+<rect x="25.0" y="25.0" width="1350.0" height="940.0" rx="0" class="thin" />
+<text x="45.0" y="60.0" class="h" text-anchor="start" >Sheet 3. Handle cross-section</text>
+<text x="45.0" y="82.0" class="s" text-anchor="start" >LYRA concept. Dimensions in mm, approximate (not a manufacturing drawing).</text>
+<rect x="985" y="845" width="390" height="120" fill="#fff" stroke="#111" stroke-width="1.6"/>
+<line x1="985.0" y1="881.0" x2="1375.0" y2="881.0" class="thin" />
+<line x1="985.0" y1="911.0" x2="1375.0" y2="911.0" class="thin" />
+<line x1="985.0" y1="939.0" x2="1375.0" y2="939.0" class="thin" />
+<line x1="1095.0" y1="845.0" x2="1095.0" y2="881.0" class="thin" />
+<line x1="1235.0" y1="911.0" x2="1235.0" y2="965.0" class="thin" />
+<text x="1040.0" y="871.0" class="h" text-anchor="middle" >LYRA</text>
+<text x="1105.0" y="868.0" class="b" text-anchor="start" >Handle cross-section</text>
+<text x="995.0" y="901.0" class="t" text-anchor="start" >Concept, NASA Space Apps 2026</text>
+<text x="995.0" y="930.0" class="t" text-anchor="start" >Scale: NTS</text>
+<text x="1245.0" y="930.0" class="b" text-anchor="start" >Sheet 3/5</text>
+<text x="995.0" y="956.0" class="s" text-anchor="start" >Dimensions in mm, approximate</text>
+<text x="1245.0" y="956.0" class="s" text-anchor="start" >Format: landscape</text>
+<text x="60.0" y="125.0" class="vh" text-anchor="start" >Handle longitudinal section (right; left is mirrored)</text>
+<text x="60.0" y="145.0" class="s" text-anchor="start" >palm side on top, fingers wrap underneath</text>
+<rect x="170.0" y="289.0" width="576.0" height="162.0" rx="46" class="of" />
+<rect x="180.8" y="299.8" width="554.4" height="140.4" rx="38" class="o" fill="#fff"/>
+<line x1="191.6" y1="377.2" x2="724.4" y2="377.2" class="thin" stroke-dasharray="2 2"/>
+<line x1="141.2" y1="370.0" x2="774.8" y2="370.0" class="ctr" />
+<rect x="180.8" y="316.0" width="25.2" height="108.0" rx="0" class="ofd" />
+<line x1="186.2" y1="323.2" x2="186.2" y2="416.8" class="thin" />
+<line x1="191.6" y1="323.2" x2="191.6" y2="416.8" class="thin" />
+<line x1="197.0" y1="323.2" x2="197.0" y2="416.8" class="thin" />
+<line x1="202.4" y1="323.2" x2="202.4" y2="416.8" class="thin" />
+<rect x="342.8" y="289.0" width="194.4" height="10.8" rx="0" class="ofd" fill="#cfe3f5"/>
+<rect x="368.0" y="301.6" width="144.0" height="46.8" rx="0" class="ofd" />
+<line x1="378.8" y1="301.6" x2="378.8" y2="316.0" class="thin" />
+<line x1="393.2" y1="301.6" x2="393.2" y2="316.0" class="thin" />
+<line x1="407.6" y1="301.6" x2="407.6" y2="316.0" class="thin" />
+<line x1="422.0" y1="301.6" x2="422.0" y2="316.0" class="thin" />
+<line x1="436.4" y1="301.6" x2="436.4" y2="316.0" class="thin" />
+<line x1="450.8" y1="301.6" x2="450.8" y2="316.0" class="thin" />
+<line x1="465.2" y1="301.6" x2="465.2" y2="316.0" class="thin" />
+<line x1="479.6" y1="301.6" x2="479.6" y2="316.0" class="thin" />
+<line x1="494.0" y1="301.6" x2="494.0" y2="316.0" class="thin" />
+<circle cx="263.6" cy="334.0" r="28.8" class="o" />
+<circle cx="263.6" cy="334.0" r="10.8" class="ofd" />
+<circle cx="630.8" cy="334.0" r="28.8" class="o" />
+<circle cx="630.8" cy="334.0" r="10.8" class="ofd" />
+<path d="M263.6,305.2 L314.0,285.4 L566.0,285.4 L630.8,305.2" class="gel" />
+<circle cx="263.6" cy="334.0" r="21.6" fill="none" stroke="#1a7a4a" stroke-width="5" stroke-opacity="0.5"/>
+<circle cx="630.8" cy="334.0" r="16.2" fill="none" stroke="#1a7a4a" stroke-width="4" stroke-opacity="0.35"/>
+<rect x="220.4" y="294.4" width="460.8" height="64.8" rx="6" class="grp" />
+<line x1="393.2" y1="269.2" x2="479.6" y2="269.2" class="fl" marker-end="url(#fa)"/>
+<text x="490.8" y="273.2" class="s" text-anchor="start" >advance</text>
+<rect x="609.2" y="368.0" width="50.4" height="32.4" rx="3" class="ofd" />
+<text x="634.4" y="390.0" class="b" text-anchor="middle" >M</text>
+<rect x="213.2" y="384.4" width="93.6" height="50.4" rx="3" class="of" fill="#e3f1e8"/>
+<rect x="310.4" y="391.6" width="25.2" height="25.2" rx="0" class="ofd" />
+<path d="M335.6,402.4 L339.20000000000005,402.4 L339.20000000000005,298.0 L342.8,289.0" class="thin" stroke="#1a7a4a" stroke-width="1.6"/>
+<rect x="368.0" y="384.4" width="180.0" height="14.4" rx="0" class="ofd" fill="url(#hatch)"/>
+<rect x="364.0" y="371.2" width="6.0" height="18.0" rx="0" class="ofd" />
+<rect x="546.0" y="371.2" width="6.0" height="18.0" rx="0" class="ofd" />
+<rect x="414.8" y="440.2" width="72.0" height="10.8" rx="0" class="ofd" fill="#f6d5d5"/>
+<rect x="422.0" y="420.4" width="57.6" height="18.0" rx="0" class="ofd" />
+<rect x="566.0" y="289.0" width="21.6" height="14.4" rx="0" class="ofd" fill="#f5e3c8"/>
+<rect x="566.0" y="406.0" width="122.4" height="14.4" rx="0" class="ofd" fill="#d6e6d0"/>
+<rect x="746.0" y="326.8" width="108.0" height="86.4" rx="0" class="post" />
+<line x1="854.0" y1="370.0" x2="944.0" y2="370.0" class="thick" />
+<text x="900.8" y="360.0" class="s" text-anchor="middle" >to post</text>
+<path d="M688.4,398.8 C746.0,398.8 782.0,398.8 800.0,413.2" class="thin" />
+<line x1="450.8" y1="267.0" x2="450.8" y2="477.0" class="ctr" />
+<text x="459.8" y="279.0" class="b" text-anchor="start" >A</text>
+<text x="459.8" y="473.0" class="b" text-anchor="start" >A</text>
+<circle cx="332.0" cy="285.4" r="2.2" fill="#222"/>
+<line x1="332.0" y1="285.4" x2="366.0" y2="176.0" class="ld" />
+<text x="370.0" y="180.0" class="t" text-anchor="start" >solid hydrogel tape over the window</text>
+<circle cx="440.0" cy="290.8" r="2.2" fill="#222"/>
+<line x1="440.0" y1="290.8" x2="452.0" y2="211.0" class="ld" />
+<text x="456.0" y="215.0" class="t" text-anchor="start" >Doppler window (ultrasound → palmar arteries)</text>
+<circle cx="224.4" cy="297.4" r="2.2" fill="#222"/>
+<line x1="224.4" y1="297.4" x2="160.0" y2="206.0" class="ld" />
+<text x="156.0" y="210.0" class="t" text-anchor="end" ></text>
+<text x="45.0" y="180.0" class="t" text-anchor="start" >hydrogel tape cassette (replaceable):</text>
+<text x="45.0" y="196.0" class="t" text-anchor="start" >our design (LYRA concept)</text>
+<circle cx="249.2" cy="308.8" r="2.2" fill="#222"/>
+<line x1="249.2" y1="308.8" x2="170.0" y2="241.0" class="ld" />
+<text x="166.0" y="245.0" class="t" text-anchor="end" >supply spool</text>
+<circle cx="576.8" cy="289.0" r="2.2" fill="#222"/>
+<line x1="576.8" y1="289.0" x2="596.0" y2="246.0" class="ld" />
+<text x="600.0" y="250.0" class="t" text-anchor="start" >palm temperature sensor</text>
+<circle cx="630.8" cy="305.2" r="2.2" fill="#222"/>
+<line x1="630.8" y1="305.2" x2="756.0" y2="296.0" class="ld" />
+<text x="760.0" y="300.0" class="t" text-anchor="start" >take-up spool</text>
+<text x="760.0" y="314.0" class="t" text-anchor="start" >(used tape)</text>
+<circle cx="195.2" cy="406.0" r="2.2" fill="#222"/>
+<line x1="195.2" y1="406.0" x2="164.0" y2="491.0" class="ld" />
+<text x="160.0" y="495.0" class="t" text-anchor="end" >NFC reader</text>
+<text x="160.0" y="509.0" class="t" text-anchor="end" >(end cap)</text>
+<circle cx="260.0" cy="398.8" r="2.2" fill="#222"/>
+<line x1="260.0" y1="398.8" x2="260.0" y2="530.0" class="ld" />
+<text x="264.0" y="534.0" class="t" text-anchor="start" >backup liquid gel dispenser:</text>
+<text x="264.0" y="548.0" class="t" text-anchor="start" >reservoir + micropump + channel to window</text>
+<circle cx="450.8" cy="440.2" r="2.2" fill="#222"/>
+<line x1="450.8" y1="440.2" x2="450.8" y2="501.0" class="ld" />
+<text x="454.8" y="505.0" class="t" text-anchor="start" >PPG + SpO₂</text>
+<text x="454.8" y="519.0" class="t" text-anchor="start" >(under fingers)</text>
+<circle cx="544.4" cy="377.2" r="2.2" fill="#222"/>
+<line x1="544.4" y1="377.2" x2="660.0" y2="520.0" class="ld" />
+<text x="664.0" y="524.0" class="t" text-anchor="start" >load-cell beam: grip force</text>
+<text x="664.0" y="538.0" class="t" text-anchor="start" >(lower half-shell floats)</text>
+<circle cx="648.8" cy="378.0" r="2.2" fill="#222"/>
+<line x1="648.8" y1="378.0" x2="790.0" y2="455.0" class="ld" />
+<text x="794.0" y="459.0" class="t" text-anchor="start" >tape drive micromotor</text>
+<circle cx="584.0" cy="398.8" r="2.2" fill="#222"/>
+<line x1="584.0" y1="398.8" x2="760.0" y2="490.0" class="ld" />
+<text x="764.0" y="494.0" class="t" text-anchor="start" >board: MCU, ADC, US driver</text>
+<circle cx="800.0" cy="413.2" r="2.2" fill="#222"/>
+<line x1="800.0" y1="413.2" x2="880.0" y2="396.0" class="ld" />
+<text x="884.0" y="400.0" class="t" text-anchor="start" >cable into post</text>
+<line x1="170.0" y1="455.0" x2="170.0" y2="493.0" class="ex" />
+<line x1="746.0" y1="455.0" x2="746.0" y2="493.0" class="ex" />
+<line x1="170.0" y1="485.0" x2="746.0" y2="485.0" class="dim"/>
+<text x="458.0" y="479.0" class="dl" text-anchor="middle" ></text>
+<text x="213.2" y="481.0" class="dl" text-anchor="start" >160</text>
+<line x1="200.0" y1="289.0" x2="76.4" y2="289.0" class="ex" />
+<line x1="200.0" y1="451.0" x2="76.4" y2="451.0" class="ex" />
+<line x1="105.2" y1="289.0" x2="105.2" y2="451.0" class="dim"/>
+<text x="97.2" y="370.0" class="dl" text-anchor="middle" transform="rotate(-90 97.2 370.0)">Ø45</text>
+<text x="1000.0" y="125.0" class="vh" text-anchor="start" >Section A-A</text>
+<circle cx="1140.0" cy="330.0" r="72.0" class="of" />
+<circle cx="1140.0" cy="330.0" r="62.4" class="o" fill="#fff"/>
+<line x1="1058.0" y1="336.4" x2="1222.0" y2="336.4" class="thin" stroke-dasharray="2 2"/>
+<path d="M1100,260.0 A 72.0 72.0 0 0 1 1180,260.0" class="o" stroke="#5b8fc7" stroke-width="6"/>
+<path d="M1094,254.0 A 78.0 78.0 0 0 1 1186,254.0" class="gel" />
+<rect x="1104.0" y="270.0" width="72.0" height="38.0" rx="0" class="ofd" />
+<rect x="1078.0" y="332.0" width="124.0" height="13.0" rx="0" class="ofd" fill="url(#hatch)"/>
+<rect x="1112.0" y="376.0" width="56.0" height="16.0" rx="0" class="ofd" />
+<path d="M1110,400.0 A 72.0 72.0 0 0 0 1170,400.0" class="o" stroke="#c97b7b" stroke-width="6"/>
+<path d="M1226.0,300 C1242.0,370 1180,432.0 1120,420.0" class="hum" />
+<circle cx="1180.0" cy="254.0" r="2.2" fill="#222"/>
+<line x1="1180.0" y1="254.0" x2="1230.0" y2="190.0" class="ld" />
+<text x="1234.0" y="194.0" class="t" text-anchor="start" >hydrogel tape</text>
+<circle cx="1150.0" cy="288.0" r="2.2" fill="#222"/>
+<line x1="1150.0" y1="288.0" x2="1230.0" y2="225.0" class="ld" />
+<text x="1234.0" y="229.0" class="t" text-anchor="start" >US transducer</text>
+<circle cx="1190.0" cy="338.0" r="2.2" fill="#222"/>
+<line x1="1190.0" y1="338.0" x2="1230.0" y2="330.0" class="ld" />
+<text x="1234.0" y="334.0" class="t" text-anchor="start" >load-cell beam</text>
+<circle cx="1234.0" cy="360.0" r="2.2" fill="#222"/>
+<line x1="1234.0" y1="360.0" x2="1250.0" y2="380.0" class="ld" />
+<text x="1254.0" y="384.0" class="t" text-anchor="start" >fingers</text>
+<circle cx="1160.0" cy="384.0" r="2.2" fill="#222"/>
+<line x1="1160.0" y1="384.0" x2="1230.0" y2="430.0" class="ld" />
+<text x="1234.0" y="434.0" class="t" text-anchor="start" >PPG/SpO₂</text>
+<circle cx="1065.0" cy="336.0" r="2.2" fill="#222"/>
+<line x1="1065.0" y1="336.0" x2="1060.0" y2="420.0" class="ld" />
+<text x="1056.0" y="424.0" class="t" text-anchor="end" >half-shell</text>
+<text x="1056.0" y="438.0" class="t" text-anchor="end" >split line</text>
+<text x="60.0" y="640.0" class="b" text-anchor="start" >Hydrogel tape cycle (primary option)</text>
+<text x="60.0" y="662.0" class="t" text-anchor="start" >1. Before each session the motor advances ≈20 mm of fresh tape</text>
+<text x="60.0" y="681.0" class="t" text-anchor="start" >2. Palm rests on the tape: acoustic contact without liquid</text>
+<text x="60.0" y="700.0" class="t" text-anchor="start" >3. 30 s session: Doppler, PPG/SpO₂, temperature; then 2 squeezes (grip)</text>
+<text x="60.0" y="719.0" class="t" text-anchor="start" >4. Used tape winds onto the take-up spool (closed cassette)</text>
+<text x="60.0" y="738.0" class="t" text-anchor="start" >5. Tape counter → reminder to replace the cassette</text>
+<text x="60.0" y="770.0" class="t" text-anchor="start" >Fallback: liquid gel dispenser in the same handle (a drop on the window).</text>
+<text x="640.0" y="640.0" class="b" text-anchor="start" >Honesty notes</text>
+<text x="640.0" y="662.0" class="t" text-anchor="start" >• Hydrogel ultrasound pads and tape-advance mechanisms already exist;</text>
+<text x="640.0" y="681.0" class="t" text-anchor="start" >   the handle cassette itself is our design (LYRA concept); no prototype yet.</text>
+<text x="640.0" y="700.0" class="t" text-anchor="start" >• Ultrasound does not pass through air: a coupling medium is required.</text>
+<text x="640.0" y="719.0" class="t" text-anchor="start" >• Nothing is worn on the body, no electrodes (no ECG);</text>
+<text x="640.0" y="738.0" class="t" text-anchor="start" >   HRV comes from PPG/Doppler. Screening, not diagnosis.</text>
+<text x="640.0" y="757.0" class="t" text-anchor="start" >• Ultrasound ≈8 to 12 MHz (superficial vessels): our estimate.</text>
+<text x="640.0" y="776.0" class="t" text-anchor="start" >• NFC card stays at the station: used only if 3D face ID is unsure.</text>
+</svg>

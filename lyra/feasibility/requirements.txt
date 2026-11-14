@@ -1,0 +1,6 @@
+# Feasibility checks: real camera (MediaPipe) and the ESP32 handle. The demo does not depend on these.
+numpy>=1.26
+scipy>=1.11
+opencv-python>=4.9
+mediapipe==0.10.14   # version with the mp.solutions API, Python 3.9 to 3.12
+pyserial>=3.5
