@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 920" font-family="-apple-system, Segoe UI, Roboto, sans-serif" font-size="13">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+    <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#b08850" stroke-width="2"/>
+    </pattern>
+    <style>
+      .t{fill:#111}.s{fill:#555;font-size:12px}.h{font-size:18px;font-weight:600;fill:#111}
+      .dim{stroke:#333;stroke-width:1;marker-start:url(#arr);marker-end:url(#arr)}
+      .lead{stroke:#777;stroke-width:1;fill:none}
+    </style>
+  </defs>
+  <rect width="1500" height="920" fill="#fff"/>
+  <text x="30" y="36" class="h">LYRA — сборка зеркала (примерный чертёж, размеры в мм, ориентировочные)</text>
+
+  <!-- ============ ВИД СПЕРЕДИ (масштаб ≈ 1:18) ============ -->
+  <text x="90" y="80" class="h" font-size="15">1. Вид спереди</text>
+  <!-- рама -->
+  <rect x="90" y="110" width="308" height="473" fill="url(#hatch)" stroke="#333" stroke-width="2"/>
+  <!-- зеркало -->
+  <rect x="106.5" y="126.5" width="275" height="440" fill="#dfe8ef" stroke="#333"/>
+  <!-- монитор за зеркалом -->
+  <rect x="162" y="140" width="164" height="292" fill="#c3cfda" stroke="#456" stroke-dasharray="6 4"/>
+  <text x="244" y="270" text-anchor="middle" class="s">монитор 24″</text>
+  <text x="244" y="286" text-anchor="middle" class="s">вертикально</text>
+  <text x="244" y="302" text-anchor="middle" class="s">(за зеркалом)</text>
+  <!-- силуэт отражения -->
+  <ellipse cx="244" cy="200" rx="34" ry="44" fill="none" stroke="#89a" stroke-dasharray="3 3"/>
+  <path d="M170,430 Q244,330 318,430" fill="none" stroke="#89a" stroke-dasharray="3 3"/>
+  <!-- камера -->
+  <circle cx="244" cy="118" r="5" fill="#111"/>
+  <!-- LED -->
+  <rect x="70" y="150" width="10" height="370" fill="#ffe9a8" stroke="#a80"/>
+  <rect x="408" y="150" width="10" height="370" fill="#ffe9a8" stroke="#a80"/>
+  <!-- полка + станция ладони -->
+  <rect x="150" y="590" width="188" height="12" fill="#cfa86b" stroke="#333"/>
+  <rect x="196" y="572" width="96" height="18" rx="4" fill="#9fc6a5" stroke="#333"/>
+  <!-- размеры -->
+  <line x1="90" y1="630" x2="398" y2="630" class="dim"/>
+  <text x="244" y="648" text-anchor="middle" class="t">560 (рама) / 500 (зеркало)</text>
+  <line x1="40" y1="110" x2="40" y2="583" class="dim"/>
+  <text x="32" y="350" text-anchor="middle" class="t" transform="rotate(-90 32 350)">860 (рама) / 800 (зеркало)</text>
+  <line x1="440" y1="140" x2="440" y2="432" class="dim"/>
+  <text x="452" y="290" class="t" transform="rotate(-90 452 290)">≈ 531 (экран)</text>
+  <!-- выноски -->
+  <polyline points="249,118 470,95" class="lead"/><text x="474" y="99" class="t">камера 1080p, по центру над зеркалом</text>
+  <polyline points="418,200 470,180" class="lead"/><text x="474" y="184" class="t">LED-полосы с рассеивателем</text>
+  <text x="474" y="200" class="s">(ровный свет для rPPG, 4000–5000 K)</text>
+  <polyline points="381,480 470,470" class="lead"/><text x="474" y="474" class="t">акрил 3 мм + плёнка «зеркало Гезелла»</text>
+  <polyline points="292,580 470,560" class="lead"/><text x="474" y="564" class="t">станция ладони на полке</text>
+  <text x="474" y="580" class="s">(см. palm_station.svg)</text>
+  <text x="90" y="690" class="s">Чёрный фон интерфейса = отражение, яркие элементы = «просвечивают» сквозь зеркало.</text>
+  <text x="90" y="708" class="s">Зона экрана — на уровне головы и плеч, текст статуса — по бокам от лица.</text>
+
+  <!-- ============ ВИД СБОКУ, ОБЩИЙ (масштаб ≈ 1:25) ============ -->
+  <text x="640" y="80" class="h" font-size="15">2. Вид сбоку, установка</text>
+  <line x1="600" y1="860" x2="1050" y2="860" stroke="#333" stroke-width="2"/>
+  <text x="610" y="878" class="s">пол</text>
+  <line x1="1000" y1="100" x2="1000" y2="860" stroke="#333" stroke-width="3"/>
+  <text x="1006" y="850" class="s">стена</text>
+  <rect x="964" y="116" width="36" height="344" fill="url(#hatch)" stroke="#333"/>
+  <rect x="964" y="116" width="4" height="344" fill="#7aa3c2"/>
+  <rect x="972" y="118" width="12" height="10" fill="#111"/>
+  <rect x="884" y="466" width="80" height="8" fill="#cfa86b" stroke="#333"/>
+  <rect x="900" y="452" width="48" height="14" rx="3" fill="#9fc6a5" stroke="#333"/>
+  <!-- человек -->
+  <circle cx="760" cy="200" r="38" fill="none" stroke="#333" stroke-width="2"/>
+  <rect x="735" y="242" width="50" height="320" rx="20" fill="none" stroke="#333" stroke-width="2"/>
+  <line x1="748" y1="562" x2="745" y2="860" stroke="#333" stroke-width="2"/>
+  <line x1="772" y1="562" x2="778" y2="860" stroke="#333" stroke-width="2"/>
+  <polyline points="778,268 805,400 900,455" fill="none" stroke="#333" stroke-width="2"/>
+  <!-- линия взгляда -->
+  <line x1="792" y1="212" x2="972" y2="124" stroke="#c33" stroke-dasharray="5 4"/>
+  <text x="820" y="160" class="s" style="fill:#c33">поле зрения камеры</text>
+  <!-- размеры -->
+  <line x1="1040" y1="460" x2="1040" y2="860" class="dim"/><text x="1048" y="660" class="t">≈ 1000</text>
+  <line x1="1090" y1="116" x2="1090" y2="860" class="dim"/><text x="1098" y="500" class="t">≈ 1860</text>
+  <line x1="785" y1="620" x2="964" y2="620" class="dim"/><text x="874" y="612" text-anchor="middle" class="t">≈ 450–600</text>
+  <text x="640" y="900" class="s">Нижний край зеркала ≈ 1000 мм, верх ≈ 1860 мм: покрывает голову и верх корпуса при росте 160–195 см.</text>
+
+  <!-- ============ РАЗРЕЗ A–A (верх рамы, масштаб 2:1 к экрану) ============ -->
+  <text x="1150" y="80" class="h" font-size="15">3. Разрез A–A (верх рамы)</text>
+  <!-- верхняя планка рамы -->
+  <rect x="1150" y="140" width="220" height="60" fill="url(#hatch)" stroke="#333" stroke-width="1.5"/>
+  <!-- камера в вырезе -->
+  <rect x="1158" y="150" width="50" height="40" fill="#fff" stroke="#333"/>
+  <rect x="1160" y="156" width="40" height="28" fill="#222"/>
+  <circle cx="1158" cy="170" r="7" fill="#444" stroke="#111"/>
+  <line x1="1150" y1="170" x2="1110" y2="170" stroke="#c33" marker-end="url(#arr)"/>
+  <!-- акрил + плёнка -->
+  <rect x="1150" y="200" width="6" height="250" fill="#bcd6ea" stroke="#333"/>
+  <rect x="1156" y="200" width="2" height="250" fill="#555"/>
+  <!-- воздушный зазор, монитор -->
+  <rect x="1178" y="214" width="70" height="236" fill="#c3cfda" stroke="#333"/>
+  <rect x="1178" y="214" width="6" height="236" fill="#222"/>
+  <!-- задняя панель -->
+  <rect x="1358" y="200" width="12" height="250" fill="url(#hatch)" stroke="#333"/>
+  <rect x="1248" y="300" width="110" height="10" fill="#999" stroke="#333"/>
+  <!-- обрыв -->
+  <path d="M1140,452 l20,-6 l20,12 l20,-12 l20,12 l20,-12 l20,12 l20,-12 l20,12 l20,-12 l20,12 l20,-6" fill="none" stroke="#333"/>
+  <!-- вентиляция -->
+  <circle cx="1364" cy="240" r="3" fill="#fff" stroke="#333"/><circle cx="1364" cy="260" r="3" fill="#fff" stroke="#333"/><circle cx="1364" cy="380" r="3" fill="#fff" stroke="#333"/>
+  <!-- размеры -->
+  <line x1="1150" y1="485" x2="1370" y2="485" class="dim"/><text x="1260" y="503" text-anchor="middle" class="t">глубина ≈ 110</text>
+  <line x1="1158" y1="470" x2="1178" y2="470" stroke="#333"/><text x="1168" y="465" text-anchor="middle" class="s">10</text>
+  <!-- выноски -->
+  <g class="t">
+    <text x="1120" y="540">a — камера в вырезе верхней планки,</text>
+    <text x="1136" y="556">перед объективом нет плёнки</text>
+    <text x="1120" y="578">b — акрил 3 мм, плёнка Гезелла сзади</text>
+    <text x="1120" y="600">c — воздушный зазор ≈ 10 мм</text>
+    <text x="1120" y="622">d — монитор экраном к акрилу</text>
+    <text x="1120" y="644">e — VESA-кронштейн к задней панели</text>
+    <text x="1120" y="666">f — задняя панель, фанера 6 мм,</text>
+    <text x="1136" y="682">отверстия для вентиляции и кабелей</text>
+  </g>
+  <text x="1120" y="174" class="t">a</text><text x="1140" y="330" class="t">b</text><text x="1162" y="225" class="t">c</text>
+  <text x="1210" y="330" class="t">d</text><text x="1295" y="295" class="t">e</text><text x="1376" y="330" class="t">f</text>
+
+  <!-- Спецификация -->
+  <text x="640" y="560" class="h" font-size="15" transform="translate(-540 170)">Спецификация</text>
+  <g transform="translate(100 750)" class="t">
+    <text y="0">• Рама: брус 30×40 мм, паз 4 мм под акрил</text>
+    <text y="18">• Акрил прозрачный 500×800×3 мм + плёнка Гезелла (односторонняя)</text>
+    <text y="36">• Монитор 24″ (≈ 531×299 мм), HDMI к ноутбуку, яркость 100 %</text>
+    <text y="54">• Веб-камера 1080p / 30 fps, по возможности ручная экспозиция</text>
+    <text y="72">• 2 LED-полосы с рассеивателем по бокам — ровный свет без мерцания</text>
+    <text y="90">• Полка 340×200 мм под станцию ладони</text>
+  </g>
+</svg>

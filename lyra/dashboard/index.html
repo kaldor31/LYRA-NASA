@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LYRA</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Чёрный фон = отражение в зеркале. Всё яркое «просвечивает» сквозь плёнку. -->
+  <canvas id="mesh"></canvas>
+
+  <header>
+    <div class="brand">LYRA</div>
+    <div id="day" class="muted"></div>
+    <div id="modes" class="badges"></div>
+    <div id="clock" class="muted"></div>
+  </header>
+
+  <main>
+    <section id="overall" class="panel hidden">
+      <div class="status-badge"><span id="ov-icon" class="icon"></span><span id="ov-title"></span></div>
+      <p id="ov-summary"></p>
+      <p id="ov-sim" class="muted small"></p>
+    </section>
+
+    <section id="metrics" class="panel hidden"></section>
+  </main>
+
+  <section id="phase" class="phase">
+    <div id="phase-text" class="phase-text">Подойдите к зеркалу</div>
+    <div id="phase-sub" class="muted">Пробел — начать проверку</div>
+    <div class="bar"><div id="bar-fill"></div></div>
+    <div id="live" class="live"></div>
+  </section>
+
+  <section id="trends" class="trends hidden">
+    <h2>Тренды за полёт <span class="muted small">— пунктир: норма до полёта</span></h2>
+    <div id="trend-grid" class="trend-grid"></div>
+  </section>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <footer>
+    <button data-act="measure">Пробел · проверка</button>
+    <button data-act="calibrate">C · калибровка</button>
+    <button data-act="day1">1 · день 1</button>
+    <button data-act="day20">2 · день 20</button>
+    <button data-act="day40">3 · день 40</button>
+    <button data-act="trends">T · тренды</button>
+  </footer>
+
+  <div id="tip" class="tip hidden"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+/* Панель зеркала: только тёмная тема — чёрный = отражение. */
+:root {
+  --bg: #000;
+  --ink: #f2f4f7;
+  --ink-2: #b4bcc8;
+  --muted: #7d8794;
+  --line: #2a2f37;
+  --panel: rgba(16, 19, 24, 0.72);
+  --accent: #8fc7ff;      /* сетка лица, линии графиков */
+  --good: #3ecf8e;
+  --warn: #f5c542;
+  --crit: #ff6b6b;
+  --retry: #9aa4b2;
+  --font: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  overflow: hidden;
+  cursor: none;
+}
+body:hover { cursor: default; }
+
+.hidden { display: none !important; }
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+
+#mesh { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+header {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: flex; gap: 24px; align-items: baseline;
+  padding: 20px 32px;
+}
+.brand { font-size: 1.6rem; font-weight: 300; letter-spacing: 0.4em; }
+#clock { margin-left: auto; font-variant-numeric: tabular-nums; }
+.badges { display: flex; gap: 8px; }
+.badge {
+  font-size: 0.75rem; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--ink-2);
+}
+
+/* Центр оставляем пустым — там отражение лица. Панели по бокам. */
+main {
+  position: fixed; inset: 80px 32px 190px 32px;
+  display: grid; grid-template-columns: minmax(260px, 26%) 1fr minmax(320px, 30%);
+  grid-template-areas: "overall . metrics";
+  gap: 24px; pointer-events: none;
+}
+.panel { pointer-events: auto; background: var(--panel); border-radius: 16px; padding: 20px; overflow: auto; }
+#overall { grid-area: overall; align-self: start; }
+#metrics { grid-area: metrics; display: flex; flex-direction: column; gap: 10px; }
+
+.status-badge { display: flex; align-items: center; gap: 12px; font-size: 1.5rem; font-weight: 600; }
+.icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: inline-grid; place-items: center; color: #000; font-size: 1.3rem; font-weight: 800;
+  flex: none;
+}
+.icon.green { background: var(--good); }
+.icon.yellow { background: var(--warn); }
+.icon.red { background: var(--crit); }
+.icon.retry { background: var(--retry); }
+#ov-summary { color: var(--ink-2); line-height: 1.45; }
+
+.group-title { color: var(--muted); font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; margin-top: 6px; }
+.metric {
+  display: grid; grid-template-columns: 22px 1fr auto; gap: 4px 10px; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--line);
+}
+.metric .dot { width: 14px; height: 14px; border-radius: 50%; display: grid; place-items: center; font-size: 9px; color: #000; font-weight: 800; }
+.metric .name { color: var(--ink-2); font-size: 0.95rem; }
+.metric .val { font-size: 1.15rem; font-variant-numeric: tabular-nums; text-align: right; }
+.metric .val small { color: var(--muted); font-size: 0.75rem; margin-left: 3px; }
+.metric .spark { grid-column: 2 / 4; height: 28px; width: 100%; }
+.metric .text { grid-column: 2 / 4; color: var(--ink-2); font-size: 0.82rem; line-height: 1.35; }
+.metric.ok .text { display: none; }
+.dot.green { background: var(--good); } .dot.yellow { background: var(--warn); }
+.dot.red { background: var(--crit); } .dot.retry { background: var(--retry); }
+
+/* Фаза и прогресс внизу */
+.phase {
+  position: fixed; left: 50%; bottom: 72px; transform: translateX(-50%);
+  width: min(720px, 90vw); text-align: center;
+}
+.phase-text { font-size: 2rem; font-weight: 300; margin-bottom: 6px; }
+.bar { height: 4px; background: var(--line); border-radius: 2px; margin-top: 16px; overflow: hidden; }
+#bar-fill { height: 100%; width: 0; background: var(--accent); border-radius: 2px; transition: width 0.15s linear; }
+.live { margin-top: 12px; font-size: 1.2rem; color: var(--ink-2); font-variant-numeric: tabular-nums; min-height: 1.5em; }
+.grip-meter { height: 14px; background: var(--line); border-radius: 7px; margin: 8px auto 0; width: 60%; overflow: hidden; }
+.grip-meter div { height: 100%; background: var(--accent); border-radius: 7px; }
+
+/* Тренды */
+.trends {
+  position: fixed; inset: 80px 32px 72px 32px; background: var(--bg); z-index: 5;
+  border-radius: 16px; padding: 16px 24px; overflow: auto;
+}
+.trends h2 { font-weight: 400; margin: 0 0 12px; }
+.trend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px; }
+.trend { background: var(--panel); border-radius: 12px; padding: 12px 14px; }
+.trend h3 { margin: 0 0 4px; font-size: 1rem; font-weight: 500; }
+.trend .sub { color: var(--muted); font-size: 0.8rem; }
+.trend svg { width: 100%; height: 180px; display: block; overflow: visible; }
+.axis { stroke: var(--line); stroke-width: 1; }
+.axis-label { fill: var(--muted); font-size: 11px; }
+.series { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.preflight { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 4 4; }
+.flight-start { stroke: var(--muted); stroke-width: 1; }
+.cross { stroke: var(--ink-2); stroke-width: 1; }
+.hover-dot { fill: var(--accent); stroke: var(--bg); stroke-width: 2; }
+
+.tip {
+  position: fixed; pointer-events: none; z-index: 10;
+  background: #111821; border: 1px solid var(--line); border-radius: 8px;
+  padding: 6px 10px; font-size: 0.85rem; color: var(--ink);
+}
+
+.toast {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+  background: #111821; border: 1px solid var(--line); border-radius: 10px; padding: 10px 18px;
+}
+
+footer {
+  position: fixed; bottom: 12px; left: 0; right: 0;
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; opacity: 0.25;
+  transition: opacity 0.2s;
+}
+footer:hover { opacity: 1; }
+footer button {
+  background: transparent; color: var(--ink-2); border: 1px solid var(--line);
+  border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 0.8rem; cursor: pointer;
+}
+
+/* Монитор в портретной ориентации (за зеркалом): панели сверху/снизу, лицо — посередине */
+@media (orientation: portrait) {
+  main {
+    inset: 70px 16px 180px 16px;
+    grid-template-columns: 1fr; grid-template-rows: auto 1fr auto;
+    grid-template-areas: "overall" "." "metrics";
+  }
+  #metrics { max-height: 38vh; }
+  .phase { bottom: 64px; }
+}
+@media (max-width: 700px) {
+  header { padding: 14px 16px; gap: 12px; flex-wrap: wrap; }
+  .trend-grid { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 820" font-family="-apple-system, Segoe UI, Roboto, sans-serif" font-size="13">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+    <style>
+      .t{fill:#111}.s{fill:#555;font-size:12px}.h{font-size:18px;font-weight:600;fill:#111}
+      .dim{stroke:#333;stroke-width:1;marker-start:url(#arr);marker-end:url(#arr)}
+      .lead{stroke:#777;stroke-width:1;fill:none}
+    </style>
+  </defs>
+  <rect width="1300" height="820" fill="#fff"/>
+  <text x="30" y="36" class="h">LYRA — станция ладони (примерный чертёж, масштаб 2 px = 1 мм, размеры в мм)</text>
+
+  <!-- ============ ВИД СВЕРХУ ============ -->
+  <text x="60" y="80" class="h" font-size="15">1. Вид сверху</text>
+  <!-- корпус 220 x 130 -->
+  <rect x="60" y="100" width="440" height="260" rx="16" fill="#e7efe8" stroke="#333" stroke-width="2"/>
+  <!-- ложемент ладони -->
+  <path d="M120,330 C110,250 120,190 180,170 L300,160 C340,165 350,200 345,240 L340,330 Z" fill="#cfe0d2" stroke="#333"/>
+  <!-- контур руки (пунктир) -->
+  <path d="M140,350 C130,280 140,215 175,200 L180,130 M210,195 L215,112 M245,195 L250,116 M280,200 L290,130 M320,240 L380,205" fill="none" stroke="#7a8" stroke-dasharray="4 3" stroke-width="2"/>
+  <!-- отверстие MLX -->
+  <circle cx="235" cy="260" r="12" fill="#fff" stroke="#c33" stroke-width="2"/>
+  <text x="235" y="264" text-anchor="middle" class="s" style="fill:#c33">IR</text>
+  <!-- окно MAX30102 под указательным -->
+  <rect x="205" y="112" width="22" height="16" rx="3" fill="#333"/>
+  <circle cx="216" cy="120" r="4" fill="#e33"/>
+  <!-- рукоять хвата -->
+  <rect x="410" y="130" width="20" height="200" rx="8" fill="#bbb" stroke="#333"/>
+  <rect x="455" y="130" width="20" height="200" rx="8" fill="#888" stroke="#333"/>
+  <rect x="428" y="215" width="30" height="30" fill="#5a8fd0" stroke="#333"/>
+  <text x="443" y="234" text-anchor="middle" class="s" style="fill:#fff">LC</text>
+  <!-- светодиод статуса -->
+  <circle cx="90" cy="125" r="7" fill="#4c4" stroke="#333"/>
+  <!-- размеры -->
+  <line x1="60" y1="390" x2="500" y2="390" class="dim"/><text x="280" y="408" text-anchor="middle" class="t">220</text>
+  <line x1="30" y1="100" x2="30" y2="360" class="dim"/><text x="22" y="235" text-anchor="middle" class="t" transform="rotate(-90 22 235)">130</text>
+  <!-- выноски -->
+  <polyline points="227,120 560,110" class="lead"/><text x="565" y="106" class="t">MAX30102 под подушечкой указательного пальца</text>
+  <text x="565" y="122" class="s">пульс + SpO₂, сверху мягкая накладка от внешнего света</text>
+  <polyline points="247,260 560,170" class="lead"/><text x="565" y="166" class="t">отверстие Ø 24, под ним MLX90614</text>
+  <text x="565" y="182" class="s">ИК-температура центра ладони, зазор до кожи ≈ 15 мм</text>
+  <polyline points="300,300 560,230" class="lead"/><text x="565" y="234" class="t">ложемент ладони (3D-печать / пенка EVA)</text>
+  <polyline points="475,200 560,290" class="lead"/><text x="565" y="294" class="t">рукоять хвата: неподвижная (светлая) и подвижная (тёмная)</text>
+  <text x="565" y="310" class="s">LC — балочный тензодатчик 20 кг между ними</text>
+  <text x="102" y="129" class="s">LED</text>
+
+  <!-- ============ ВИД СБОКУ (разрез по центру ладони) ============ -->
+  <text x="60" y="470" class="h" font-size="15">2. Разрез по центру ладони</text>
+  <!-- корпус h=30 -->
+  <rect x="60" y="640" width="440" height="60" rx="8" fill="#e7efe8" stroke="#333" stroke-width="2"/>
+  <!-- ложемент -->
+  <path d="M110,640 C130,615 330,610 350,640 Z" fill="#cfe0d2" stroke="#333"/>
+  <!-- ладонь -->
+  <path d="M100,622 C140,592 320,588 370,612" fill="none" stroke="#7a8" stroke-width="3" stroke-dasharray="6 3"/>
+  <text x="140" y="585" class="s">ладонь</text>
+  <!-- MLX -->
+  <rect x="222" y="660" width="26" height="22" fill="#c33"/>
+  <path d="M235,660 L215,615 M235,660 L255,615" stroke="#c33" stroke-dasharray="3 3"/>
+  <text x="235" y="718" text-anchor="middle" class="s">MLX90614</text>
+  <!-- MAX -->
+  <rect x="380" y="640" width="24" height="10" fill="#333"/>
+  <text x="392" y="718" text-anchor="middle" class="s">MAX30102</text>
+  <path d="M370,612 C385,630 400,632 410,636" fill="none" stroke="#7a8" stroke-width="3" stroke-dasharray="6 3"/>
+  <!-- ESP32 внутри -->
+  <rect x="90" y="665" width="100" height="26" fill="#2a5c99"/>
+  <text x="140" y="683" text-anchor="middle" class="s" style="fill:#fff">ESP32</text>
+  <rect x="280" y="672" width="60" height="18" fill="#6a3"/>
+  <text x="310" y="685" text-anchor="middle" class="s" style="fill:#fff">HX711</text>
+  <!-- размеры -->
+  <line x1="520" y1="640" x2="520" y2="700" class="dim"/><text x="528" y="674" class="t">30</text>
+  <line x1="270" y1="612" x2="270" y2="660" class="dim"/><text x="276" y="640" class="t">≈ 15</text>
+  <text x="60" y="760" class="s">USB-кабель от ESP32 выходит сзади к ноутбуку (питание + данные). Батарея не нужна.</text>
+
+  <!-- ============ МЕХАНИЗМ ХВАТА ============ -->
+  <text x="700" y="470" class="h" font-size="15">3. Механизм хвата (вид сверху, деталь)</text>
+  <rect x="720" y="520" width="34" height="200" rx="12" fill="#bbb" stroke="#333"/>
+  <rect x="900" y="520" width="34" height="200" rx="12" fill="#888" stroke="#333"/>
+  <!-- стойка и балка -->
+  <rect x="754" y="600" width="40" height="40" fill="#999" stroke="#333"/>
+  <rect x="794" y="608" width="160" height="24" fill="#5a8fd0" stroke="#333" transform="translate(-50 0)"/>
+  <rect x="860" y="600" width="40" height="40" fill="#999" stroke="#333"/>
+  <circle cx="770" cy="612" r="4" fill="#333"/><circle cx="770" cy="628" r="4" fill="#333"/>
+  <circle cx="884" cy="612" r="4" fill="#333"/><circle cx="884" cy="628" r="4" fill="#333"/>
+  <line x1="990" y1="620" x2="944" y2="620" stroke="#c33" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="948" y="648" class="t" style="fill:#c33">сжатие</text>
+  <line x1="720" y1="745" x2="934" y2="745" class="dim"/><text x="827" y="763" text-anchor="middle" class="t">≈ 60 между рукоятями (настраивается)</text>
+  <g class="t">
+    <text x="980" y="530">• неподвижная рукоять прикручена</text>
+    <text x="992" y="546">к корпусу через стойку</text>
+    <text x="980" y="570">• балочный тензодатчик 20 кг:</text>
+    <text x="992" y="586">один конец на стойке, другой —</text>
+    <text x="992" y="602">на подвижной рукояти</text>
+    <text x="980" y="660">• стрелка на балке датчика —</text>
+    <text x="992" y="676">по направлению усилия</text>
+    <text x="980" y="700">• калибровка: груз известной</text>
+    <text x="992" y="716">массы, коэффициент в прошивке</text>
+  </g>
+</svg>

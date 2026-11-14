@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" font-family="-apple-system, Segoe UI, Roboto, sans-serif" font-size="13">
+  <style>
+    .t{fill:#111}.s{fill:#555;font-size:12px}.h{font-size:18px;font-weight:600;fill:#111}
+    .box{fill:#f4f6f8;stroke:#333;stroke-width:2}
+    .pin{font-family:Menlo,monospace;font-size:12px;fill:#111}
+    .w{fill:none;stroke-width:3}
+  </style>
+  <rect width="1200" height="720" fill="#fff"/>
+  <text x="30" y="36" class="h">LYRA — схема подключения станции ладони (ESP32, питание 3,3 В)</text>
+
+  <!-- ESP32 -->
+  <rect x="80" y="180" width="200" height="320" rx="10" class="box"/>
+  <text x="180" y="210" text-anchor="middle" class="h" font-size="16">ESP32 DevKit</text>
+  <g class="pin">
+    <text x="270" y="250" text-anchor="end">3V3</text>
+    <text x="270" y="290" text-anchor="end">GND</text>
+    <text x="270" y="330" text-anchor="end">GPIO21 SDA</text>
+    <text x="270" y="370" text-anchor="end">GPIO22 SCL</text>
+    <text x="270" y="410" text-anchor="end">GPIO16 ← DT</text>
+    <text x="270" y="450" text-anchor="end">GPIO4  → SCK</text>
+    <text x="90" y="490">GPIO2 — LED статуса (встроенный)</text>
+  </g>
+  <!-- USB -->
+  <rect x="140" y="560" width="80" height="40" rx="6" class="box"/>
+  <text x="180" y="585" text-anchor="middle" class="t">USB</text>
+  <line x1="180" y1="500" x2="180" y2="560" stroke="#333" stroke-width="3"/>
+  <line x1="180" y1="600" x2="180" y2="650" stroke="#333" stroke-width="3" stroke-dasharray="6 4"/>
+  <text x="190" y="640" class="t">к ноутбуку: питание + Serial 115200 бод</text>
+
+  <!-- MAX30102 -->
+  <rect x="560" y="90" width="200" height="150" rx="10" class="box"/>
+  <text x="660" y="116" text-anchor="middle" class="h" font-size="15">MAX30102</text>
+  <text x="660" y="134" text-anchor="middle" class="s">I²C 0x57</text>
+  <g class="pin"><text x="570" y="160">VIN</text><text x="570" y="182">GND</text><text x="570" y="204">SDA</text><text x="570" y="226">SCL</text></g>
+
+  <!-- MLX90614 -->
+  <rect x="560" y="290" width="200" height="150" rx="10" class="box"/>
+  <text x="660" y="316" text-anchor="middle" class="h" font-size="15">MLX90614</text>
+  <text x="660" y="334" text-anchor="middle" class="s">I²C 0x5A</text>
+  <g class="pin"><text x="570" y="360">VIN</text><text x="570" y="382">GND</text><text x="570" y="404">SDA</text><text x="570" y="426">SCL</text></g>
+
+  <!-- HX711 -->
+  <rect x="560" y="490" width="200" height="160" rx="10" class="box"/>
+  <text x="660" y="516" text-anchor="middle" class="h" font-size="15">HX711</text>
+  <g class="pin"><text x="570" y="548">VCC</text><text x="570" y="570">GND</text><text x="570" y="592">DT</text><text x="570" y="614">SCK</text></g>
+  <g class="pin"><text x="750" y="548" text-anchor="end">E+</text><text x="750" y="570" text-anchor="end">E−</text><text x="750" y="592" text-anchor="end">A−</text><text x="750" y="614" text-anchor="end">A+</text></g>
+
+  <!-- Load cell -->
+  <rect x="900" y="520" width="220" height="90" rx="10" class="box"/>
+  <text x="1010" y="550" text-anchor="middle" class="h" font-size="15">Тензодатчик 20 кг</text>
+  <text x="1010" y="570" text-anchor="middle" class="s">балочный, 4 провода</text>
+  <line x1="760" y1="544" x2="900" y2="544" class="w" stroke="#d33"/>
+  <line x1="760" y1="566" x2="900" y2="566" class="w" stroke="#222"/>
+  <line x1="760" y1="588" x2="900" y2="588" class="w" stroke="#bbb"/>
+  <line x1="760" y1="610" x2="900" y2="610" class="w" stroke="#3a3"/>
+  <g class="s"><text x="800" y="539">красный</text><text x="800" y="561">чёрный</text><text x="800" y="583">белый</text><text x="800" y="605">зелёный</text></g>
+
+  <!-- Шина питания 3V3 (красный) -->
+  <path d="M280,246 H420 V156 H560 M420,246 V356 H560 M420,356 V544 H560" class="w" stroke="#d33"/>
+  <!-- GND (чёрный) -->
+  <path d="M280,286 H440 V178 H560 M440,286 V378 H560 M440,378 V566 H560" class="w" stroke="#222"/>
+  <!-- SDA (синий) -->
+  <path d="M280,326 H460 V200 H560 M460,326 V400 H560" class="w" stroke="#2a6fd6"/>
+  <!-- SCL (жёлтый) -->
+  <path d="M280,366 H480 V222 H560 M480,366 V422 H560" class="w" stroke="#e0a800"/>
+  <!-- DT (зелёный) -->
+  <path d="M280,406 H500 V588 H560" class="w" stroke="#2a9d5c"/>
+  <!-- SCK (фиолетовый) -->
+  <path d="M280,446 H520 V610 H560" class="w" stroke="#8a4fd0"/>
+  <circle cx="420" cy="246" r="4" fill="#d33"/><circle cx="420" cy="356" r="4" fill="#d33"/>
+  <circle cx="440" cy="286" r="4" fill="#222"/><circle cx="440" cy="378" r="4" fill="#222"/>
+  <circle cx="460" cy="326" r="4" fill="#2a6fd6"/><circle cx="480" cy="366" r="4" fill="#e0a800"/>
+
+  <!-- Легенда -->
+  <g transform="translate(830 110)">
+    <text class="h" font-size="15">Провода</text>
+    <line x1="0" y1="24" x2="30" y2="24" class="w" stroke="#d33"/><text x="40" y="28" class="t">3V3 (питание)</text>
+    <line x1="0" y1="46" x2="30" y2="46" class="w" stroke="#222"/><text x="40" y="50" class="t">GND</text>
+    <line x1="0" y1="68" x2="30" y2="68" class="w" stroke="#2a6fd6"/><text x="40" y="72" class="t">SDA — общая шина I²C</text>
+    <line x1="0" y1="90" x2="30" y2="90" class="w" stroke="#e0a800"/><text x="40" y="94" class="t">SCL — общая шина I²C</text>
+    <line x1="0" y1="112" x2="30" y2="112" class="w" stroke="#2a9d5c"/><text x="40" y="116" class="t">HX711 DT → GPIO16</text>
+    <line x1="0" y1="134" x2="30" y2="134" class="w" stroke="#8a4fd0"/><text x="40" y="138" class="t">HX711 SCK ← GPIO4</text>
+    <text y="176" class="s">• Модули MAX30102 и MLX90614 обычно уже имеют</text>
+    <text y="192" class="s">  подтягивающие резисторы I²C — внешние не нужны.</text>
+    <text y="212" class="s">• Всё питается от 3V3 — не подавать 5 В на I²C-линии.</text>
+    <text y="232" class="s">• Цвета проводов тензодатчика бывают разные — сверить</text>
+    <text y="248" class="s">  с даташитом: E+/E− — возбуждение, A+/A− — сигнал.</text>
+    <text y="268" class="s">• Если вес идёт со знаком минус — поменять A+ и A−.</text>
+  </g>
+</svg>

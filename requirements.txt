@@ -1,0 +1,11 @@
+# Ядро и сервер
+numpy>=1.26
+scipy>=1.11
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pyserial>=3.5
+# Камера (не нужна для режима --sim). mediapipe 0.10.14 — версия с API mp.solutions, Python 3.9–3.12
+opencv-python>=4.9
+mediapipe==0.10.14
+# Тесты
+pytest>=8
