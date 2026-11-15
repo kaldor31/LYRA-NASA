@@ -172,16 +172,10 @@ s = pres.addSlide({ masterName: 'CONTENT', sectionTitle: 'Data' });
 s.addText('How NASA and open data make LYRA possible', { placeholder: 'title' });
 // Real values from NASA OSDR OSD-575 (Inspiration4), file LSDS-8_Comprehensive_Metabolic_Panel_CMP.upload_SUBMITTED.csv:
 // serum SODIUM, mmol/L. Baseline = mean of L-92, L-44, L-3; R+1 = first day after return. Lab range 135 to 146.
-const crew = ['C001', 'C002', 'C003', 'C004'];
-s.addChart(pres.charts.BAR, [
-  { name: 'Pre-flight baseline (mean of 3)', labels: crew, values: [140.7, 142.0, 138.7, 139.7] },
-  { name: 'Day after return (R+1)', labels: crew, values: [138, 137, 137, 140] }],
-  { x: 0.6, y: 1.35, w: 5.9, h: 3.75, barDir: 'col', barGrouping: 'clustered', chartColors: ['8A99A8', 'D64545'],
-    showTitle: true, title: 'NASA OSDR OSD-575 (Inspiration4): serum sodium, mmol/L', titleFontSize: 12, titleColor: '0B1D33', titleFontFace: '+mn-lt',
-    showLegend: true, legendPos: 'b', legendFontSize: 10, legendFontFace: '+mn-lt',
-    showValue: true, dataLabelPosition: 'outEnd', dataLabelFontSize: 9, dataLabelColor: '33475B', dataLabelFontFace: '+mn-lt',
-    catAxisLabelFontSize: 10, valAxisLabelFontSize: 10, catAxisLabelColor: '33475B', valAxisLabelColor: '33475B', catAxisLabelFontFace: '+mn-lt', valAxisLabelFontFace: '+mn-lt',
-    valAxisMinVal: 130, valAxisMaxVal: 146, valAxisMajorUnit: 4, valGridLine: { color: 'E1E7ED', size: 0.5 }, catGridLine: { style: 'none' }, objectName: 'OSD-575 sodium chart' });
+// Static chart image (same in PowerPoint, Keynote and PDF); regenerate with: python3 docs/presentation/_src/make_chart.py
+const CHART = path.join(PRES_DIR, 'charts', 'osd575_sodium.png');
+if (!fs.existsSync(CHART)) throw new Error('missing chart: ' + CHART + ' (run make_chart.py)');
+s.addImage(Object.assign({ path: CHART, objectName: 'OSD-575 sodium chart' }, fit(CHART, 0.6, 1.35, 5.9, 3.75)));
 T(s, 'Crew C002: 142.0 before flight, 137 at R+1. Inside the lab range (135 to 146), yet 5 mmol/L below their own baseline. That is the LYRA idea: compare a person with themself. Illustration of the logic, not a clinical reading.', { x: 0.6, y: 5.2, w: 5.9, h: 1.0, fontSize: 12, color: C.text2, italic: true });
 T(s, 'Provenance on every result: team recording · open dataset · NASA material · simulation', { x: 0.6, y: 6.3, w: 5.9, h: 0.5, fontSize: 12, bold: true, color: C.accent1 });
 const hdr = o => Object.assign({ bold: true, color: 'FFFFFF', fill: { color: '0B1D33' }, fontSize: 11 }, o || {});
@@ -231,7 +225,7 @@ if (live) {
   usedShots.push('08_live_truedepth.png');
   const box = fit(live, 7.3, 1.5, 5.45, 3.5);
   s.addImage(Object.assign({ path: live, objectName: 'Live TrueDepth test screenshot' }, box));
-  T(s, 'Team recording, live, not stored: iPhone TrueDepth (IR depth) into the LYRA pipeline. Baseline vs compare scan: face width 121.0 to 121.9 mm (+0.8%), Within baseline; camera pulse "Measurement not confirmed" (low signal quality), as designed.', { x: 7.3, y: box.y + box.h + 0.08, w: 5.45, h: 0.95, fontSize: 11, color: C.background2, italic: true });
+  T(s, 'Team recording, live, not stored: iPhone TrueDepth (IR depth) into the LYRA pipeline. Compare scan: face width 124.5 mm vs baseline 121.7 mm (+2.3%), so "Repeat measurement" with the reason; camera pulse "Measurement not confirmed" (signal quality 0.28) instead of a guessed value.', { x: 7.3, y: box.y + box.h + 0.08, w: 5.45, h: 0.95, fontSize: 11, color: C.background2, italic: true });
 } else {
   s.addImage(Object.assign({ path: render('V1_Empty_Cam_Hero.png'), objectName: 'Station render' }, fit(render('V1_Empty_Cam_Hero.png'), 7.3, 1.5, 5.45, 3.07)));
   SIR(s, 7.3, 4.62, 5.45);
