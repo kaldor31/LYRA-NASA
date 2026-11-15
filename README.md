@@ -9,7 +9,7 @@ swelling) and depth (ToF) cameras that build a skeletal keypoint model of the bo
 (front, side, back). The palms rest on marked zones of the touch mirror only to standardize the pose. Nothing is
 worn on the body.
 
-An optional **contact research module** (vertical grips in the side posts with Doppler ultrasound and a hydrogel
+An optional **contact research module** (vertical grips on the mirror stand legs with Doppler ultrasound and a hydrogel
 cassette, PPG/SpO₂, palm temperature and a load cell) is shown separately and is not part of the overall result
 by default. LYRA makes no heart assessment through the palm.
 

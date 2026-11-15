@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Generates the LYRA concept drawing sheets (SVG, English), v2 concept:
-touch mirror between three camera frames (front / side / back), optional
-contact research module (vertical Doppler grips with a solid hydrogel cassette),
+"""Generates the LYRA concept drawing sheets (SVG, English), v3 concept:
+free-standing touch mirror plus three camera pillars (two front, one back,
+bases bolted to the floor), optional contact research module (vertical
+Doppler grips with a solid hydrogel cassette),
 face pipeline and system / AI modules.
 
 Default output: docs/drawings/ (resolved relative to this script).
@@ -163,7 +164,7 @@ def sheet(num, title, body):
     s.rect(15, 15, W - 30, H - 30, "frame")
     s.rect(25, 25, W - 50, H - 50, "thin")
     s.text(45, 60, f"Sheet {num}. {title}", "h")
-    s.text(45, 82, "LYRA concept (v2: touch mirror between three camera frames). "
+    s.text(45, 82, "LYRA concept (v3: touch mirror + three camera pillars). "
                    "Concept, not a manufacturing drawing; dimensions approximate, in mm.", "s")
     # title block
     x0, y0, x1, y1 = 985, 838, W - 25, H - 25
@@ -187,16 +188,33 @@ def sheet(num, title, body):
 # ------------------------------------------------------------------ geometry (mm)
 # x: lateral (crew right = +x), d: depth from mirror plane (crew stands at d ~ 600,
 # facing the mirror, i.e. toward -d), z: height above floor.
+# v3 layout: free-standing touch mirror on its own stand + three camera pillars
+# (two front pillars at +/-60 deg from the facing direction, one back pillar),
+# each on a base plate bolted to the floor. No ceiling attachment.
 MIR_X = 350          # mirror half width (approx. 700 wide)
 MIR_Z = (100, 1900)  # mirror bottom / top
-FF_X = 450           # front frame side posts at x = +/-450, d = -20
-SF_X = 850           # side frame plane x, posts at d = 250 / 950, mast at d = 600
-SF_D = (250, 950)
-BF_D = 1350          # back frame plane, posts at x = +/-450, mast at x = 0
-TOP = 2100
-AREA = (-400, 400, 350, 850)  # marked area x0, x1, d0, d1
+MS_X = 390           # mirror stand legs at x = +/-390, d = -20
+MS_TOP = 2000        # mirror stand height
 CREW_D = 600
+PIL_R = 750          # pillar distance from the crew member
+PILLARS = [          # (name, x, d)
+    ("FL", -650, 225),
+    ("FR", 650, 225),
+    ("B", 0, CREW_D + PIL_R),
+]
+PIL_TOP = 2000       # pillar height (free-standing)
+PIL_W = 80           # pillar cross-section
+CAM_Z = ((1650, "H"), (1150, "T"), (500, "L"))
+FOOT = 200           # base foot length (tripod)
+AREA = (-400, 400, 350, 850)  # marked area x0, x1, d0, d1
 GRIP_Z = (950, 1250)
+
+
+def base_feet(px, d):
+    """Tripod base: three feet, one pointing away from the crew member."""
+    a0 = math.atan2(d - CREW_D, px)
+    return [(px + FOOT * math.cos(a0 + i * 2 * math.pi / 3),
+             d + FOOT * math.sin(a0 + i * 2 * math.pi / 3)) for i in range(3)]
 
 
 # ------------------------------------------------------------------ sheet 1
@@ -205,13 +223,19 @@ def sheet1():
     # ---------- plan
     s.text(50, 120, "Top view (plan)", "vh")
     k = 0.2
-    cx, y0 = 225, 215
+    cx, y0 = 235, 225
     X = lambda mm: cx + mm * k
     Y = lambda d: y0 + d * k
-    # FOV wedges (light)
-    s.poly([(X(0), Y(10)), (X(-330), Y(820)), (X(330), Y(820))], "tof")
-    s.poly([(X(SF_X - 20), Y(CREW_D)), (X(-200), Y(250)), (X(-200), Y(950))], "tof")
-    s.poly([(X(0), Y(BF_D - 20)), (X(-330), Y(380)), (X(330), Y(380))], "tof")
+    # FOV wedges from every pillar toward the crew member
+    for _, px, d in PILLARS:
+        ang = math.atan2(CREW_D - d, -px)
+        far = PIL_R + 320
+        hw = math.radians(28)
+        p1 = (px + far * math.cos(ang - hw), d + far * math.sin(ang - hw))
+        p2 = (px + far * math.cos(ang + hw), d + far * math.sin(ang + hw))
+        s.poly([(X(px), Y(d)), (X(p1[0]), Y(p1[1])), (X(p2[0]), Y(p2[1]))], "tof")
+    # face channel (mirror face module)
+    s.poly([(X(0), Y(10)), (X(-110), Y(CREW_D - 40)), (X(110), Y(CREW_D - 40))], "sl")
     # marked area + feet
     s.rect(X(AREA[0]), Y(AREA[2]), (AREA[1] - AREA[0]) * k, (AREA[3] - AREA[2]) * k, "hid")
     for fx in (-110, 110):
@@ -219,57 +243,64 @@ def sheet1():
     # crew (top: shoulders + head)
     s.ellipse(X(0), Y(CREW_D + 20), 225 * k, 115 * k, "hum")
     s.circle(X(0), Y(CREW_D - 10), 85 * k, "hum")
-    # front frame + mirror
-    s.line(X(-FF_X), Y(-20), X(FF_X), Y(-20), "thick")
-    for px in (-FF_X, FF_X):
-        s.rect(X(px) - 4, Y(-20) - 4, 8, 8, "post")
-    s.rect(X(-MIR_X), Y(-10), 2 * MIR_X * k, 30 * k, "mir")
-    # vertical grips (plan: circles on inner side of front posts)
+    # mirror stand + mirror
     for sg in (-1, 1):
-        s.line(X(sg * FF_X), Y(-20), X(sg * 400), Y(70), "thin")
+        s.rect(X(sg * (MS_X + 60)) - 8, Y(-20) - 14, 16, 28, "thin", rx=3)   # base plate
+        s.rect(X(sg * MS_X) - 4, Y(-20) - 4, 8, 8, "post")
+    s.rect(X(-MIR_X), Y(-10), 2 * MIR_X * k, 30 * k, "mir")
+    # vertical grips on the mirror stand legs
+    for sg in (-1, 1):
+        s.line(X(sg * MS_X), Y(-20), X(sg * 400), Y(70), "thin")
         s.circle(X(sg * 400), Y(70), 4.5, "ofd")
-    # side frame
-    s.line(X(SF_X), Y(SF_D[0]), X(SF_X), Y(SF_D[1]), "thick")
-    for d in (SF_D[0], CREW_D, SF_D[1]):
-        s.rect(X(SF_X) - 4, Y(d) - 4, 8, 8, "post")
-    # back frame
-    s.line(X(-FF_X), Y(BF_D), X(FF_X), Y(BF_D), "thick")
-    for px in (-FF_X, 0, FF_X):
-        s.rect(X(px) - 4, Y(BF_D) - 4, 8, 8, "post")
+    # pillars with tripod bases
+    for _, px, d in PILLARS:
+        for fx, fd in base_feet(px, d):
+            s.line(X(px), Y(d), X(fx), Y(fd), "o")
+            s.circle(X(fx), Y(fd), 4, "of")
+        s.rect(X(px) - PIL_W * k / 2, Y(d) - PIL_W * k / 2, PIL_W * k, PIL_W * k, "post")
+    # radius circle (pillars on one circle around the crew member)
+    s.circle(X(0), Y(CREW_D), PIL_R * k, "ctr")
     # dims
-    s.ext(X(-FF_X), Y(BF_D) + 6, X(-FF_X), Y(BF_D) + 48); s.ext(X(SF_X), Y(SF_D[1]) + 6, X(SF_X), Y(BF_D) + 48)
-    s.dim(X(-FF_X), Y(BF_D) + 40, X(SF_X), Y(BF_D) + 40, "approx. 1300")
-    s.ext(X(-FF_X) - 6, Y(-20), X(-FF_X) - 70, Y(-20)); s.ext(X(-FF_X) - 6, Y(BF_D), X(-FF_X) - 70, Y(BF_D))
-    s.dim(X(-FF_X) - 60, Y(-20), X(-FF_X) - 60, Y(BF_D), "approx. 1370", off=-2)
-    s.ext(X(-FF_X) - 6, Y(CREW_D), X(-FF_X) - 34, Y(CREW_D))
-    s.dim(X(-FF_X) - 26, Y(-20), X(-FF_X) - 26, Y(CREW_D), "approx. 600", off=-2)
+    xl, xr = PILLARS[0][1], PILLARS[1][1]
+    yb = Y(PILLARS[2][2] + FOOT) + 22
+    s.ext(X(xl), Y(225) + 8, X(xl), yb + 8); s.ext(X(xr), Y(225) + 8, X(xr), yb + 8)
+    s.dim(X(xl), yb, X(xr), yb, "approx. 1300")
+    xd = X(xl - FOOT) - 22
+    s.ext(X(-MIR_X) - 4, Y(0), xd - 8, Y(0)); s.ext(X(-200), Y(PILLARS[2][2]), xd - 8, Y(PILLARS[2][2]))
+    s.dim(xd, Y(0), xd, Y(PILLARS[2][2]), "approx. 1350", off=-2)
+    s.ext(X(-200), Y(CREW_D), xd + 26 - 8, Y(CREW_D))
+    s.dim(xd + 26, Y(0), xd + 26, Y(CREW_D), "approx. 600", off=-2)
     s.ext(X(-MIR_X), Y(-12), X(-MIR_X), Y(-75)); s.ext(X(MIR_X), Y(-12), X(MIR_X), Y(-75))
     s.dim(X(-MIR_X), Y(-65), X(MIR_X), Y(-65), "mirror approx. 700")
+    # radius label
+    s.leader(X(PIL_R * math.cos(math.radians(-20))), Y(CREW_D + PIL_R * math.sin(math.radians(-20))),
+             X(780), Y(520), "start", ["pillars on R approx. 750,", "120 deg apart"])
     # leaders (plan)
-    s.leader(X(250), Y(5), X(540), Y(-90), "start", ["touch mirror"])
-    s.leader(X(FF_X), Y(-20), X(700), Y(30), "start", ["front frame"])
-    s.leader(X(400), Y(70), X(700), Y(100), "start", ["vertical Doppler grip", "(optional, research)"])
-    s.leader(X(SF_X), Y(SF_D[1]), X(920), Y(1050), "start", ["side frame"])
-    s.leader(X(FF_X), Y(BF_D), X(700), Y(1290), "start", ["back frame"])
-    s.leader(X(110), Y(CREW_D + 20), X(330), Y(1130), "start", ["foot restraints"])
+    s.leader(X(250), Y(5), X(800), Y(-110), "start", ["touch mirror"])
+    s.leader(X(MS_X), Y(-20), X(800), Y(-40), "start", ["mirror stand"])
+    s.leader(X(400), Y(70), X(800), Y(60), "start", ["vertical Doppler grip", "(optional, research)"])
+    s.leader(X(650), Y(225), X(800), Y(250), "start", ["front pillar R"])
+    s.leader(X(0) + 6, Y(PILLARS[2][2]), X(780), Y(1300), "start", ["back pillar"])
+    s.leader(X(110), Y(CREW_D + 20), X(780), Y(1000), "start", ["foot restraints"])
     # notes under plan
-    ny = 560
+    ny = 610
     s.mtext(50, ny, [
         "The crew member (dashed) steps into the marked area (dashed rectangle,",
         "approx. 800 x 500) and faces the touch mirror.",
-        "Three frames give front, side and back views; blue wedges = camera fields of view.",
-        "Front frame: face, chest, arms. Side frame: profile, head/trunk tilt, spine.",
-        "Back frame: shoulders, scapulae, pelvis, back symmetry.",
-        "Frames fix to floor and ceiling (e.g. seat-track rails); no free-standing legs.",
+        "Three free-standing camera pillars stand on one circle around the crew",
+        "member: two in front at +/-60 deg, one behind. Blue wedges = camera views;",
+        "red wedge = face channel of the mirror face module.",
+        "Each pillar base plate bolts to the floor (e.g. seat-track rails): in",
+        "microgravity a weighted base holds nothing. No ceiling attachment.",
         "Cameras check pose and frame quality before any capture.",
+        "Optional contact research module: vertical grips on the mirror stand legs",
+        "(see sheets 2 and 3). Not part of the contactless core.",
     ], "s", "start", 15)
-    s.text(50, ny + 120, "Optional contact research module: vertical grips on the front", "s")
-    s.text(50, ny + 135, "frame side posts (see sheets 2 and 3). Not part of the contactless core.", "s")
 
     # ---------- mirror face elevation
-    s.text(490, 120, "Touch mirror, face view", "vh")
+    s.text(520, 120, "Touch mirror, face view", "vh")
     km = 0.25
-    mx0, mfloor = 495, 720
+    mx0, mfloor = 530, 720
     MX = lambda x: mx0 + (x + MIR_X) * km
     MZ = lambda z: mfloor - z * km
     s.line(MX(-MIR_X) - 15, MZ(0), MX(MIR_X) + 15, MZ(0), "thick")
@@ -304,9 +335,8 @@ def sheet1():
     s.ext(MX(MIR_X) + 3, MZ(MIR_Z[1]), MX(MIR_X) + 22, MZ(MIR_Z[1]))
     s.ext(MX(MIR_X) + 3, MZ(MIR_Z[0]), MX(MIR_X) + 22, MZ(MIR_Z[0]))
     s.dim(MX(MIR_X) + 16, MZ(MIR_Z[1]), MX(MIR_X) + 16, MZ(MIR_Z[0]), "approx. 1800", off=16)
-    # labels below the mirror face view
     ly = 790
-    s.mtext(490, ly, [
+    s.mtext(520, ly, [
         "Blue dashed: contours shown on the mirror",
         "(head guide, torso, feet). Shaded ovals:",
         "palm zones. They standardize the pose,",
@@ -318,42 +348,62 @@ def sheet1():
     ], "s", "start", 14)
 
     # ---------- isometric
-    s.text(720, 120, "Isometric view (from behind-left)", "vh")
+    s.text(730, 120, "Isometric view (from behind-left)", "vh")
     k2 = 0.165
-    ox, oy = 925, 600
+    ox, oy = 935, 590
     c30 = math.cos(math.radians(30))
     def P(x, d, z):
         return (ox + (x + d) * c30 * k2, oy + (d - x) * 0.5 * k2 - z * k2)
     def L(a, b, cls="o", extra=""):
         s.line(*P(*a), *P(*b), cls, extra)
-    def post(x, d, z0=0, z1=TOP, w=5):
+    def post(x, d, z0=0, z1=PIL_TOP, w=6, col="#1a1a1a"):
         a, b = P(x, d, z0), P(x, d, z1)
-        s.add(f'<line x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" y2="{b[1]:.1f}" stroke="#1a1a1a" stroke-width="{w}"/>')
+        s.add(f'<line x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" y2="{b[1]:.1f}" stroke="{col}" stroke-width="{w}"/>')
     def cam(x, d, z):
         m = P(x, d, z)
-        s.rect(m[0] - 5, m[1] - 6, 10, 12, "of")
+        s.rect(m[0] - 5, m[1] - 7, 10, 14, "of")
+        s.circle(m[0], m[1] - 2, 1.8, "o", extra='fill="#111" stroke="none"')
+    def pillar(px, d):
+        for fx, fd in base_feet(px, d):
+            L((px, d, 0), (fx, fd, 0), "thick")
+            c = P(fx, fd, 0)
+            s.ellipse(c[0], c[1], 5, 3, "of")
+        post(px, d)
+        top = P(px, d, PIL_TOP)
+        s.rect(top[0] - 4, top[1] - 3, 8, 3, "ofd")
+        for z, _ in CAM_Z:
+            cam(px, d, z)
     # floor outline
-    s.poly([P(-FF_X - 50, -60, 0), P(SF_X + 50, -60, 0), P(SF_X + 50, BF_D + 50, 0), P(-FF_X - 50, BF_D + 50, 0)], "thin", extra='stroke-dasharray="1 4"')
+    s.poly([P(-850, -250, 0), P(850, -250, 0), P(850, 1550, 0), P(-850, 1550, 0)], "thin", extra='stroke-dasharray="1 4"')
     s.poly([P(AREA[0], AREA[2], 0), P(AREA[1], AREA[2], 0), P(AREA[1], AREA[3], 0), P(AREA[0], AREA[3], 0)], "hid")
-    # front frame
-    post(-FF_X, -20); post(FF_X, -20)
-    L((-FF_X, -20, TOP), (FF_X, -20, TOP), "thick")
+    # cables along the floor to the compute unit (behind the mirror)
+    for _, px, d in PILLARS:
+        s.path("M{:.1f},{:.1f} Q{:.1f},{:.1f} {:.1f},{:.1f}".format(
+            *P(px, d, 0), *P(px * 0.5 + 100, (d - 150) * 0.5, 0), *P(150, -150, 0)),
+            "thin", extra='stroke="#777"')
+    cu = P(150, -150, 0)
+    s.rect(cu[0] - 9, cu[1] - 14, 18, 14, "ofd", rx=2)
+    # front pillars first (farther from the viewer)
+    pillar(650, 225)
+    # mirror stand + mirror
+    for sg in (-1, 1):
+        L((sg * MS_X - 120, -20, 0), (sg * MS_X + 120, -20, 0), "thick")
+        post(sg * MS_X, -20, 0, MS_TOP, w=4)
     s.poly([P(-MIR_X, 0, MIR_Z[0]), P(MIR_X, 0, MIR_Z[0]), P(MIR_X, 0, MIR_Z[1]), P(-MIR_X, 0, MIR_Z[1])], "mir")
     s.poly([P(-90, 0, 1910), P(90, 0, 1910), P(90, 0, 1960), P(-90, 0, 1960)], "ofd")
-    for z in (1450, 500):
-        cam(FF_X, -20, z); cam(-FF_X, -20, z)
-    # grips (vertical)
+    # grips (vertical) on the mirror stand legs
     for sg in (-1, 1):
         a, b = P(sg * 400, 70, GRIP_Z[0]), P(sg * 400, 70, GRIP_Z[1])
         s.add(f'<line x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" y2="{b[1]:.1f}" stroke="#555" stroke-width="7" stroke-linecap="round"/>')
-        L((sg * FF_X, -20, GRIP_Z[0] + 20), (sg * 400, 70, GRIP_Z[0] + 20), "thin")
-        L((sg * FF_X, -20, GRIP_Z[1] - 20), (sg * 400, 70, GRIP_Z[1] - 20), "thin")
+        L((sg * MS_X, -20, GRIP_Z[0] + 20), (sg * 400, 70, GRIP_Z[0] + 20), "thin")
+        L((sg * MS_X, -20, GRIP_Z[1] - 20), (sg * 400, 70, GRIP_Z[1] - 20), "thin")
+    pillar(-650, 225)
     # crew (dashed figure)
     hd = CREW_D
     L((0, hd, 900), (0, hd, 1450), "hum")
     L((-200, hd, 1430), (200, hd, 1430), "hum")
-    L((-200, hd, 1430), (-260, hd - 150, 1080), "hum")
-    L((200, hd, 1430), (260, hd - 150, 1080), "hum")
+    L((-200, hd, 1430), (-300, hd, 1050), "hum")
+    L((200, hd, 1430), (300, hd, 1050), "hum")
     L((-100, hd, 950), (-110, hd, 60), "hum")
     L((100, hd, 950), (110, hd, 60), "hum")
     L((-110, hd, 950), (110, hd, 950), "hum")
@@ -361,33 +411,26 @@ def sheet1():
     s.circle(hcx, hcy, 95 * k2, "hum")
     for fx in (-110, 110):
         s.poly([P(fx - 50, hd - 110, 0), P(fx + 50, hd - 110, 0), P(fx + 50, hd + 110, 0), P(fx - 50, hd + 110, 0)], "thin")
-    # side frame
-    post(SF_X, SF_D[0]); post(SF_X, SF_D[1]); post(SF_X, CREW_D, w=3)
-    L((SF_X, SF_D[0], TOP), (SF_X, SF_D[1], TOP), "thick")
-    L((SF_X, SF_D[0], 0), (SF_X, SF_D[1], 0), "thick")
-    for z in (1650, 1200, 500):
-        cam(SF_X, CREW_D, z)
-    # back frame
-    post(-FF_X, BF_D); post(FF_X, BF_D); post(0, BF_D, w=3)
-    L((-FF_X, BF_D, TOP), (FF_X, BF_D, TOP), "thick")
-    L((-FF_X, BF_D, 0), (FF_X, BF_D, 0), "thick")
-    for z in (1650, 1200, 500):
-        cam(0, BF_D, z)
+    # back pillar (nearest to the viewer)
+    pillar(0, PILLARS[2][2])
     # labels (iso)
     def lab(pt3, tx, ty, lines, anchor="start"):
         x, y = P(*pt3)
         s.leader(x, y, tx, ty, anchor, lines)
     LX, RX = 836, 1262
-    lab((-MIR_X, 0, 1500), LX, 330, ["touch mirror"], "end")
-    lab((-90, 0, 1935), LX, 200, ["face module", "(RGB + IR camera", "+ IR projector)"], "end")
-    lab((-FF_X, -20, 1450), LX, 270, ["front frame", "body camera"], "end")
-    lab((-400, 70, 1100), LX, 440, ["vertical Doppler", "grip (optional,", "research)"], "end")
-    lab((AREA[0], AREA[2], 0), LX, 650, ["marked area"], "end")
-    lab((-110, hd - 60, 0), LX, 720, ["foot restraints"], "end")
-    lab((SF_X, CREW_D, 1650), RX, 230, ["side frame", "camera mast"], "start")
-    lab((0, BF_D, 1200), RX, 470, ["back frame", "camera mast"], "start")
-    lab((0, hd, 1300), RX, 560, ["crew member"], "start")
-    s.text(720, 815, "Frame height approx. 2100 (floor to ceiling); camera modules at head, torso and leg height.", "s")
+    lab((-90, 0, 1935), LX, 190, ["face module", "(RGB + IR camera", "+ IR projector)"], "end")
+    lab((-MIR_X, 0, 1500), LX, 265, ["touch mirror"], "end")
+    lab((-650, 225, 1650), LX, 330, ["front pillar L", "camera module H"], "end")
+    lab((-400, 70, 1100), LX, 420, ["vertical Doppler", "grip (optional,", "research)"], "end")
+    lab((-MS_X - 100, -20, 0), LX, 520, ["mirror stand base"], "end")
+    lab((AREA[0], AREA[2], 0), LX, 600, ["marked area"], "end")
+    lab((-110, hd - 60, 0), LX, 660, ["foot restraints"], "end")
+    lab((650, 225, 1150), RX, 200, ["front pillar R", "camera module T"], "start")
+    lab((0, PILLARS[2][2], 1650), RX, 300, ["back pillar", "(H / T / L modules)"], "start")
+    lab((0, hd, 1300), RX, 420, ["crew member"], "start")
+    fx, fd = base_feet(0, PILLARS[2][2])[0]
+    lab((fx, fd, 0), RX, 640, ["pillar base, bolted", "to the floor"], "start")
+    s.text(730, 815, "Pillars approx. 2000 high, no ceiling mount; camera modules at head, torso, leg height; cables run to the compute unit.", "s")
     return sheet(1, "General view", s.out())
 
 
@@ -400,43 +443,50 @@ def sheet2():
 
     def slab(xa, xb):
         s.line(xa, Z(0), xb, Z(0), "thick")
-        s.line(xa, Z(TOP), xb, Z(TOP), "thick")
         s.rect(xa, Z(0), xb - xa, 8, extra='fill="url(#hatch)" stroke="none"')
-        s.rect(xa, Z(TOP) - 8, xb - xa, 8, extra='fill="url(#hatch)" stroke="none"')
+
+    def pillar_el(xc, cls="post", labels=True, hidden=False):
+        """Pillar in elevation: post, camera modules, base with bolts."""
+        w = PIL_W * k
+        if hidden:
+            s.rect(xc - w / 2, Z(PIL_TOP), w, PIL_TOP * k, "hid")
+        else:
+            s.rect(xc - w / 2, Z(PIL_TOP), w, PIL_TOP * k, cls)
+            s.rect(xc - FOOT * k, Z(0) - 6, 2 * FOOT * k, 6, "ofd")
+            for bx in (xc - FOOT * k + 5, xc + FOOT * k - 5):
+                s.line(bx, Z(0) - 9, bx, Z(0) + 3, "o")
+        if labels:
+            for z, nm in CAM_Z:
+                s.rect(xc - 10, Z(z) - 13, 20, 26, "hid" if hidden else "of")
+                s.text(xc, Z(z) + 4, nm, "xs", "middle")
 
     # ---------------- front elevation (looking at the mirror face from behind the crew)
-    cx = 330
+    cx = 340
     X = lambda x: cx + x * k
     s.text(50, 120, "Front elevation (looking at the mirror face)", "vh")
-    slab(X(-950), X(950))
-    s.text(X(-950), Z(0) + 22, "floor", "s"); s.text(X(-950), Z(TOP) - 14, "ceiling", "s")
-    # side frame FOV (horizontal cones toward crew, from mast at x = 850)
-    s.poly([(X(SF_X), Z(1650)), (X(-120), Z(1880)), (X(-120), Z(1350))], "tof")
-    s.poly([(X(SF_X), Z(500)), (X(-150), Z(1050)), (X(-150), Z(0))], "tof")
-    # face cone (front module toward face, mostly into the page; shown short)
-    # mirror + front frame
-    for px in (-FF_X, FF_X):
-        s.rect(X(px) - 20 * k, Z(TOP), 40 * k, TOP * k, "post")
+    slab(X(-850), X(850))
+    s.text(X(-850), Z(0) + 22, "floor", "s")
+    # FOV from the two front pillars toward the crew member
+    for sg in (-1, 1):
+        for z, za, zb in ((1650, 1880, 1350), (1150, 1500, 800), (500, 1000, 0)):
+            s.poly([(X(sg * 650), Z(z)), (X(sg * 170), Z(za)), (X(sg * 170), Z(zb))], "tof")
+    # mirror stand + mirror
+    for sg in (-1, 1):
+        s.rect(X(sg * MS_X) - 25 * k, Z(MS_TOP), 50 * k, MS_TOP * k, "post")
+        s.rect(X(sg * MS_X) - 120 * k, Z(0) - 6, 240 * k, 6, "ofd")
     s.rect(X(-MIR_X), Z(MIR_Z[1]), 2 * MIR_X * k, (MIR_Z[1] - MIR_Z[0]) * k, "mir")
     s.rect(X(-90), Z(1960), 180 * k, 50 * k, "ofd")
-    for z, nm in ((1450, "T"), (500, "L")):
-        for px in (-FF_X, FF_X):
-            s.rect(X(px) - 9, Z(z) - 12, 18, 24, "of")
-            s.text(X(px), Z(z) + 4, nm, "xs", "middle")
-    # illumination strips
-    for px in (-FF_X, FF_X):
-        s.rect(X(px) + (6 if px < 0 else -10), Z(1900), 4, 400 * k, "ofd")
-    # vertical grips
+    # vertical grips on the mirror stand legs
     for sg in (-1, 1):
-        gx = X(sg * 400)
-        s.line(X(sg * FF_X), Z(GRIP_Z[0] + 20), gx, Z(GRIP_Z[0] + 20), "thin")
-        s.line(X(sg * FF_X), Z(GRIP_Z[1] - 20), gx, Z(GRIP_Z[1] - 20), "thin")
+        gx = X(sg * 420)
+        s.line(X(sg * MS_X), Z(GRIP_Z[0] + 20), gx, Z(GRIP_Z[0] + 20), "thin")
+        s.line(X(sg * MS_X), Z(GRIP_Z[1] - 20), gx, Z(GRIP_Z[1] - 20), "thin")
         s.rect(gx - 6, Z(GRIP_Z[1]), 12, (GRIP_Z[1] - GRIP_Z[0]) * k, "ofd", rx=5)
-    # side frame mast (seen end-on)
-    s.rect(X(SF_X) - 20 * k, Z(TOP), 40 * k, TOP * k, "post")
-    for z, nm in ((1650, "H"), (1200, "T"), (500, "L")):
-        s.rect(X(SF_X) - 10, Z(z) - 12, 20, 24, "of")
-        s.text(X(SF_X), Z(z) + 4, nm, "xs", "middle")
+    # front pillars
+    for sg in (-1, 1):
+        pillar_el(X(sg * 650))
+    # back pillar (between viewer and crew member): hidden outline
+    pillar_el(X(0), hidden=True)
     # crew (dashed, in front of mirror)
     s.circle(X(0), Z(1630), 95 * k, "hum")
     s.path(f"M{X(-200)},{Z(1440)} L{X(200)},{Z(1440)} L{X(150)},{Z(950)} L{X(-150)},{Z(950)} Z", "hum")
@@ -445,82 +495,78 @@ def sheet2():
     for fx in (-120, 120):
         s.rect(X(fx) - 12, Z(70), 24, 70 * k, "thin")
     # dims front
-    s.ext(X(-FF_X), Z(0) + 10, X(-FF_X), Z(0) + 38); s.ext(X(FF_X), Z(0) + 10, X(FF_X), Z(0) + 38)
-    s.dim(X(-FF_X), Z(0) + 32, X(FF_X), Z(0) + 32, "approx. 900 between side posts")
-    s.ext(X(-FF_X) - 8, Z(GRIP_Z[0]), X(-FF_X) - 60, Z(GRIP_Z[0])); s.ext(X(-FF_X) - 8, Z(0), X(-FF_X) - 60, Z(0))
-    s.dim(X(-FF_X) - 50, Z(GRIP_Z[0]), X(-FF_X) - 50, Z(0), "approx. 950", off=-2)
+    s.ext(X(-650), Z(0) + 10, X(-650), Z(0) + 38); s.ext(X(650), Z(0) + 10, X(650), Z(0) + 38)
+    s.dim(X(-650), Z(0) + 32, X(650), Z(0) + 32, "approx. 1300 between front pillars")
+    s.ext(X(650) + 14, Z(PIL_TOP), X(650) + 60, Z(PIL_TOP))
+    s.dim(X(650) + 50, Z(PIL_TOP), X(650) + 50, Z(0), "approx. 2000", off=16)
+    s.ext(X(-420) - 8, Z(GRIP_Z[0]), X(-420) - 40, Z(GRIP_Z[0]))
+    s.dim(X(-420) - 32, Z(GRIP_Z[0]), X(-420) - 32, Z(0), "approx. 950", off=-2)
     # labels front (left margin)
-    s.leader(X(-90), Z(1940), 150, 222, "end", ["face module:", "RGB + IR camera", "+ IR projector"])
-    s.leader(X(-FF_X) - 5, Z(1750), 150, 278, "end", ["illumination"])
-    s.leader(X(-FF_X), Z(1450), 150, 330, "end", ["body camera", "(RGB keypoints;", "ToF alternative)"])
-    s.leader(X(-400), Z(1150), 150, 445, "end", ["VERTICAL grip", "(Doppler)"])
-    s.text(48, 488, "Optional research", "bs"); s.text(48, 501, "module (contact)", "bs")
-    s.leader(X(-MIR_X) + 4, Z(700), 150, 560, "end", ["touch mirror"])
-    s.leader(X(-120), Z(30), 150, 760, "end", ["foot restraints"])
-    s.leader(X(SF_X) + 6, Z(1100), X(SF_X) + 20, Z(1000), "start", ["side frame", "mast"])
-    s.text(X(SF_X) + 30, Z(1650) + 4, "", "s")
+    s.leader(X(-90), Z(1940), 120, 205, "end", ["face module:", "RGB + IR camera", "+ IR projector"])
+    s.leader(X(-650) - 8, Z(1650), 120, 290, "end", ["front pillar L:", "camera module H", "(RGB + IR depth)"])
+    s.leader(X(-420), Z(1150), 120, 420, "end", ["VERTICAL grip", "(Doppler)"])
+    s.text(30, 462, "Optional research", "bs"); s.text(30, 475, "module (contact)", "bs")
+    s.leader(X(-MIR_X) + 4, Z(700), 120, 560, "end", ["touch mirror"])
+    s.leader(X(-650) - 50, Z(0) - 3, 120, 700, "end", ["pillar base,", "bolted to floor"])
+    s.leader(X(-120), Z(30), 120, 760, "end", ["foot restraints"])
+    s.leader(X(0) + 12, Z(1950), X(130), 165, "start", ["back pillar (behind the", "viewer, dashed)"])
 
     # ---------------- side elevation (from +x, mirror on the left)
-    x0 = 790
+    x0 = 820
     D = lambda d: x0 + d * k
-    s.text(735, 120, "Side elevation: camera fields of view", "vh")
-    slab(D(-150), D(1500))
+    s.text(760, 120, "Side elevation: camera fields of view", "vh")
+    BD = PILLARS[2][2]
+    slab(D(-180), D(1580))
     # FOV cones (under objects)
     s.poly([(D(20), Z(1935)), (D(CREW_D - 60), Z(1820)), (D(CREW_D - 60), Z(1480))], "sl")
-    s.poly([(D(-10), Z(1450)), (D(CREW_D - 60), Z(1950)), (D(CREW_D - 60), Z(850))], "tof")
-    s.poly([(D(-10), Z(500)), (D(CREW_D - 60), Z(1050)), (D(CREW_D - 60), Z(0))], "tof")
-    for z, za, zb in ((1650, 1900, 1350), (1200, 1650, 750), (500, 1000, 0)):
-        s.poly([(D(BF_D - 20), Z(z)), (D(CREW_D + 70), Z(za)), (D(CREW_D + 70), Z(zb))], "tof")
-    # front frame post (projected) + mirror
-    s.rect(D(-20) - 20 * k, Z(TOP), 40 * k, TOP * k, "post")
+    for z, za, zb in ((1650, 1850, 1400), (1150, 1500, 800), (500, 900, 0)):
+        s.poly([(D(225), Z(z)), (D(CREW_D - 40), Z(za)), (D(CREW_D - 40), Z(zb))], "tof")
+        s.poly([(D(BD), Z(z)), (D(CREW_D + 70), Z(za + 50)), (D(CREW_D + 70), Z(max(zb - 50, 0)))], "tof")
+    # mirror stand + mirror
+    s.rect(D(-20) - 25 * k, Z(MS_TOP), 50 * k, MS_TOP * k, "post")
+    s.rect(D(-20) - 120 * k, Z(0) - 6, 240 * k, 6, "ofd")
     s.rect(D(0), Z(MIR_Z[1]), 30 * k, (MIR_Z[1] - MIR_Z[0]) * k, "mir")
     s.rect(D(0), Z(1960), 45 * k, 50 * k, "ofd")
-    for z in (1450, 500):
-        s.rect(D(-20) - 9, Z(z) - 12, 18, 24, "of")
-    # grip (vertical, near the post, palm side toward crew)
+    # grip (vertical, near the stand leg)
     s.line(D(-20), Z(GRIP_Z[0] + 20), D(70), Z(GRIP_Z[0] + 20), "thin")
     s.line(D(-20), Z(GRIP_Z[1] - 20), D(70), Z(GRIP_Z[1] - 20), "thin")
     s.rect(D(70) - 6, Z(GRIP_Z[1]), 12, (GRIP_Z[1] - GRIP_Z[0]) * k, "ofd", rx=5)
     s.line(D(70), Z(GRIP_Z[1]) - 14, D(70), Z(GRIP_Z[0]) + 14, "ctr")
-    # side frame (nearest to viewer: outline dashed)
-    for d in SF_D:
-        s.line(D(d), Z(0), D(d), Z(TOP), "hid")
-    # back frame mast
-    s.rect(D(BF_D) - 20 * k, Z(TOP), 40 * k, TOP * k, "post")
-    for z, nm in ((1650, "H"), (1200, "T"), (500, "L")):
-        s.rect(D(BF_D) - 10, Z(z) - 12, 20, 24, "of")
-        s.text(D(BF_D), Z(z) + 4, nm, "xs", "middle")
+    # front pillar R (nearest to the viewer; L is behind it) and back pillar
+    pillar_el(D(225))
+    pillar_el(D(BD))
     # crew facing mirror (left)
     s.circle(D(CREW_D), Z(1630), 95 * k, "hum")
     s.path(f"M{D(CREW_D-40)},{Z(1450)} L{D(CREW_D-20)},{Z(950)} M{D(CREW_D+50)},{Z(1450)} L{D(CREW_D+50)},{Z(950)}", "hum")
     s.path(f"M{D(CREW_D-20)},{Z(950)} L{D(CREW_D-30)},{Z(60)} M{D(CREW_D+50)},{Z(950)} L{D(CREW_D+30)},{Z(60)}", "hum")
-    s.path(f"M{D(CREW_D-20)},{Z(1430)} L{D(CREW_D-60)},{Z(1130)} L{D(110)},{Z(1100)}", "hum")
+    s.path(f"M{D(CREW_D-20)},{Z(1430)} L{D(CREW_D-40)},{Z(1050)}", "hum")
     s.rect(D(CREW_D - 70), Z(70), 140 * k, 70 * k, "thin")
     # dims side
-    s.ext(D(0), Z(0) + 10, D(0), Z(0) + 38); s.ext(D(CREW_D), Z(0) + 10, D(CREW_D), Z(0) + 38)
-    s.ext(D(BF_D), Z(0) + 10, D(BF_D), Z(0) + 38)
-    s.dim(D(0), Z(0) + 32, D(CREW_D), Z(0) + 32, "approx. 600")
-    s.dim(D(CREW_D), Z(0) + 32, D(BF_D), Z(0) + 32, "approx. 750")
-    s.ext(D(BF_D) + 8, Z(TOP), D(BF_D) + 50, Z(TOP))
-    s.dim(D(BF_D) + 40, Z(TOP), D(BF_D) + 40, Z(0), "approx. 2100", off=16)
-    # labels side (right margin)
-    s.leader(D(300), Z(1800), 1240, 160, "start", ["face: RGB + IR", "camera, IR pattern"])
-    s.leader(D(BF_D), Z(1650), 1240, 225, "start", ["back frame H"])
-    s.leader(D(BF_D) + 10, Z(1200), 1240, 345, "start", ["back frame T", "(scapulae, spine)"])
-    s.leader(D(BF_D) + 10, Z(500), 1240, 600, "start", ["back frame L", "(pelvis, legs)"])
-    s.leader(D(70) + 6, Z(1050), D(70) + 58, 560, "start", ["vertical grip,", "axis vertical", "(dash-dot)"])
+    for dd in (0, 225, CREW_D, BD):
+        s.ext(D(dd), Z(0) + 10, D(dd), Z(0) + 38)
+    s.dim(D(0), Z(0) + 32, D(225), Z(0) + 32, "225", off=-2)
+    s.dim(D(225), Z(0) + 32, D(CREW_D), Z(0) + 32, "375")
+    s.dim(D(CREW_D), Z(0) + 32, D(BD), Z(0) + 32, "approx. 750")
+    s.ext(D(BD) + 14, Z(PIL_TOP), D(BD) + 60, Z(PIL_TOP))
+    s.dim(D(BD) + 50, Z(PIL_TOP), D(BD) + 50, Z(0), "approx. 2000", off=16)
+    # labels side
+    s.leader(D(300), Z(1800), 1250, 150, "start", ["face: RGB + IR", "camera, IR pattern"])
+    s.leader(D(BD) + 10, Z(1650), 1250, 230, "start", ["back pillar H"])
+    s.leader(D(BD) + 10, Z(1150), 1250, 350, "start", ["back pillar T", "(scapulae, spine)"])
+    s.leader(D(BD) + 10, Z(500), 1250, 600, "start", ["back pillar L", "(pelvis, legs)"])
+    s.leader(D(225) + 10, Z(1650), D(225) + 40, 170, "start", ["front pillar R", "(L hidden behind)"])
+    s.leader(D(70) + 6, Z(1050), D(225) + 22, 560, "start", ["vertical grip,", "axis vertical", "(dash-dot)"])
     # legend
     ly = 870
     s.poly([(50, ly - 10), (78, ly - 2), (50, ly + 6)], "sl")
-    s.text(86, ly, "Face channel: IR projector pattern + IR camera + RGB camera (head height, front frame)", "s")
+    s.text(86, ly, "Face channel: IR projector pattern + IR camera + RGB camera (mirror top bezel, head height)", "s")
     s.poly([(50, ly + 10), (78, ly + 18), (50, ly + 26)], "tof")
-    s.text(86, ly + 20, "Body cameras: RGB keypoints from 3 synced views; ToF is an alternative for whole-body depth", "s")
-    s.text(86, ly + 34, "(engineering choice to verify on a prototype). Side view: side frame posts dashed (nearest to viewer).", "s")
+    s.text(86, ly + 20, "Body cameras: RGB + IR depth modules on 3 synced pillars; skeleton keypoints merged in one", "s")
+    s.text(86, ly + 34, "coordinate system (sensor choice to verify on a prototype).", "s")
     s.text(50, ly + 56, "H / T / L = camera module at head / torso / leg height. Grips: optional research module (contact), "
                         "not part of the contactless core.", "s")
-    s.text(50, ly + 72, "Front view: shoulder and pelvis symmetry. Side view: head and trunk tilt. Back view: scapulae and spine symmetry.", "s")
+    s.text(50, ly + 72, "Front pillars: face, chest, arms, shoulder and pelvis symmetry, head and trunk tilt. Back pillar: scapulae, spine.", "s")
     return sheet(2, "Front and side views", s.out())
-
 
 # ------------------------------------------------------------------ sheet 3
 def sheet3():
@@ -528,8 +574,8 @@ def sheet3():
     s.text(50, 120, "Section A-A through the vertical grip (scale enlarged, schematic)", "vh")
     # --- post and grip body
     s.rect(70, 150, 40, 640, extra='fill="url(#hatch)" stroke="#1a1a1a" stroke-width="1.4"')
-    s.text(90, 808, "side post", "s", "middle")
-    s.text(90, 822, "(front frame)", "s", "middle")
+    s.text(90, 808, "mirror stand", "s", "middle")
+    s.text(90, 822, "leg", "s", "middle")
     # brackets
     s.rect(110, 200, 70, 22, "post"); s.rect(110, 718, 70, 22, "post")
     # grip shell (vertical)
@@ -809,11 +855,11 @@ def sheet5():
     # --- sensors column
     sx, sw = 45, 225
     s.text(sx, 152, "Sensors", "b")
-    s.box(sx, 165, sw, 95, "Front frame", ["RGB camera + IR camera", "+ IR projector (face),", "body camera, illumination"], center=False)
+    s.box(sx, 165, sw, 95, "Mirror face module", ["RGB camera + IR camera", "+ IR projector (face),", "illumination"], center=False)
     tag(s, sx + 8, 240, "TEAM")
-    s.box(sx, 272, sw, 64, "Side frame", ["body camera (profile, spine)"], center=False)
+    s.box(sx, 272, sw, 64, "Front pillars L / R", ["RGB + IR depth modules H/T/L"], center=False)
     tag(s, sx + 8, 316, "TEAM")
-    s.box(sx, 348, sw, 64, "Back frame", ["body camera (scapulae, pelvis)"], center=False)
+    s.box(sx, 348, sw, 64, "Back pillar", ["H/T/L modules (scapulae, spine)"], center=False)
     tag(s, sx + 8, 392, "TEAM")
     s.box(sx, 424, sw, 78, "Touch mirror", ["foot / torso / palm contours,", "touch input, display"], center=False)
     s.rect(sx + 6, 478, sw - 12, 19, "blkd", rx=3)
@@ -828,7 +874,7 @@ def sheet5():
     qx, qw = 320, 160
     s.rect(qx, 260, qw, 230, "blk", rx=4)
     s.text(qx + qw / 2, 282, "Quality gate", "b", "middle")
-    s.mtext(qx + 10, 306, ["pose inside contours", "all 3 views in frame", "light level", "motion", "sync between views",
+    s.mtext(qx + 10, 306, ["pose inside contours", "all 3 pillar views", "light level", "motion", "sync between views",
                            "Doppler: contact quality", "fail: prompt to adjust", "and repeat capture"], "s", "start", 16)
     for yy in (212, 304, 380, 463):
         s.arrow(sx + sw + 2, yy, qx - 2, min(max(yy, 270), 480))

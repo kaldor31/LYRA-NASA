@@ -10,7 +10,7 @@
 - We are building a **concept**: drawings + presentation + a **web app running on simulation**. No hardware.
 - Judging focuses first of all on **software**. Criteria: Impact, Creativity, Validity, Relevance (NASA data), Presentation.
 - Everywhere: LYRA "detects change", never "diagnoses"; the medical team decides.
-- Core is contactless (touch mirror + 3 camera frames); the vertical Doppler grips are an optional research module.
+- Core is contactless (touch mirror + 3 camera pillars); the vertical Doppler grips are an optional research module.
 - All materials, UI and docs are in English (official Space Apps rule).
 
 ## 1. Submission deadlines (official)

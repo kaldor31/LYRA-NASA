@@ -508,7 +508,7 @@ function metricsView(res) {
   const rs = res.metrics.filter(isResearch).sort(sort);
   if (rs.length) {
     html += `<section class="research" aria-labelledby="rh"><h3 class="h-sub" id="rh"><span class="tag">${icon("FlaskConical")}Research module</span> Contact grips
-      <span class="faint" style="font-weight:400">${esc(en(res.overall?.research?.note, "Optional contact grips in the side posts with a hydrogel cassette. Not part of the main status."))}</span></h3>
+      <span class="faint" style="font-weight:400">${esc(en(res.overall?.research?.note, "Optional contact grips on the mirror stand legs with a hydrogel cassette. Not part of the main status."))}</span></h3>
       <div class="metrics">${rs.map(mRow).join("")}</div></section>`;
   }
   html += `<p class="small faint" style="margin-top:var(--s4)">${esc(en(res.overall.disclaimer, "This is screening, not a diagnosis."))} Core LYRA is contactless. Values here are simulated along NASA expected-adaptation curves.</p>`;
@@ -839,7 +839,7 @@ function waveDraw(canvas, t, hr, amp = 1) {
 }
 
 async function stepRest(f) {
-  f.frame("rest", "Hold the vertical grips in the side posts", `<span class="tag">${icon("FlaskConical")}Research module</span> Optional contact Doppler ultrasound under the palm arteries, plus PPG, SpO₂ and palm temperature. A fresh hydrogel strip is advanced from the cassette. Excluded from the main status. <span class="faint">A real reading takes 30 s.</span>`,
+  f.frame("rest", "Hold the vertical grips on the mirror stand legs", `<span class="tag">${icon("FlaskConical")}Research module</span> Optional contact Doppler ultrasound under the palm arteries, plus PPG, SpO₂ and palm temperature. A fresh hydrogel strip is advanced from the cassette. Excluded from the main status. <span class="faint">A real reading takes 30 s.</span>`,
     `<div class="btn-row" style="margin-bottom:var(--s3)"><button type="button" class="btn quiet" id="skip-rest">${icon("SkipForward")}Skip Research Module</button></div><canvas class="wave" id="wave" aria-hidden="true"></canvas><div class="readouts"><div><b id="hr">-</b><span>Pulse, bpm</span></div><div><b id="spo2">-</b><span>SpO₂, %</span></div><div><b id="tmp">-</b><span>Palm temperature, °C</span></div><div><b id="flow">-</b><span>Blood flow L / R, cm/s</span></div></div>`,
     f.training ? "Rest your palms on the vertical grips. The ultrasound window should sit under your palm, with your index finger on the pulse sensor. Gel is applied automatically." : "Rest both palms on the grips and relax.");
   const t0 = performance.now();
@@ -1085,7 +1085,7 @@ function renderScan(res = S.latest) {
     </dl>
     <p class="notice" style="margin-top:var(--s4)">${icon("Info", "ico-20")}<span>${neutralNote}</span></p>
     <h2 class="h-section">Optional research module</h2>
-    <p class="notice">${icon("FlaskConical", "ico-20")}<span><b>Doppler ultrasound grips.</b> Vertical grips in the side posts with a hydrogel cassette measure palm blood flow. This is a contact research module, shown separately and excluded from the main status.</span></p>`;
+    <p class="notice">${icon("FlaskConical", "ico-20")}<span><b>Doppler ultrasound grips.</b> Vertical grips on the mirror stand legs with a hydrogel cassette measure palm blood flow. This is a contact research module, shown separately and excluded from the main status.</span></p>`;
   if (!el.hidden) paintStages(el);
 }
 

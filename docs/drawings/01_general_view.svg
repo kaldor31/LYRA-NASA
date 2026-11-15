@@ -62,7 +62,7 @@
 <rect x="15.0" y="15.0" width="1370.0" height="960.0" rx="0" class="frame" />
 <rect x="25.0" y="25.0" width="1350.0" height="940.0" rx="0" class="thin" />
 <text x="45.0" y="60.0" class="h" text-anchor="start" >Sheet 1. General view</text>
-<text x="45.0" y="82.0" class="s" text-anchor="start" >LYRA concept (v2: touch mirror between three camera frames). Concept, not a manufacturing drawing; dimensions approximate, in mm.</text>
+<text x="45.0" y="82.0" class="s" text-anchor="start" >LYRA concept (v3: touch mirror + three camera pillars). Concept, not a manufacturing drawing; dimensions approximate, in mm.</text>
 <rect x="985" y="838" width="390" height="127" fill="#fff" stroke="#111" stroke-width="1.6"/>
 <line x1="985.0" y1="872.0" x2="1375.0" y2="872.0" class="thin" />
 <line x1="985.0" y1="898.0" x2="1375.0" y2="898.0" class="thin" />
@@ -79,189 +79,244 @@
 <text x="995.0" y="939.0" class="s" text-anchor="start" >Concept, not a manufacturing drawing; dimensions approximate</text>
 <text x="995.0" y="959.0" class="s" text-anchor="start" >Screening aid, not a diagnosis. No medical claims.</text>
 <text x="50.0" y="120.0" class="vh" text-anchor="start" >Top view (plan)</text>
-<polygon points="225.0,217.0 159.0,379.0 291.0,379.0" class="tof" />
-<polygon points="391.0,335.0 185.0,265.0 185.0,405.0" class="tof" />
-<polygon points="225.0,481.0 159.0,291.0 291.0,291.0" class="tof" />
-<rect x="145.0" y="285.0" width="160.0" height="100.0" rx="0" class="hid" />
-<rect x="193.0" y="313.0" width="20.0" height="44.0" rx="8" class="thin" />
-<rect x="237.0" y="313.0" width="20.0" height="44.0" rx="8" class="thin" />
-<ellipse cx="225.0" cy="339.0" rx="45.0" ry="23.0" class="hum" />
-<circle cx="225.0" cy="333.0" r="17.0" class="hum" />
-<line x1="135.0" y1="211.0" x2="315.0" y2="211.0" class="thick" />
-<rect x="131.0" y="207.0" width="8.0" height="8.0" rx="0" class="post" />
-<rect x="311.0" y="207.0" width="8.0" height="8.0" rx="0" class="post" />
-<rect x="155.0" y="213.0" width="140.0" height="6.0" rx="0" class="mir" />
-<line x1="135.0" y1="211.0" x2="145.0" y2="229.0" class="thin" />
-<circle cx="145.0" cy="229.0" r="4.5" class="ofd" />
-<line x1="315.0" y1="211.0" x2="305.0" y2="229.0" class="thin" />
-<circle cx="305.0" cy="229.0" r="4.5" class="ofd" />
-<line x1="395.0" y1="265.0" x2="395.0" y2="405.0" class="thick" />
-<rect x="391.0" y="261.0" width="8.0" height="8.0" rx="0" class="post" />
-<rect x="391.0" y="331.0" width="8.0" height="8.0" rx="0" class="post" />
-<rect x="391.0" y="401.0" width="8.0" height="8.0" rx="0" class="post" />
-<line x1="135.0" y1="485.0" x2="315.0" y2="485.0" class="thick" />
-<rect x="131.0" y="481.0" width="8.0" height="8.0" rx="0" class="post" />
-<rect x="221.0" y="481.0" width="8.0" height="8.0" rx="0" class="post" />
-<rect x="311.0" y="481.0" width="8.0" height="8.0" rx="0" class="post" />
-<line x1="135.0" y1="491.0" x2="135.0" y2="533.0" class="ex" />
-<line x1="395.0" y1="411.0" x2="395.0" y2="533.0" class="ex" />
-<line x1="135.0" y1="525.0" x2="395.0" y2="525.0" class="dim"/>
-<text x="265.0" y="519.0" class="dl" text-anchor="middle" >approx. 1300</text>
-<line x1="129.0" y1="211.0" x2="65.0" y2="211.0" class="ex" />
-<line x1="129.0" y1="485.0" x2="65.0" y2="485.0" class="ex" />
-<line x1="75.0" y1="211.0" x2="75.0" y2="485.0" class="dim"/>
-<text x="67.0" y="348.0" class="dl" text-anchor="middle" transform="rotate(-90 67.0 348.0)">approx. 1370</text>
-<line x1="129.0" y1="335.0" x2="101.0" y2="335.0" class="ex" />
-<line x1="109.0" y1="211.0" x2="109.0" y2="335.0" class="dim"/>
-<text x="101.0" y="273.0" class="dl" text-anchor="middle" transform="rotate(-90 101.0 273.0)">approx. 600</text>
-<line x1="155.0" y1="212.6" x2="155.0" y2="200.0" class="ex" />
-<line x1="295.0" y1="212.6" x2="295.0" y2="200.0" class="ex" />
-<line x1="155.0" y1="202.0" x2="295.0" y2="202.0" class="dim"/>
-<text x="225.0" y="196.0" class="dl" text-anchor="middle" >mirror approx. 700</text>
-<circle cx="275.0" cy="216.0" r="2.2" fill="#222"/>
-<line x1="275.0" y1="216.0" x2="333.0" y2="197.0" class="ld" />
-<text x="337.0" y="201.0" class="s" text-anchor="start" >touch mirror</text>
-<circle cx="315.0" cy="211.0" r="2.2" fill="#222"/>
-<line x1="315.0" y1="211.0" x2="365.0" y2="221.0" class="ld" />
-<text x="369.0" y="225.0" class="s" text-anchor="start" >front frame</text>
-<circle cx="305.0" cy="229.0" r="2.2" fill="#222"/>
-<line x1="305.0" y1="229.0" x2="365.0" y2="235.0" class="ld" />
-<text x="369.0" y="239.0" class="s" text-anchor="start" >vertical Doppler grip</text>
-<text x="369.0" y="252.0" class="s" text-anchor="start" >(optional, research)</text>
-<circle cx="395.0" cy="405.0" r="2.2" fill="#222"/>
-<line x1="395.0" y1="405.0" x2="409.0" y2="425.0" class="ld" />
-<text x="413.0" y="429.0" class="s" text-anchor="start" >side frame</text>
-<circle cx="315.0" cy="485.0" r="2.2" fill="#222"/>
-<line x1="315.0" y1="485.0" x2="365.0" y2="473.0" class="ld" />
-<text x="369.0" y="477.0" class="s" text-anchor="start" >back frame</text>
-<circle cx="247.0" cy="339.0" r="2.2" fill="#222"/>
-<line x1="247.0" y1="339.0" x2="291.0" y2="441.0" class="ld" />
-<text x="295.0" y="445.0" class="s" text-anchor="start" >foot restraints</text>
-<text x="50.0" y="560.0" class="s" text-anchor="start" >The crew member (dashed) steps into the marked area (dashed rectangle,</text>
-<text x="50.0" y="575.0" class="s" text-anchor="start" >approx. 800 x 500) and faces the touch mirror.</text>
-<text x="50.0" y="590.0" class="s" text-anchor="start" >Three frames give front, side and back views; blue wedges = camera fields of view.</text>
-<text x="50.0" y="605.0" class="s" text-anchor="start" >Front frame: face, chest, arms. Side frame: profile, head/trunk tilt, spine.</text>
-<text x="50.0" y="620.0" class="s" text-anchor="start" >Back frame: shoulders, scapulae, pelvis, back symmetry.</text>
-<text x="50.0" y="635.0" class="s" text-anchor="start" >Frames fix to floor and ceiling (e.g. seat-track rails); no free-standing legs.</text>
-<text x="50.0" y="650.0" class="s" text-anchor="start" >Cameras check pose and frame quality before any capture.</text>
-<text x="50.0" y="680.0" class="s" text-anchor="start" >Optional contact research module: vertical grips on the front</text>
-<text x="50.0" y="695.0" class="s" text-anchor="start" >frame side posts (see sheets 2 and 3). Not part of the contactless core.</text>
-<text x="490.0" y="120.0" class="vh" text-anchor="start" >Touch mirror, face view</text>
-<line x1="480.0" y1="720.0" x2="685.0" y2="720.0" class="thick" />
-<rect x="480.0" y="720.0" width="205.0" height="8.0" rx="0" class="nc" fill="url(#hatch)" stroke="none"/>
-<rect x="495.0" y="245.0" width="175.0" height="450.0" rx="0" class="mir" />
-<rect x="517.5" y="255.0" width="130.0" height="17.5" rx="0" class="thin" />
-<text x="582.5" y="269.0" class="xs" text-anchor="middle" >prompts / status</text>
-<rect x="560.0" y="230.0" width="45.0" height="12.5" rx="0" class="ofd" />
-<ellipse cx="582.5" cy="310.0" rx="22.5" ry="28.8" class="cont" />
-<path d="M530.0,355.0 Q582.5,340.0 635.0,355.0 L625.0,470.0 L630.0,500.0 L535.0,500.0 L540.0,470.0 Z" class="cont" />
-<ellipse cx="513.8" cy="432.5" rx="13.8" ry="21.2" class="palm" />
-<line x1="521.2" y1="415.0" x2="521.2" y2="401.2" class="cont" />
-<line x1="516.2" y1="415.0" x2="516.2" y2="401.2" class="cont" />
-<line x1="511.2" y1="415.0" x2="511.2" y2="401.2" class="cont" />
-<line x1="506.2" y1="415.0" x2="506.2" y2="401.2" class="cont" />
-<ellipse cx="651.2" cy="432.5" rx="13.8" ry="21.2" class="palm" />
-<line x1="643.8" y1="415.0" x2="643.8" y2="401.2" class="cont" />
-<line x1="648.8" y1="415.0" x2="648.8" y2="401.2" class="cont" />
-<line x1="653.8" y1="415.0" x2="653.8" y2="401.2" class="cont" />
-<line x1="658.8" y1="415.0" x2="658.8" y2="401.2" class="cont" />
-<path d="M543.75,682.5 Q542.5,620.0 555.0,615.0 Q567.5,620.0 566.25,682.5 Z" class="cont" />
-<path d="M598.75,682.5 Q597.5,620.0 610.0,615.0 Q622.5,620.0 621.25,682.5 Z" class="cont" />
-<rect x="606.0" y="520.0" width="74.0" height="24.0" rx="3" class="ofd" />
-<text x="643.0" y="536.0" class="bs" text-anchor="middle" >NFC reader</text>
-<line x1="495.0" y1="697.0" x2="495.0" y2="750.0" class="ex" />
-<line x1="670.0" y1="697.0" x2="670.0" y2="750.0" class="ex" />
-<line x1="495.0" y1="746.0" x2="670.0" y2="746.0" class="dim"/>
-<text x="582.5" y="756.0" class="dl" text-anchor="middle" >approx. 700</text>
-<line x1="673.0" y1="245.0" x2="692.0" y2="245.0" class="ex" />
-<line x1="673.0" y1="695.0" x2="692.0" y2="695.0" class="ex" />
-<line x1="686.0" y1="245.0" x2="686.0" y2="695.0" class="dim"/>
-<text x="696.0" y="470.0" class="dl" text-anchor="middle" transform="rotate(-90 696.0 470.0)">approx. 1800</text>
-<text x="490.0" y="790.0" class="s" text-anchor="start" >Blue dashed: contours shown on the mirror</text>
-<text x="490.0" y="804.0" class="s" text-anchor="start" >(head guide, torso, feet). Shaded ovals:</text>
-<text x="490.0" y="818.0" class="s" text-anchor="start" >palm zones. They standardize the pose,</text>
-<text x="490.0" y="832.0" class="s" text-anchor="start" >they are not a medical sensor.</text>
-<text x="490.0" y="846.0" class="s" text-anchor="start" >Grey bar in top bezel: face module.</text>
-<text x="490.0" y="860.0" class="s" text-anchor="start" >NFC: NFC reader on the mirror frame</text>
-<text x="490.0" y="874.0" class="s" text-anchor="start" >(station, fallback ID when 3D face ID</text>
-<text x="490.0" y="888.0" class="s" text-anchor="start" >is not confident; card kept at station).</text>
-<text x="720.0" y="120.0" class="vh" text-anchor="start" >Isometric view (from behind-left)</text>
-<polygon points="845.0,636.3 1045.0,520.8 1253.7,641.2 1053.6,756.8" class="thin" stroke-dasharray="1 4"/>
-<polygon points="917.9,661.9 1032.2,595.9 1103.6,637.1 989.3,703.1" class="hid" />
-<line x1="857.8" y1="635.5" x2="857.8" y2="289.0" stroke="#1a1a1a" stroke-width="5"/>
-<line x1="986.4" y1="561.2" x2="986.4" y2="214.7" stroke="#1a1a1a" stroke-width="5"/>
-<line x1="857.8" y1="289.0" x2="986.4" y2="214.7" class="thick" />
-<polygon points="875.0,612.4 975.0,554.6 975.0,257.6 875.0,315.4" class="mir" />
-<polygon points="912.1,292.3 937.9,277.4 937.9,269.2 912.1,284.0" class="ofd" />
-<rect x="981.4" y="316.0" width="10.0" height="12.0" rx="0" class="of" />
-<rect x="852.8" y="390.2" width="10.0" height="12.0" rx="0" class="of" />
-<rect x="981.4" y="472.7" width="10.0" height="12.0" rx="0" class="of" />
-<rect x="852.8" y="547.0" width="10.0" height="12.0" rx="0" class="of" />
-<line x1="877.8" y1="482.0" x2="877.8" y2="432.5" stroke="#555" stroke-width="7" stroke-linecap="round"/>
-<line x1="857.8" y1="475.4" x2="877.8" y2="478.7" class="thin" />
-<line x1="857.8" y1="432.5" x2="877.8" y2="435.8" class="thin" />
-<line x1="992.2" y1="416.0" x2="992.2" y2="366.5" stroke="#555" stroke-width="7" stroke-linecap="round"/>
-<line x1="986.4" y1="401.2" x2="992.2" y2="412.7" class="thin" />
-<line x1="986.4" y1="358.3" x2="992.2" y2="369.8" class="thin" />
-<line x1="1010.7" y1="501.0" x2="1010.7" y2="410.2" class="hum" />
-<line x1="982.2" y1="430.0" x2="1039.3" y2="397.0" class="hum" />
-<line x1="982.2" y1="430.0" x2="952.1" y2="480.4" class="hum" />
-<line x1="1039.3" y1="397.0" x2="1026.5" y2="437.5" class="hum" />
-<line x1="996.4" y1="501.0" x2="995.0" y2="648.7" class="hum" />
-<line x1="1025.0" y1="484.5" x2="1026.5" y2="630.5" class="hum" />
-<line x1="995.0" y1="501.8" x2="1026.5" y2="483.7" class="hum" />
-<circle cx="1010.7" cy="382.2" r="15.7" class="hum" />
-<polygon points="972.2,653.6 986.4,645.4 1017.9,663.5 1003.6,671.8" class="thin" />
-<polygon points="1003.6,635.5 1017.9,627.2 1049.3,645.4 1035.0,653.6" class="thin" />
-<line x1="1082.2" y1="550.5" x2="1082.2" y2="204.0" stroke="#1a1a1a" stroke-width="5"/>
-<line x1="1182.2" y1="608.2" x2="1182.2" y2="261.8" stroke="#1a1a1a" stroke-width="5"/>
-<line x1="1132.2" y1="579.4" x2="1132.2" y2="232.9" stroke="#1a1a1a" stroke-width="3"/>
-<line x1="1082.2" y1="204.0" x2="1182.2" y2="261.8" class="thick" />
-<line x1="1082.2" y1="550.5" x2="1182.2" y2="608.2" class="thick" />
-<rect x="1127.2" y="301.1" width="10.0" height="12.0" rx="0" class="of" />
-<rect x="1127.2" y="375.4" width="10.0" height="12.0" rx="0" class="of" />
-<rect x="1127.2" y="490.9" width="10.0" height="12.0" rx="0" class="of" />
-<line x1="1053.6" y1="748.5" x2="1053.6" y2="402.0" stroke="#1a1a1a" stroke-width="5"/>
-<line x1="1182.2" y1="674.2" x2="1182.2" y2="327.8" stroke="#1a1a1a" stroke-width="5"/>
-<line x1="1117.9" y1="711.4" x2="1117.9" y2="364.9" stroke="#1a1a1a" stroke-width="3"/>
-<line x1="1053.6" y1="402.0" x2="1182.2" y2="327.8" class="thick" />
-<line x1="1053.6" y1="748.5" x2="1182.2" y2="674.2" class="thick" />
-<rect x="1112.9" y="433.1" width="10.0" height="12.0" rx="0" class="of" />
-<rect x="1112.9" y="507.4" width="10.0" height="12.0" rx="0" class="of" />
-<rect x="1112.9" y="622.9" width="10.0" height="12.0" rx="0" class="of" />
-<circle cx="875.0" cy="381.4" r="2.2" fill="#222"/>
-<line x1="875.0" y1="381.4" x2="836.0" y2="330.0" class="ld" />
-<text x="832.0" y="334.0" class="s" text-anchor="end" >touch mirror</text>
-<circle cx="912.1" cy="288.1" r="2.2" fill="#222"/>
-<line x1="912.1" y1="288.1" x2="836.0" y2="200.0" class="ld" />
-<text x="832.0" y="204.0" class="s" text-anchor="end" >face module</text>
-<text x="832.0" y="217.0" class="s" text-anchor="end" >(RGB + IR camera</text>
-<text x="832.0" y="230.0" class="s" text-anchor="end" >+ IR projector)</text>
-<circle cx="857.8" cy="396.2" r="2.2" fill="#222"/>
-<line x1="857.8" y1="396.2" x2="836.0" y2="270.0" class="ld" />
-<text x="832.0" y="274.0" class="s" text-anchor="end" >front frame</text>
-<text x="832.0" y="287.0" class="s" text-anchor="end" >body camera</text>
-<circle cx="877.8" cy="457.3" r="2.2" fill="#222"/>
-<line x1="877.8" y1="457.3" x2="836.0" y2="440.0" class="ld" />
-<text x="832.0" y="444.0" class="s" text-anchor="end" >vertical Doppler</text>
-<text x="832.0" y="457.0" class="s" text-anchor="end" >grip (optional,</text>
-<text x="832.0" y="470.0" class="s" text-anchor="end" >research)</text>
-<circle cx="917.9" cy="661.9" r="2.2" fill="#222"/>
-<line x1="917.9" y1="661.9" x2="836.0" y2="650.0" class="ld" />
-<text x="832.0" y="654.0" class="s" text-anchor="end" >marked area</text>
-<circle cx="986.4" cy="653.6" r="2.2" fill="#222"/>
-<line x1="986.4" y1="653.6" x2="836.0" y2="720.0" class="ld" />
-<text x="832.0" y="724.0" class="s" text-anchor="end" >foot restraints</text>
-<circle cx="1132.2" cy="307.1" r="2.2" fill="#222"/>
-<line x1="1132.2" y1="307.1" x2="1262.0" y2="230.0" class="ld" />
-<text x="1266.0" y="234.0" class="s" text-anchor="start" >side frame</text>
-<text x="1266.0" y="247.0" class="s" text-anchor="start" >camera mast</text>
-<circle cx="1117.9" cy="513.4" r="2.2" fill="#222"/>
-<line x1="1117.9" y1="513.4" x2="1262.0" y2="470.0" class="ld" />
-<text x="1266.0" y="474.0" class="s" text-anchor="start" >back frame</text>
-<text x="1266.0" y="487.0" class="s" text-anchor="start" >camera mast</text>
-<circle cx="1010.7" cy="435.0" r="2.2" fill="#222"/>
-<line x1="1010.7" y1="435.0" x2="1262.0" y2="560.0" class="ld" />
-<text x="1266.0" y="564.0" class="s" text-anchor="start" >crew member</text>
-<text x="720.0" y="815.0" class="s" text-anchor="start" >Frame height approx. 2100 (floor to ceiling); camera modules at head, torso and leg height.</text>
+<polygon points="105.0,270.0 318.9,277.4 218.5,451.4" class="tof" />
+<polygon points="365.0,270.0 251.5,451.4 151.1,277.4" class="tof" />
+<polygon points="235.0,495.0 134.5,306.0 335.5,306.0" class="tof" />
+<polygon points="235.0,227.0 213.0,337.0 257.0,337.0" class="sl" />
+<rect x="155.0" y="295.0" width="160.0" height="100.0" rx="0" class="hid" />
+<rect x="203.0" y="323.0" width="20.0" height="44.0" rx="8" class="thin" />
+<rect x="247.0" y="323.0" width="20.0" height="44.0" rx="8" class="thin" />
+<ellipse cx="235.0" cy="349.0" rx="45.0" ry="23.0" class="hum" />
+<circle cx="235.0" cy="343.0" r="17.0" class="hum" />
+<rect x="137.0" y="207.0" width="16.0" height="28.0" rx="3" class="thin" />
+<rect x="153.0" y="217.0" width="8.0" height="8.0" rx="0" class="post" />
+<rect x="317.0" y="207.0" width="16.0" height="28.0" rx="3" class="thin" />
+<rect x="309.0" y="217.0" width="8.0" height="8.0" rx="0" class="post" />
+<rect x="165.0" y="223.0" width="140.0" height="6.0" rx="0" class="mir" />
+<line x1="157.0" y1="221.0" x2="155.0" y2="239.0" class="thin" />
+<circle cx="155.0" cy="239.0" r="4.5" class="ofd" />
+<line x1="313.0" y1="221.0" x2="315.0" y2="239.0" class="thin" />
+<circle cx="315.0" cy="239.0" r="4.5" class="ofd" />
+<line x1="105.0" y1="270.0" x2="70.4" y2="250.0" class="o" />
+<circle cx="70.4" cy="250.0" r="4.0" class="of" />
+<line x1="105.0" y1="270.0" x2="139.6" y2="250.0" class="o" />
+<circle cx="139.6" cy="250.0" r="4.0" class="of" />
+<line x1="105.0" y1="270.0" x2="105.0" y2="310.0" class="o" />
+<circle cx="105.0" cy="310.0" r="4.0" class="of" />
+<rect x="97.0" y="262.0" width="16.0" height="16.0" rx="0" class="post" />
+<line x1="365.0" y1="270.0" x2="399.6" y2="250.0" class="o" />
+<circle cx="399.6" cy="250.0" r="4.0" class="of" />
+<line x1="365.0" y1="270.0" x2="365.0" y2="310.0" class="o" />
+<circle cx="365.0" cy="310.0" r="4.0" class="of" />
+<line x1="365.0" y1="270.0" x2="330.4" y2="250.0" class="o" />
+<circle cx="330.4" cy="250.0" r="4.0" class="of" />
+<rect x="357.0" y="262.0" width="16.0" height="16.0" rx="0" class="post" />
+<line x1="235.0" y1="495.0" x2="235.0" y2="535.0" class="o" />
+<circle cx="235.0" cy="535.0" r="4.0" class="of" />
+<line x1="235.0" y1="495.0" x2="200.4" y2="475.0" class="o" />
+<circle cx="200.4" cy="475.0" r="4.0" class="of" />
+<line x1="235.0" y1="495.0" x2="269.6" y2="475.0" class="o" />
+<circle cx="269.6" cy="475.0" r="4.0" class="of" />
+<rect x="227.0" y="487.0" width="16.0" height="16.0" rx="0" class="post" />
+<circle cx="235.0" cy="345.0" r="150.0" class="ctr" />
+<line x1="105.0" y1="278.0" x2="105.0" y2="565.0" class="ex" />
+<line x1="365.0" y1="278.0" x2="365.0" y2="565.0" class="ex" />
+<line x1="105.0" y1="557.0" x2="365.0" y2="557.0" class="dim"/>
+<text x="235.0" y="551.0" class="dl" text-anchor="middle" >approx. 1300</text>
+<line x1="161.0" y1="225.0" x2="35.0" y2="225.0" class="ex" />
+<line x1="195.0" y1="495.0" x2="35.0" y2="495.0" class="ex" />
+<line x1="43.0" y1="225.0" x2="43.0" y2="495.0" class="dim"/>
+<text x="35.0" y="360.0" class="dl" text-anchor="middle" transform="rotate(-90 35.0 360.0)">approx. 1350</text>
+<line x1="195.0" y1="345.0" x2="61.0" y2="345.0" class="ex" />
+<line x1="69.0" y1="225.0" x2="69.0" y2="345.0" class="dim"/>
+<text x="61.0" y="285.0" class="dl" text-anchor="middle" transform="rotate(-90 61.0 285.0)">approx. 600</text>
+<line x1="165.0" y1="222.6" x2="165.0" y2="210.0" class="ex" />
+<line x1="305.0" y1="222.6" x2="305.0" y2="210.0" class="ex" />
+<line x1="165.0" y1="212.0" x2="305.0" y2="212.0" class="dim"/>
+<text x="235.0" y="206.0" class="dl" text-anchor="middle" >mirror approx. 700</text>
+<circle cx="376.0" cy="293.7" r="2.2" fill="#222"/>
+<line x1="376.0" y1="293.7" x2="391.0" y2="329.0" class="ld" />
+<text x="395.0" y="333.0" class="s" text-anchor="start" >pillars on R approx. 750,</text>
+<text x="395.0" y="346.0" class="s" text-anchor="start" >120 deg apart</text>
+<circle cx="285.0" cy="226.0" r="2.2" fill="#222"/>
+<line x1="285.0" y1="226.0" x2="395.0" y2="203.0" class="ld" />
+<text x="399.0" y="207.0" class="s" text-anchor="start" >touch mirror</text>
+<circle cx="313.0" cy="221.0" r="2.2" fill="#222"/>
+<line x1="313.0" y1="221.0" x2="395.0" y2="217.0" class="ld" />
+<text x="399.0" y="221.0" class="s" text-anchor="start" >mirror stand</text>
+<circle cx="315.0" cy="239.0" r="2.2" fill="#222"/>
+<line x1="315.0" y1="239.0" x2="395.0" y2="237.0" class="ld" />
+<text x="399.0" y="241.0" class="s" text-anchor="start" >vertical Doppler grip</text>
+<text x="399.0" y="254.0" class="s" text-anchor="start" >(optional, research)</text>
+<circle cx="365.0" cy="270.0" r="2.2" fill="#222"/>
+<line x1="365.0" y1="270.0" x2="395.0" y2="275.0" class="ld" />
+<text x="399.0" y="279.0" class="s" text-anchor="start" >front pillar R</text>
+<circle cx="241.0" cy="495.0" r="2.2" fill="#222"/>
+<line x1="241.0" y1="495.0" x2="391.0" y2="485.0" class="ld" />
+<text x="395.0" y="489.0" class="s" text-anchor="start" >back pillar</text>
+<circle cx="257.0" cy="349.0" r="2.2" fill="#222"/>
+<line x1="257.0" y1="349.0" x2="391.0" y2="425.0" class="ld" />
+<text x="395.0" y="429.0" class="s" text-anchor="start" >foot restraints</text>
+<text x="50.0" y="610.0" class="s" text-anchor="start" >The crew member (dashed) steps into the marked area (dashed rectangle,</text>
+<text x="50.0" y="625.0" class="s" text-anchor="start" >approx. 800 x 500) and faces the touch mirror.</text>
+<text x="50.0" y="640.0" class="s" text-anchor="start" >Three free-standing camera pillars stand on one circle around the crew</text>
+<text x="50.0" y="655.0" class="s" text-anchor="start" >member: two in front at +/-60 deg, one behind. Blue wedges = camera views;</text>
+<text x="50.0" y="670.0" class="s" text-anchor="start" >red wedge = face channel of the mirror face module.</text>
+<text x="50.0" y="685.0" class="s" text-anchor="start" >Each pillar base plate bolts to the floor (e.g. seat-track rails): in</text>
+<text x="50.0" y="700.0" class="s" text-anchor="start" >microgravity a weighted base holds nothing. No ceiling attachment.</text>
+<text x="50.0" y="715.0" class="s" text-anchor="start" >Cameras check pose and frame quality before any capture.</text>
+<text x="50.0" y="730.0" class="s" text-anchor="start" >Optional contact research module: vertical grips on the mirror stand legs</text>
+<text x="50.0" y="745.0" class="s" text-anchor="start" >(see sheets 2 and 3). Not part of the contactless core.</text>
+<text x="520.0" y="120.0" class="vh" text-anchor="start" >Touch mirror, face view</text>
+<line x1="515.0" y1="720.0" x2="720.0" y2="720.0" class="thick" />
+<rect x="515.0" y="720.0" width="205.0" height="8.0" rx="0" class="nc" fill="url(#hatch)" stroke="none"/>
+<rect x="530.0" y="245.0" width="175.0" height="450.0" rx="0" class="mir" />
+<rect x="552.5" y="255.0" width="130.0" height="17.5" rx="0" class="thin" />
+<text x="617.5" y="269.0" class="xs" text-anchor="middle" >prompts / status</text>
+<rect x="595.0" y="230.0" width="45.0" height="12.5" rx="0" class="ofd" />
+<ellipse cx="617.5" cy="310.0" rx="22.5" ry="28.8" class="cont" />
+<path d="M565.0,355.0 Q617.5,340.0 670.0,355.0 L660.0,470.0 L665.0,500.0 L570.0,500.0 L575.0,470.0 Z" class="cont" />
+<ellipse cx="548.8" cy="432.5" rx="13.8" ry="21.2" class="palm" />
+<line x1="556.2" y1="415.0" x2="556.2" y2="401.2" class="cont" />
+<line x1="551.2" y1="415.0" x2="551.2" y2="401.2" class="cont" />
+<line x1="546.2" y1="415.0" x2="546.2" y2="401.2" class="cont" />
+<line x1="541.2" y1="415.0" x2="541.2" y2="401.2" class="cont" />
+<ellipse cx="686.2" cy="432.5" rx="13.8" ry="21.2" class="palm" />
+<line x1="678.8" y1="415.0" x2="678.8" y2="401.2" class="cont" />
+<line x1="683.8" y1="415.0" x2="683.8" y2="401.2" class="cont" />
+<line x1="688.8" y1="415.0" x2="688.8" y2="401.2" class="cont" />
+<line x1="693.8" y1="415.0" x2="693.8" y2="401.2" class="cont" />
+<path d="M578.75,682.5 Q577.5,620.0 590.0,615.0 Q602.5,620.0 601.25,682.5 Z" class="cont" />
+<path d="M633.75,682.5 Q632.5,620.0 645.0,615.0 Q657.5,620.0 656.25,682.5 Z" class="cont" />
+<rect x="641.0" y="520.0" width="74.0" height="24.0" rx="3" class="ofd" />
+<text x="678.0" y="536.0" class="bs" text-anchor="middle" >NFC reader</text>
+<line x1="530.0" y1="697.0" x2="530.0" y2="750.0" class="ex" />
+<line x1="705.0" y1="697.0" x2="705.0" y2="750.0" class="ex" />
+<line x1="530.0" y1="746.0" x2="705.0" y2="746.0" class="dim"/>
+<text x="617.5" y="756.0" class="dl" text-anchor="middle" >approx. 700</text>
+<line x1="708.0" y1="245.0" x2="727.0" y2="245.0" class="ex" />
+<line x1="708.0" y1="695.0" x2="727.0" y2="695.0" class="ex" />
+<line x1="721.0" y1="245.0" x2="721.0" y2="695.0" class="dim"/>
+<text x="731.0" y="470.0" class="dl" text-anchor="middle" transform="rotate(-90 731.0 470.0)">approx. 1800</text>
+<text x="520.0" y="790.0" class="s" text-anchor="start" >Blue dashed: contours shown on the mirror</text>
+<text x="520.0" y="804.0" class="s" text-anchor="start" >(head guide, torso, feet). Shaded ovals:</text>
+<text x="520.0" y="818.0" class="s" text-anchor="start" >palm zones. They standardize the pose,</text>
+<text x="520.0" y="832.0" class="s" text-anchor="start" >they are not a medical sensor.</text>
+<text x="520.0" y="846.0" class="s" text-anchor="start" >Grey bar in top bezel: face module.</text>
+<text x="520.0" y="860.0" class="s" text-anchor="start" >NFC: NFC reader on the mirror frame</text>
+<text x="520.0" y="874.0" class="s" text-anchor="start" >(station, fallback ID when 3D face ID</text>
+<text x="520.0" y="888.0" class="s" text-anchor="start" >is not confident; card kept at station).</text>
+<text x="730.0" y="120.0" class="vh" text-anchor="start" >Isometric view (from behind-left)</text>
+<polygon points="777.8,639.5 1020.7,499.2 1277.9,647.8 1035.0,788.0" class="thin" stroke-dasharray="1 4"/>
+<polygon points="927.9,651.9 1042.2,585.9 1113.6,627.1 999.3,693.1" class="hid" />
+<path d="M874.3,662.2 Q908.2,611.7 935.0,565.2" class="thin" stroke="#777"/>
+<path d="M1060.0,554.9 Q1001.1,558.0 935.0,565.2" class="thin" stroke="#777"/>
+<path d="M1127.9,701.4 Q1035.0,631.2 935.0,565.2" class="thin" stroke="#777"/>
+<rect x="926.0" y="551.2" width="18.0" height="14.0" rx="2" class="ofd" />
+<line x1="1060.0" y1="554.9" x2="1070.5" y2="532.4" class="thick" />
+<ellipse cx="1070.5" cy="532.4" rx="5.0" ry="3.0" class="of" />
+<line x1="1060.0" y1="554.9" x2="1088.6" y2="571.4" class="thick" />
+<ellipse cx="1088.6" cy="571.4" rx="5.0" ry="3.0" class="of" />
+<line x1="1060.0" y1="554.9" x2="1021.0" y2="561.0" class="thick" />
+<ellipse cx="1021.0" cy="561.0" rx="5.0" ry="3.0" class="of" />
+<line x1="1060.0" y1="554.9" x2="1060.0" y2="224.9" stroke="#1a1a1a" stroke-width="6"/>
+<rect x="1056.0" y="221.9" width="8.0" height="3.0" rx="0" class="ofd" />
+<rect x="1055.0" y="275.7" width="10.0" height="14.0" rx="0" class="of" />
+<circle cx="1060.0" cy="280.7" r="1.8" class="nc" fill="#111" stroke="none"/>
+<rect x="1055.0" y="358.2" width="10.0" height="14.0" rx="0" class="of" />
+<circle cx="1060.0" cy="363.2" r="1.8" class="nc" fill="#111" stroke="none"/>
+<rect x="1055.0" y="465.4" width="10.0" height="14.0" rx="0" class="of" />
+<circle cx="1060.0" cy="470.4" r="1.8" class="nc" fill="#111" stroke="none"/>
+<line x1="859.3" y1="630.4" x2="893.6" y2="610.6" class="thick" />
+<line x1="876.4" y1="620.5" x2="876.4" y2="290.5" stroke="#1a1a1a" stroke-width="4"/>
+<line x1="970.7" y1="566.1" x2="1005.0" y2="546.3" class="thick" />
+<line x1="987.9" y1="556.2" x2="987.9" y2="226.2" stroke="#1a1a1a" stroke-width="4"/>
+<polygon points="885.0,602.4 985.0,544.6 985.0,247.6 885.0,305.4" class="mir" />
+<polygon points="922.1,282.3 947.9,267.4 947.9,259.2 922.1,274.0" class="ofd" />
+<line x1="887.8" y1="472.0" x2="887.8" y2="422.5" stroke="#555" stroke-width="7" stroke-linecap="round"/>
+<line x1="876.4" y1="460.5" x2="887.8" y2="468.7" class="thin" />
+<line x1="876.4" y1="417.6" x2="887.8" y2="425.8" class="thin" />
+<line x1="1002.2" y1="406.0" x2="1002.2" y2="356.5" stroke="#555" stroke-width="7" stroke-linecap="round"/>
+<line x1="987.9" y1="396.1" x2="1002.2" y2="402.7" class="thin" />
+<line x1="987.9" y1="353.2" x2="1002.2" y2="359.8" class="thin" />
+<line x1="874.3" y1="662.2" x2="835.2" y2="668.2" class="thick" />
+<ellipse cx="835.2" cy="668.2" rx="5.0" ry="3.0" class="of" />
+<line x1="874.3" y1="662.2" x2="884.7" y2="639.6" class="thick" />
+<ellipse cx="884.7" cy="639.6" rx="5.0" ry="3.0" class="of" />
+<line x1="874.3" y1="662.2" x2="902.9" y2="678.7" class="thick" />
+<ellipse cx="902.9" cy="678.7" rx="5.0" ry="3.0" class="of" />
+<line x1="874.3" y1="662.2" x2="874.3" y2="332.2" stroke="#1a1a1a" stroke-width="6"/>
+<rect x="870.3" y="329.2" width="8.0" height="3.0" rx="0" class="ofd" />
+<rect x="869.3" y="382.9" width="10.0" height="14.0" rx="0" class="of" />
+<circle cx="874.3" cy="387.9" r="1.8" class="nc" fill="#111" stroke="none"/>
+<rect x="869.3" y="465.4" width="10.0" height="14.0" rx="0" class="of" />
+<circle cx="874.3" cy="470.4" r="1.8" class="nc" fill="#111" stroke="none"/>
+<rect x="869.3" y="572.7" width="10.0" height="14.0" rx="0" class="of" />
+<circle cx="874.3" cy="577.7" r="1.8" class="nc" fill="#111" stroke="none"/>
+<line x1="1020.7" y1="491.0" x2="1020.7" y2="400.2" class="hum" />
+<line x1="992.2" y1="420.0" x2="1049.3" y2="387.0" class="hum" />
+<line x1="992.2" y1="420.0" x2="977.9" y2="491.0" class="hum" />
+<line x1="1049.3" y1="387.0" x2="1063.6" y2="441.5" class="hum" />
+<line x1="1006.4" y1="491.0" x2="1005.0" y2="638.7" class="hum" />
+<line x1="1035.0" y1="474.5" x2="1036.5" y2="620.5" class="hum" />
+<line x1="1005.0" y1="491.8" x2="1036.5" y2="473.7" class="hum" />
+<circle cx="1020.7" cy="372.2" r="15.7" class="hum" />
+<polygon points="982.2,643.6 996.4,635.4 1027.9,653.5 1013.6,661.8" class="thin" />
+<polygon points="1013.6,625.5 1027.9,617.2 1059.3,635.4 1045.0,643.6" class="thin" />
+<line x1="1127.9" y1="701.4" x2="1156.5" y2="717.9" class="thick" />
+<ellipse cx="1156.5" cy="717.9" rx="5.0" ry="3.0" class="of" />
+<line x1="1127.9" y1="701.4" x2="1088.9" y2="707.4" class="thick" />
+<ellipse cx="1088.9" cy="707.4" rx="5.0" ry="3.0" class="of" />
+<line x1="1127.9" y1="701.4" x2="1138.4" y2="678.8" class="thick" />
+<ellipse cx="1138.4" cy="678.8" rx="5.0" ry="3.0" class="of" />
+<line x1="1127.9" y1="701.4" x2="1127.9" y2="371.4" stroke="#1a1a1a" stroke-width="6"/>
+<rect x="1123.9" y="368.4" width="8.0" height="3.0" rx="0" class="ofd" />
+<rect x="1122.9" y="422.1" width="10.0" height="14.0" rx="0" class="of" />
+<circle cx="1127.9" cy="427.1" r="1.8" class="nc" fill="#111" stroke="none"/>
+<rect x="1122.9" y="504.6" width="10.0" height="14.0" rx="0" class="of" />
+<circle cx="1127.9" cy="509.6" r="1.8" class="nc" fill="#111" stroke="none"/>
+<rect x="1122.9" y="611.9" width="10.0" height="14.0" rx="0" class="of" />
+<circle cx="1127.9" cy="616.9" r="1.8" class="nc" fill="#111" stroke="none"/>
+<circle cx="922.1" cy="278.1" r="2.2" fill="#222"/>
+<line x1="922.1" y1="278.1" x2="836.0" y2="190.0" class="ld" />
+<text x="832.0" y="194.0" class="s" text-anchor="end" >face module</text>
+<text x="832.0" y="207.0" class="s" text-anchor="end" >(RGB + IR camera</text>
+<text x="832.0" y="220.0" class="s" text-anchor="end" >+ IR projector)</text>
+<circle cx="885.0" cy="371.4" r="2.2" fill="#222"/>
+<line x1="885.0" y1="371.4" x2="836.0" y2="265.0" class="ld" />
+<text x="832.0" y="269.0" class="s" text-anchor="end" >touch mirror</text>
+<circle cx="874.3" cy="389.9" r="2.2" fill="#222"/>
+<line x1="874.3" y1="389.9" x2="836.0" y2="330.0" class="ld" />
+<text x="832.0" y="334.0" class="s" text-anchor="end" >front pillar L</text>
+<text x="832.0" y="347.0" class="s" text-anchor="end" >camera module H</text>
+<circle cx="887.8" cy="447.3" r="2.2" fill="#222"/>
+<line x1="887.8" y1="447.3" x2="836.0" y2="420.0" class="ld" />
+<text x="832.0" y="424.0" class="s" text-anchor="end" >vertical Doppler</text>
+<text x="832.0" y="437.0" class="s" text-anchor="end" >grip (optional,</text>
+<text x="832.0" y="450.0" class="s" text-anchor="end" >research)</text>
+<circle cx="862.1" cy="628.8" r="2.2" fill="#222"/>
+<line x1="862.1" y1="628.8" x2="836.0" y2="520.0" class="ld" />
+<text x="832.0" y="524.0" class="s" text-anchor="end" >mirror stand base</text>
+<circle cx="927.9" cy="651.9" r="2.2" fill="#222"/>
+<line x1="927.9" y1="651.9" x2="836.0" y2="600.0" class="ld" />
+<text x="832.0" y="604.0" class="s" text-anchor="end" >marked area</text>
+<circle cx="996.4" cy="643.6" r="2.2" fill="#222"/>
+<line x1="996.4" y1="643.6" x2="836.0" y2="660.0" class="ld" />
+<text x="832.0" y="664.0" class="s" text-anchor="end" >foot restraints</text>
+<circle cx="1060.0" cy="365.2" r="2.2" fill="#222"/>
+<line x1="1060.0" y1="365.2" x2="1262.0" y2="200.0" class="ld" />
+<text x="1266.0" y="204.0" class="s" text-anchor="start" >front pillar R</text>
+<text x="1266.0" y="217.0" class="s" text-anchor="start" >camera module T</text>
+<circle cx="1127.9" cy="429.1" r="2.2" fill="#222"/>
+<line x1="1127.9" y1="429.1" x2="1262.0" y2="300.0" class="ld" />
+<text x="1266.0" y="304.0" class="s" text-anchor="start" >back pillar</text>
+<text x="1266.0" y="317.0" class="s" text-anchor="start" >(H / T / L modules)</text>
+<circle cx="1020.7" cy="425.0" r="2.2" fill="#222"/>
+<line x1="1020.7" y1="425.0" x2="1262.0" y2="420.0" class="ld" />
+<text x="1266.0" y="424.0" class="s" text-anchor="start" >crew member</text>
+<circle cx="1156.5" cy="717.9" r="2.2" fill="#222"/>
+<line x1="1156.5" y1="717.9" x2="1262.0" y2="640.0" class="ld" />
+<text x="1266.0" y="644.0" class="s" text-anchor="start" >pillar base, bolted</text>
+<text x="1266.0" y="657.0" class="s" text-anchor="start" >to the floor</text>
+<text x="730.0" y="815.0" class="s" text-anchor="start" >Pillars approx. 2000 high, no ceiling mount; camera modules at head, torso, leg height; cables run to the compute unit.</text>
 </svg>

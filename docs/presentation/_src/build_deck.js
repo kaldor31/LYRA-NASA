@@ -93,7 +93,7 @@ T(s, [
   { text: 'Team: ', options: { bold: true } }, { text: 'LYRA', options: { breakLine: true } },
   { text: 'Members: ', options: { bold: true } }, { text: 'Alina Dmitriyeva, Daniil Shabalin' }
 ], { x: 0.6, y: 4.6, w: 6.5, h: 1.5, fontSize: 16, color: C.background1, paraSpaceAfter: 6 });
-T(s, 'A touch mirror between three camera frames for contactless crew readiness checks. It detects change and checks its own measurement quality; it does not diagnose.', { x: 7.3, y: 5.3, w: 5.5, h: 1.0, fontSize: 15, color: C.background2 });
+T(s, 'A touch mirror with three camera pillars for contactless crew readiness checks. It detects change and checks its own measurement quality; it does not diagnose.', { x: 7.3, y: 5.3, w: 5.5, h: 1.0, fontSize: 15, color: C.background2 });
 
 // 2 Problem
 pres.addSection({ title: 'Problem' });
@@ -127,7 +127,7 @@ T(s, 'Palm zones on the mirror standardize the pose; they are not a medical sens
 const steps = [
   ['1', 'Position check', 'Feet, torso and palms on the mirror contours. Cameras check pose, light and stillness first.'],
   ['2', 'Face', 'Structured IR dots to depth, point cloud and mesh (key regions). RGB: expression, skin tone, rPPG pulse.'],
-  ['3', 'Body in 3 planes', 'Skeleton from the front, side and back frames: shoulder, pelvis, head, trunk, scapulae.'],
+  ['3', 'Body in 3 planes', 'Skeleton from three camera pillars (two front, one back): shoulder, pelvis, head, trunk, scapulae.'],
   ['4', 'Result', 'One of 3 statuses with what changed, how reliable, what to do. Report queued to Earth.']];
 steps.forEach((st, i) => {
   const y = 1.45 + i * 1.2;

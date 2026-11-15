@@ -13,7 +13,7 @@ On long missions the body adapts continuously: fluid shifts toward the head, the
 
 ## 2. Solution in one paragraph
 
-LYRA is a stationary **touch mirror between three camera frames** (front, side, back). The crew member steps into the marked area; the mirror shows **contours for the feet, torso and palms**, and the cameras check pose and frame quality. LYRA then captures RGB video, **structured IR depth of the face** and a **3-view skeleton of the body**, filters motion, checks quality, and **AI modules** compare the result with the person's **own baseline** and the current **environment mode** (Earth, microgravity, partial gravity; rover or module context). The mirror shows one of three statuses: **Within baseline**, **Repeat measurement**, or **Refer to specialist**, with an explanation: which indicator changed, how reliable the signal is, and what to do. A low-quality capture gives **"Measurement not confirmed"**, never a made-up number. A report (time series, quality, environment mode, comparison with earlier scans) queues to the medical team on Earth.
+LYRA is a stationary **touch mirror with three camera pillars** (two in front, one behind). The crew member steps into the marked area; the mirror shows **contours for the feet, torso and palms**, and the cameras check pose and frame quality. LYRA then captures RGB video, **structured IR depth of the face** and a **3-view skeleton of the body**, filters motion, checks quality, and **AI modules** compare the result with the person's **own baseline** and the current **environment mode** (Earth, microgravity, partial gravity; rover or module context). The mirror shows one of three statuses: **Within baseline**, **Repeat measurement**, or **Refer to specialist**, with an explanation: which indicator changed, how reliable the signal is, and what to do. A low-quality capture gives **"Measurement not confirmed"**, never a made-up number. A report (time series, quality, environment mode, comparison with earlier scans) queues to the medical team on Earth.
 
 ## 3. Station
 
@@ -23,12 +23,12 @@ Drawings: `docs/drawings/01_general_view.svg`, `02_front_side_views.svg`.
 |---|---|
 | Touch mirror | Display behind a mirror surface; shows foot, torso and palm contours, light cues, live mesh and skeleton, results. Touch passes commands to the UI; it does not measure physiology. |
 | Palm zones | Standardize pose and body orientation for repeatable scans. Not a medical sensor. |
-| Front frame | Face, chest, arms: RGB camera, IR camera, structured IR projector, illumination |
-| Side frame | Profile: head and trunk tilt, chest position, spine curve |
-| Back frame | Shoulders, scapulae, pelvis, visible back symmetry |
+| Face module | In the mirror top bezel: RGB camera, IR camera, structured IR projector, illumination |
+| Front pillars (L / R) | Free-standing, approx. 2000 high, +/-60 deg in front of the crew member; RGB + IR depth modules at head, torso, leg height: face, chest, arms, head and trunk tilt, shoulder and pelvis symmetry |
+| Back pillar | Same modules behind the crew member: shoulders, scapulae, spine curve, pelvis, back symmetry |
 | Identification | 3D face recognition; fallback **NFC reader on the mirror frame** (card kept at the station) |
-| Mounting | Frames attached to the module structure (ISS seat tracks), foot restraints for microgravity |
-| Research option | **Vertical Doppler grips** in the side posts (section 6) |
+| Mounting | Mirror stand and pillar base plates bolted to the floor (ISS seat tracks), no ceiling mount; foot restraints for microgravity |
+| Research option | **Vertical Doppler grips** on the mirror stand legs (section 6) |
 
 ## 4. Face: structured IR light to a mesh
 
@@ -70,7 +70,7 @@ Drawing: `docs/drawings/04_face_pipeline.svg`.
 
 Drawing: `docs/drawings/03_doppler_cassette.svg`.
 
-- Ultrasound Doppler transducers are built into the **vertical side posts as vertical grips**. Doppler is a contact device even when its housing is in a post, so this is an **optional research channel**, not part of the contactless core. Its metrics are shown separately and **excluded from the overall status**.
+- Ultrasound Doppler transducers are built into the **mirror stand legs as vertical grips**. Doppler is a contact device even when its housing is in a post, so this is an **optional research channel**, not part of the contactless core. Its metrics are shown separately and **excluded from the overall status**.
 - **Solid hydrogel cassette (4 parts)** held on the transducer itself: **holder** fixed on the transducer body; **thin replaceable hydrogel pad**; **soft protective rim** limiting material displacement; **thin membrane** protecting the gel and keeping skin contact. The gel must fill the acoustic path; an air gap blocks ultrasound. A thin pad, not a thick block: a thick layer increases distance and deforms under pressure. **Thickness and press force are to be found experimentally on a ground mock-up.**
 - **Workflow:** 1 pad into the holder on the transducer face; 2 check for bubbles and damage; 3 palm on the marked zone; 4 cassette gently pressed to the skin (not a standalone sensor); 5 pulses through the hydrogel; 6 receiver registers the echo; 7 software checks contact quality and signal stability; 8 if poor, reposition the hand or repeat.
 - **Hackathon versions:** demo = mock cassette on the grip + on-screen signal path diagram; extended = real transducer only after a phantom or ground test bench.

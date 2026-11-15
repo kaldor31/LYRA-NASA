@@ -62,7 +62,7 @@
 <rect x="15.0" y="15.0" width="1370.0" height="960.0" rx="0" class="frame" />
 <rect x="25.0" y="25.0" width="1350.0" height="940.0" rx="0" class="thin" />
 <text x="45.0" y="60.0" class="h" text-anchor="start" >Sheet 5. System and AI modules</text>
-<text x="45.0" y="82.0" class="s" text-anchor="start" >LYRA concept (v2: touch mirror between three camera frames). Concept, not a manufacturing drawing; dimensions approximate, in mm.</text>
+<text x="45.0" y="82.0" class="s" text-anchor="start" >LYRA concept (v3: touch mirror + three camera pillars). Concept, not a manufacturing drawing; dimensions approximate, in mm.</text>
 <rect x="985" y="838" width="390" height="127" fill="#fff" stroke="#111" stroke-width="1.6"/>
 <line x1="985.0" y1="872.0" x2="1375.0" y2="872.0" class="thin" />
 <line x1="985.0" y1="898.0" x2="1375.0" y2="898.0" class="thin" />
@@ -83,20 +83,20 @@
 <text x="310.0" y="156.0" class="s" text-anchor="start" >Onboard compute (station / module)</text>
 <text x="45.0" y="152.0" class="b" text-anchor="start" >Sensors</text>
 <rect x="45.0" y="165.0" width="225.0" height="95.0" rx="4" class="blk" />
-<text x="53.0" y="183.0" class="b" text-anchor="start" >Front frame</text>
+<text x="53.0" y="183.0" class="b" text-anchor="start" >Mirror face module</text>
 <text x="53.0" y="199.0" class="s" text-anchor="start" >RGB camera + IR camera</text>
 <text x="53.0" y="213.0" class="s" text-anchor="start" >+ IR projector (face),</text>
-<text x="53.0" y="227.0" class="s" text-anchor="start" >body camera, illumination</text>
+<text x="53.0" y="227.0" class="s" text-anchor="start" >illumination</text>
 <rect x="53.0" y="240.0" width="101.6" height="15" rx="7" fill="#1f5fa8"/>
 <text x="103.8" y="251.0" text-anchor="middle" class="tg">TEAM RECORDING</text>
 <rect x="45.0" y="272.0" width="225.0" height="64.0" rx="4" class="blk" />
-<text x="53.0" y="290.0" class="b" text-anchor="start" >Side frame</text>
-<text x="53.0" y="306.0" class="s" text-anchor="start" >body camera (profile, spine)</text>
+<text x="53.0" y="290.0" class="b" text-anchor="start" >Front pillars L / R</text>
+<text x="53.0" y="306.0" class="s" text-anchor="start" >RGB + IR depth modules H/T/L</text>
 <rect x="53.0" y="316.0" width="101.6" height="15" rx="7" fill="#1f5fa8"/>
 <text x="103.8" y="327.0" text-anchor="middle" class="tg">TEAM RECORDING</text>
 <rect x="45.0" y="348.0" width="225.0" height="64.0" rx="4" class="blk" />
-<text x="53.0" y="366.0" class="b" text-anchor="start" >Back frame</text>
-<text x="53.0" y="382.0" class="s" text-anchor="start" >body camera (scapulae, pelvis)</text>
+<text x="53.0" y="366.0" class="b" text-anchor="start" >Back pillar</text>
+<text x="53.0" y="382.0" class="s" text-anchor="start" >H/T/L modules (scapulae, spine)</text>
 <rect x="53.0" y="392.0" width="101.6" height="15" rx="7" fill="#1f5fa8"/>
 <text x="103.8" y="403.0" text-anchor="middle" class="tg">TEAM RECORDING</text>
 <rect x="45.0" y="424.0" width="225.0" height="78.0" rx="4" class="blk" />
@@ -118,7 +118,7 @@
 <rect x="320.0" y="260.0" width="160.0" height="230.0" rx="4" class="blk" />
 <text x="400.0" y="282.0" class="b" text-anchor="middle" >Quality gate</text>
 <text x="330.0" y="306.0" class="s" text-anchor="start" >pose inside contours</text>
-<text x="330.0" y="322.0" class="s" text-anchor="start" >all 3 views in frame</text>
+<text x="330.0" y="322.0" class="s" text-anchor="start" >all 3 pillar views</text>
 <text x="330.0" y="338.0" class="s" text-anchor="start" >light level</text>
 <text x="330.0" y="354.0" class="s" text-anchor="start" >motion</text>
 <text x="330.0" y="370.0" class="s" text-anchor="start" >sync between views</text>

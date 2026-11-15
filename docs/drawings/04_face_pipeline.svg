@@ -62,7 +62,7 @@
 <rect x="15.0" y="15.0" width="1370.0" height="960.0" rx="0" class="frame" />
 <rect x="25.0" y="25.0" width="1350.0" height="940.0" rx="0" class="thin" />
 <text x="45.0" y="60.0" class="h" text-anchor="start" >Sheet 4. Face pipeline (IR, depth, mesh, RGB)</text>
-<text x="45.0" y="82.0" class="s" text-anchor="start" >LYRA concept (v2: touch mirror between three camera frames). Concept, not a manufacturing drawing; dimensions approximate, in mm.</text>
+<text x="45.0" y="82.0" class="s" text-anchor="start" >LYRA concept (v3: touch mirror + three camera pillars). Concept, not a manufacturing drawing; dimensions approximate, in mm.</text>
 <rect x="985" y="838" width="390" height="127" fill="#fff" stroke="#111" stroke-width="1.6"/>
 <line x1="985.0" y1="872.0" x2="1375.0" y2="872.0" class="thin" />
 <line x1="985.0" y1="898.0" x2="1375.0" y2="898.0" class="thin" />

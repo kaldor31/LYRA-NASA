@@ -1,6 +1,6 @@
 # LYRA: recorded decisions (source of truth)
 
-> v2, 2026-11-15. The team's concept paper `docs/research/LYRA_concept_paper_ru.pdf` (Russian, 22 pages) is authoritative: where this file and the paper differ, the paper wins. One explicit team instruction on top of the paper: **the Doppler transducers are oriented vertically** (vertical grips built into the vertical side posts).
+> v2, 2026-11-15. The team's concept paper `docs/research/LYRA_concept_paper_ru.pdf` (Russian, 22 pages) is authoritative: where this file and the paper differ, the paper wins. One explicit team instruction on top of the paper: **the Doppler transducers are oriented vertically** (vertical grips on the mirror stand legs).
 > v1 decisions (2026-11-14 survey) are superseded where they conflict; the main changes are listed in section 12.
 > The hackathon is under way (deadline Sun 15 Nov 23:59 local): we work fast, and the priority is what the judges see.
 
@@ -19,14 +19,14 @@ One-liner: "LYRA is a touch mirror for contactless crew readiness checks on spac
 Tagline: **"Step in. Scan. Know."**
 
 ## 2. Station (hardware concept)
-- **Touch mirror between 3 frames: front, side, back.** The crew member steps into the marked area. The mirror shows **contours for the feet, the torso and the palms**. Palms on the marked zones **standardize the pose and body orientation; they are not a medical sensor.** Light cues show where to turn or how close to stand.
-- **Frames** are a camera placement and synchronization system, not medical sensors:
-  - front frame: face, chest, arms (RGB camera + IR camera + structured IR projector + illumination);
-  - side frame: profile, head and trunk tilt, spine;
-  - back frame: shoulders, scapulae, pelvis, back symmetry.
+- **Touch mirror + 3 camera pillars** (v3 layout, 2026-11-15: replaces the earlier front/side/back frames). The crew member steps into the marked area. The mirror shows **contours for the feet, the torso and the palms**. Palms on the marked zones **standardize the pose and body orientation; they are not a medical sensor.** Light cues show where to turn or how close to stand.
+- **Pillars** are a camera placement and synchronization system, not medical sensors. Three free-standing pillars (approx. 2000 high) stand on one circle (R approx. 750) around the crew member, 120 deg apart, each with camera modules (RGB + IR depth) at head, torso and leg height:
+  - two front pillars (left / right, +/-60 deg from the facing direction): face, chest, arms, shoulder and pelvis symmetry, head and trunk tilt;
+  - one back pillar: shoulders, scapulae, spine, pelvis, back symmetry.
+- **Face module** (RGB camera + IR camera + structured IR projector + illumination) sits in the top bezel of the full-height touch mirror, which stands on its own stand in front of the crew member.
 - **Cameras check pose and frame quality before capture.** If the person cannot reach the pose, this is stored as a measurement condition, not as pathology.
 - **Identification:** 3D face recognition; fallback is an **NFC reader on the mirror frame** (station reader, card kept at the station). Voice is not used for identification.
-- Mounting: frames attach to the module structure (on the ISS, the standard seat tracks), foot restraints for microgravity. Dimensions in the drawings are approximate.
+- Mounting: each pillar and the mirror stand have a base plate bolted to the floor (on the ISS, the standard seat tracks); a weighted base holds nothing in microgravity. No ceiling attachment. Foot restraints for microgravity. Dimensions in the drawings are approximate.
 
 ## 3. Sensing (contactless core)
 - **Face: structured IR light.** Projector sends an invisible dot/stripe pattern → IR camera captures the pattern deformed by the face → correspondence projector vs image → triangulation → depth map → point cloud → surface reconstruction joins neighbouring points into triangles (mesh). Software: **OpenCV** (calibration, pattern decoding, depth) + **Open3D or PCL** (point cloud, mesh). **The projector does not build the mesh.**
@@ -37,7 +37,7 @@ Tagline: **"Step in. Scan. Know."**
 - **The camera does not measure bone density, discs or muscle strength.** It records external geometry and movement.
 
 ## 4. Optional contact research module: vertical Doppler grips
-- Ultrasound Doppler transducers built into the **vertical side posts as vertical grips**. This is a **contact research channel, not part of the core**, and contradicts a strict "fully contactless" definition, so it is shown separately.
+- Ultrasound Doppler transducers built into the **mirror stand legs as vertical grips**. This is a **contact research channel, not part of the core**, and contradicts a strict "fully contactless" definition, so it is shown separately.
 - **Solid hydrogel cassette, 4 parts:** (1) holder fixed on the transducer body; (2) **thin replaceable hydrogel pad**; (3) soft protective rim limiting material displacement; (4) thin membrane protecting the gel and keeping skin contact. Gel must fully cover the acoustic path (no air gap). Pad thickness and press force: **to be determined experimentally on a ground mock-up**.
 - **Workflow (8 steps):** pad into holder on the transducer face → check for bubbles/damage → palm on the marked zone → cassette gently pressed to the skin (not a standalone sensor) → pulses through the hydrogel → receiver registers the echo → software checks contact quality and signal stability → if poor, ask to reposition the hand or repeat.
 - **Two hackathon versions:** **demo** = mock cassette on the grip + on-screen signal path diagram; **extended** = real transducer only after a phantom / ground test-bench check.
@@ -74,7 +74,7 @@ Position check (feet, torso, palms on the mirror contours) → face: RGB, IR dot
 Owned by the software agents (`lyra/`, `tests/`, `README.md`). Statuses, environment modes, provenance values and research-module handling follow sections 5 to 7. The research module is excluded from the overall status and can be skipped in a session (`skip_research`). Metric keys are canonical in `data/nasa_reference.json`; new posture keys: `trunk_tilt_deg`, `pelvis_tilt_deg`, `scapula_asym_mm`, `spine_length_mm`, `pose_return_s`, `back_pain_flag`.
 
 ## 10. Drawings (5 sheets, English, `docs/drawings/*.svg`, PNG in `docs/drawings/png/`)
-1. `01_general_view`: plan, mirror face with foot/torso/palm contours and NFC reader, isometric of the 3 frames.
+1. `01_general_view`: plan, mirror face with foot/torso/palm contours and NFC reader, isometric of the mirror stand and 3 camera pillars.
 2. `02_front_side_views`: elevations, camera modules and fields of view, vertical Doppler grips (research module).
 3. `03_doppler_cassette`: vertical grip section, 4-part hydrogel cassette, 8-step workflow, demo vs extended.
 4. `04_face_pipeline`: IR dots → depth → point cloud → mesh, RGB channel, fusion.
