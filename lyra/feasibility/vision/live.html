@@ -108,11 +108,11 @@ function resize() { const w = cv.clientWidth, h = cv.clientHeight; renderer.setS
 new ResizeObserver(resize).observe(cv); resize();
 function setMesh(m, measured) {
   if (!m) return;
-  const k = measured ? 4.2 : 1.6;  // measured mesh is in metres around the face centre
+  const sc = measured ? 4.2 : 1.6;  // measured mesh is in metres around the face centre
   let zmin = 1e9, zmax = -1e9; for (const p of m) { if (p[2] == null) continue; zmin = Math.min(zmin, p[2]); zmax = Math.max(zmax, p[2]); }
   m.forEach((p, i) => {
     if (p[2] == null) { posArr[i * 3] = 0; posArr[i * 3 + 1] = 0; posArr[i * 3 + 2] = -50; return; }
-    posArr[i * 3] = p[0] * k; posArr[i * 3 + 1] = -p[1] * k; posArr[i * 3 + 2] = -p[2] * k;
+    posArr[i * 3] = p[0] * sc; posArr[i * 3 + 1] = -p[1] * sc; posArr[i * 3 + 2] = -p[2] * sc;
     const k = (p[2] - zmin) / ((zmax - zmin) || 1);  // near = warm, far = cool
     colArr[i * 3] = 0.95 - 0.4 * k; colArr[i * 3 + 1] = 0.55 + 0.15 * k; colArr[i * 3 + 2] = 0.45 + 0.5 * k;
   });
@@ -167,7 +167,10 @@ async function tick() {
     const L = r.last_scan;
     if (L && L.time !== lastResultTime) { lastResultTime = L.time; showResult(L); }
     if (!L) { $("result").innerHTML = ""; lastResultTime = null; }
-  } catch (e) { $("cam").textContent = "server not reachable"; }
+  } catch (e) {
+    $("cam").textContent = e instanceof TypeError && /fetch|Load failed|NetworkError/i.test(e.message) ? "server not reachable" : "page error: " + e.message;
+    console.error(e);
+  }
   setTimeout(tick, 120);
 }
 function showResult(L) {
