@@ -1,7 +1,7 @@
-# Демо LYRA (веб-приложение на симуляции)
+# LYRA demo (simulation web app)
 fastapi>=0.110
 uvicorn[standard]>=0.29
-# Тесты
+# Tests
 pytest>=8
 httpx>=0.27
-# Модули проверки осуществимости (камера, ESP32) — отдельно: lyra/feasibility/requirements.txt
+# Feasibility modules (camera, ESP32) have their own file: lyra/feasibility/requirements.txt

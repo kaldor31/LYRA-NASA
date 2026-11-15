@@ -1,20 +1,23 @@
-# LYRA — сценарий демо-видео (≤ 30 секунд)
+# LYRA: demo video script (30 seconds or less)
 
-> Правило Space Apps 2026: видео **30 секунд или меньше**; если речь не на английском — **обязательны английские субтитры**. Видео длиннее → проект не допускается к Global Judging. Хостинг — YouTube/Drive/GitHub, публичная ссылка без логина.
-> Источник: https://www.spaceappschallenge.org/resources/project-submission-guide/ (структура 0:00 / 0:02 / 0:05 / 0:10 / 0:20–0:30 — оттуда).
-> Если в кадре есть кадры, созданные ИИ (SI), — **видимый водяной знак** «AI-generated». Без логотипов/флагов/символики миссий NASA. Без людей младше 18 лет.
-> Озвучка — английский (≈70 слов на 30 с). Субтитры = тот же текст.
+> Space Apps 2026 rule: the video is **30 seconds or less**; if the voice is not in English, **English subtitles are required**. A longer video makes the project ineligible for Global Judging. Host on YouTube, Drive or GitHub with a public link, no login.
+> Source: https://www.spaceappschallenge.org/resources/project-submission-guide/ (structure 0:00 / 0:02 / 0:05 / 0:10 / 0:20 to 0:30).
+> Any AI (SI) made frame needs a **visible watermark** ("AI (SI) assisted"). No NASA logos, flags or mission identifiers. No people under 18.
+> Voice-over in English (about 70 words for 30 s). Subtitles = the same text.
+> Team: Alina Dmitriyeva, Daniil Shabalin.
 
-| Время | Кадр | Текст (VO + субтитр) |
+| Time | Shot | Text (VO + subtitle) |
 |---|---|---|
-| 0:00–0:02 | Титр «Team LYRA» на тёмном фоне | "Hi, we're team LYRA." |
-| 0:02–0:05 | Слайд 2: 1–1.5 %/month, 20 min | "In space, bones lose up to one and a half percent a month — and Mars is twenty minutes away." |
-| 0:05–0:10 | Чертёж 01 (EN) → логотип-текст LYRA + слоган | "LYRA: a 3D health scan for long missions. Step in. Grip. Know." |
-| 0:10–0:15 | Запись экрана веб-приложения: облако точек, лицо и ноги подсвечены | "Ninety seconds: 3D cameras scan face and body, smart grips read blood flow, pulse and grip strength." |
-| 0:15–0:20 | График «you vs NASA» — линия выходит из коридора, статус жёлтый | "NASA data sets the expected adaptation. LYRA flags when you change faster than NASA expects." |
-| 0:20–0:26 | Очередь к врачу: МКС → Луна → Марс (задержка) | "Every scan reaches the flight surgeon, even with Mars delay." |
-| 0:26–0:30 | Чертёж 05 (компакт) + «Ships · Rovers · Earth clinics» | "From the station to the rover — and to aging adults on Earth." |
+| 0:00 to 0:02 | Title card "Team LYRA: Alina Dmitriyeva, Daniil Shabalin" | "Hi, we're team LYRA." |
+| 0:02 to 0:05 | Deck slide 2 (stat cards) | "In space the spine grows, posture shifts, and Mars is twenty minutes from a doctor." |
+| 0:05 to 0:10 | Drawing 01 (watermark "AI (SI) assisted drawing"), then "LYRA: Step in. Scan. Know." | "LYRA is a touch mirror for contactless crew readiness checks. Step in. Scan. Know." |
+| 0:10 to 0:16 | App screen recording: Scan tab, IR dots to depth to mesh, three body views | "Infrared light builds a 3D face, the camera reads pulse, three frames check posture." |
+| 0:16 to 0:22 | Status card "Refer to specialist" with the reason, then "Measurement not confirmed" | "AI compares you with your own baseline, and says so when it isn't sure." |
+| 0:22 to 0:27 | Downlink queue ISS / Moon / Mars + data slide (NASA OSDR, CameraVitals) | "NASA data set the context; the medical team gets the report and decides." |
+| 0:27 to 0:30 | Title card "Step in. Scan. Know." | "From orbit to the Moon, and back to Earth." |
 
-**Таймер:** перед заливкой проверить длительность файла ≤ 30,0 с (`ffprobe` или свойства файла). Субтитры — вшить (burn-in) или .srt в YouTube.
+**Timer:** before uploading, check the file is 30.0 s or less (`ffprobe` or file properties). Burn the subtitles in, or upload an .srt to YouTube.
 
-**Подпись к видео (описание на YouTube):** "LYRA — NASA Space Apps 2026, challenge: Create Health Monitoring Software for Astronauts on Space Missions. Concept + simulated web app. Screening, not diagnosis. Drawings and parts of the text were prepared with AI (SI) assistance."
+**On-screen labels:** app footage "Simulated crew data"; drawings "AI (SI) assisted drawing".
+
+**Video description (YouTube):** "LYRA, NASA Space Apps 2026, challenge: Create Health Monitoring Software for Astronauts on Space Missions. Team: Alina Dmitriyeva, Daniil Shabalin. Concept + web app on simulated data. LYRA detects change, it does not diagnose. Code, drawings and parts of the text were prepared with AI (SI) assistance under the team's direction; the idea is the team's own."

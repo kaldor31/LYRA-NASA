@@ -1,12 +1,13 @@
-"""Модель «ожидаемой адаптации» NASA: коридор нормального приспособления по дням полёта.
+"""NASA "expected adaptation" model: the corridor of normal adaptation by mission day.
 
-Для метрики с expected.model:
-  linear      — центр = база × (1 + rate·t), rate в «%/мес» (или абсолютные единицы в мес/сут);
-  saturating  — центр = база × (1 + rate·(1 − e^(−день/τ))), rate — изменение к плато;
-  none        — коридора нет, работает только личная норма.
-Полуширина коридора = band из справочника (в тех же единицах, что rate), но не уже 2σ шума
-измерения (иначе шум датчика выглядел бы как «быстрее NASA»). Если band нет — max(2σ, ½ ожидаемого изменения).
-База — среднее личных измерений до полёта (дни −6…0).
+For a metric with expected.model:
+  linear      center = base x (1 + rate * t), rate in "%/month" (or absolute units per month/day);
+  saturating  center = base x (1 + rate * (1 - e^(-day/tau))), rate is the change to the plateau;
+  none        no corridor, only the personal baseline applies.
+Corridor half-width = band from the reference (same units as rate), but never narrower than 2 sigma of
+measurement noise (otherwise sensor noise would look like "faster than NASA expects"). Without band:
+max(2 sigma, half of the expected change).
+Base = mean of the personal pre-flight measurements (days -6 to 0).
 """
 from __future__ import annotations
 
@@ -44,14 +45,14 @@ def is_modeled(expected: dict[str, Any]) -> bool:
 
 
 def offset(expected: dict[str, Any], base: float, day: float) -> float:
-    """Ожидаемое изменение к дню `day` в абсолютных единицах метрики."""
+    """Expected change by day `day`, in the metric's absolute units."""
     if day <= 0:
         return 0.0
     rate = _num(expected.get("rate")) or 0.0
     unit = str(expected.get("rate_unit", ""))
     relative = "%" in unit
     if expected.get("model") == "linear":
-        per_day = rate / 30.0 if "мес" in unit or "month" in unit else rate
+        per_day = rate / 30.0 if "month" in unit else rate
         amount = per_day * day
     else:
         tau = _num(expected.get("tau_days")) or 1.0

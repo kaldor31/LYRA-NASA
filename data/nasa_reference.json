@@ -1,5 +1,5 @@
 {
-  "_status": "v1, verified by Agent B on 2026-11-14: URLs are real, basis set per source (cited = the figure appears directly in the source). Metric keys and schema (DECISIONS section 11) unchanged. Details: docs/research/nasa_sources.md",
+  "_status": "v2, updated 2026-11-15 to the team concept paper (touch mirror, 3 frames, contactless core, optional vertical-grip Doppler research module). URLs checked 2026-11-15. Schema (DECISIONS section 11) unchanged; posture metrics and data-provenance sources added. Details: docs/research/nasa_sources.md",
   "sources": [
     {
       "id": "hrp-hazards",
@@ -286,8 +286,96 @@
       "title": "Bioadhesive ultrasound for long-term continuous imaging of diverse organs (Wang et al., Science 377:517, 2022)",
       "publisher": "MIT",
       "url": "https://news.mit.edu/2022/ultrasound-stickers-0728",
-      "note_ru": "Not NASA/CSA (publisher outside the schema, for reference only). Solid hydrogel-elastomer instead of liquid gel, worn for 48 h or more. Rationale for the solid hydrogel cartridge in the LYRA handle.",
+      "note_ru": "Not NASA/CSA (reference only). Solid hydrogel-elastomer coupling instead of liquid gel, worn for 48 h or more. Supports only the general principle of solid hydrogel acoustic coupling for the optional Doppler research module (vertical grips); efficiency for our transducer and palm contact is not verified.",
       "accessed": "2026-11-14"
+    },
+    {
+      "id": "nasa-life-sciences-portal",
+      "title": "NASA Life Sciences Portal (Life Sciences Data Archive, LSDA)",
+      "publisher": "NASA",
+      "url": "https://nlsp.nasa.gov/",
+      "note_ru": "Human research data from spaceflight and ground analogs since 1961 (team paper). Used for space context and choice of indicators; it does not contain camera, IR face or 3D posture recordings that we could train on.",
+      "accessed": "2026-11-15"
+    },
+    {
+      "id": "nasa-open-data-portal",
+      "title": "NASA Open Data Portal",
+      "publisher": "NASA",
+      "url": "https://data.nasa.gov/",
+      "note_ru": "Catalog of NASA open datasets (science, space exploration, aeronautics). Used as a catalog only. Official URL; the site did not respond from our network during the 2026-11-15 check (unverified reachability).",
+      "accessed": "2026-11-15"
+    },
+    {
+      "id": "nasa-osdr",
+      "title": "NASA Open Science Data Repository (OSDR)",
+      "publisher": "NASA",
+      "url": "https://osdr.nasa.gov/bio/",
+      "note_ru": "Open biological spaceflight studies, including the SpaceX Inspiration4 (I4) mission datasets. Used to visualize real spaceflight changes, not as camera training data.",
+      "accessed": "2026-11-15"
+    },
+    {
+      "id": "nasa-osdr-i4-news",
+      "title": "OSDR: Inspiration4 mission datasets released",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/osdr-latest-news-i4-mission-datasets/",
+      "note_ru": "NASA announcement of the Inspiration4 datasets in OSDR.",
+      "accessed": "2026-11-15"
+    },
+    {
+      "id": "osdr-osd-575",
+      "title": "OSD-575: SpaceX Inspiration4 Blood Serum Metabolic Panel and Immune/Cardiac Cytokine Arrays",
+      "publisher": "NASA",
+      "url": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-575",
+      "note_ru": "LYRA's one concrete NASA dataset. File LSDS-8_Comprehensive_Metabolic_Panel_CMP.upload_SUBMITTED.csv: 531 rows, columns ANALYTE, VALUE, RANGE_MIN, RANGE_MAX, UNITS, TEST_TYPE, SUBJECT_ID, SEX, timepoint; 4 crew (C001 to C004), 19 analytes (e.g. GLUCOSE mg/dL, SODIUM mmol/L, CALCIUM mg/dL, ALKALINE PHOSPHATASE U/L), timepoints L-92, L-44, L-3, R+1, R+45, R+82, R+194. Role: shows the LYRA idea of a personal pre-flight baseline vs post-flight values with reference ranges on real crew data (provenance tag: NASA material). Not a camera dataset.",
+      "accessed": "2026-11-15"
+    },
+    {
+      "id": "nasa-hidh",
+      "title": "Human Integration Design Handbook (HIDH)",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/organizations/ochmo/human-integration-design-handbook/",
+      "note_ru": "Companion to NASA-STD-3001 Vol. 2; anthropometry, body changes in microgravity and the neutral body posture used for design.",
+      "accessed": "2026-11-15"
+    },
+    {
+      "id": "nasa-std-3001-v2",
+      "title": "NASA-STD-3001 Volume 2: Human Factors, Habitability, and Environmental Health",
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/reference/nasa-std-3001v2/",
+      "note_ru": "NASA standard that requires designs to account for anthropometry changes and posture in microgravity.",
+      "accessed": "2026-11-15"
+    },
+    {
+      "id": "ntrs-nbp-anthro",
+      "title": "Quantification of In-Flight Physical Changes: Anthropometry and Neutral Body Posture (NASA NTRS 20150020939)",
+      "publisher": "NASA",
+      "url": "https://ntrs.nasa.gov/citations/20150020939",
+      "note_ru": "HRP study of in-flight anthropometry and neutral body posture; reports stature growth of about 3% and seated height growth of about 6%.",
+      "accessed": "2026-11-15"
+    },
+    {
+      "id": "ntrs-nbp-sts57",
+      "title": "Evaluation of Neutral Body Posture on Shuttle Mission STS-57 (SPACEHAB-1) (NASA NTRS 20040200967)",
+      "publisher": "NASA",
+      "url": "https://ntrs.nasa.gov/citations/20040200967",
+      "note_ru": "Found larger individual differences in neutral body posture than the earlier Skylab study, which supports a personal baseline instead of one universal reference.",
+      "accessed": "2026-11-15"
+    },
+    {
+      "id": "cameravitals",
+      "title": "Camera Vitals: Camera Measurement of Physiological Vital Signs (dataset list)",
+      "publisher": "Other",
+      "url": "https://cameravitals.github.io/datasets.html",
+      "note_ru": "Not NASA/CSA. Companion site of the McDuff survey (arXiv 2111.11547). The '160 one-minute sequences from 40 participants, RGB video synced with cardiac (PPG) and respiratory signals' figures in our concept paper match the COHFACE entry on this list (Idiap; 12 women, 28 men). We call it 'CameraVitals (COHFACE)'. Role: rPPG validation on Earth; it does not represent microgravity.",
+      "accessed": "2026-11-15"
+    },
+    {
+      "id": "cohface",
+      "title": "COHFACE dataset (Idiap Research Institute)",
+      "publisher": "Other",
+      "url": "https://www.idiap.ch/en/scientific-research/data/cohface",
+      "note_ru": "Not NASA/CSA. RGB face video with synchronized PPG and respiration; registration/licence required for download. Cite Heusch, Anjos, Marcel, 'A reproducible study on remote heart rate measurement' (arXiv 2016).",
+      "accessed": "2026-11-15"
     }
   ],
   "hazards": [
@@ -599,9 +687,9 @@
         "source_ids": [
           "hrp-risks"
         ],
-        "note_ru": "Personal baseline; cross-checked against the handle heart rate."
+        "note_ru": "Personal baseline; the rPPG module also returns signal quality, usable duration, motion, light level and a reject reason. Poor quality gives 'Measurement not confirmed', never a substituted value."
       },
-      "why_ru": "Video heart rate is measured without contact from subtle changes in skin color and is cross-checked against the heart rate from the handles. Weightlessness changes how the heart and blood vessels work (NASA risk \"Cardiovascular Adaptations\"); this is screening, not a diagnosis."
+      "why_ru": "Video heart rate is measured without contact from subtle changes in skin color. Weightlessness changes how the heart and blood vessels work (NASA risk \"Cardiovascular Adaptations\"); this is screening, not a diagnosis."
     },
     "leg_volume_ml": {
       "name_ru": "Lower leg volume",
@@ -724,7 +812,7 @@
           "hrp-zero-t2"
         ]
       },
-      "why_ru": "Grip strength is a simple functional marker of the strength of muscles that lose mass and strength in weightlessness (CSA, NASA). LYRA does not measure bone density; it watches whether strength drops faster than expected. This is screening, not a diagnosis."
+      "why_ru": "Research module (contact, optional; excluded from the overall status). Grip strength is a simple functional marker of the strength of muscles that lose mass and strength in weightlessness (CSA, NASA). LYRA does not measure bone density; it watches whether strength drops faster than expected. This is screening, not a diagnosis."
     },
     "grip_right_kg": {
       "name_ru": "Grip strength (right)",
@@ -747,7 +835,7 @@
         ],
         "note_ru": "Cited for bone only: 1 to 1.5%/month loss (NASA). The -1%/month for grip strength is our estimate; NASA reports loss of muscle strength without a figure for the hand."
       },
-      "why_ru": "Right-hand grip strength is compared with the left hand and with your baseline: a sharp drop or asymmetry is a reason to repeat the measurement. It is a functional marker of the risk of muscle and bone loss; this is screening, not a diagnosis."
+      "why_ru": "Research module (contact, optional; excluded from the overall status). Right-hand grip strength is compared with the left hand and with your baseline: a sharp drop or asymmetry is a reason to repeat the measurement. It is a functional marker of the risk of muscle and bone loss; this is screening, not a diagnosis."
     },
     "doppler_flow_left_cms": {
       "name_ru": "Blood flow (left palm)",
@@ -765,7 +853,7 @@
         ],
         "note_ru": "No trajectory for palm blood flow in the sources; personal baseline."
       },
-      "why_ru": "Ultrasound Doppler measures blood flow velocity in the palmar arteries without needles or electrodes. NASA studies in-flight changes in blood flow with ultrasound (Thigh Cuff, Venous Haemostasis); this is screening, not a diagnosis."
+      "why_ru": "Research module (contact, optional; excluded from the overall status). Ultrasound Doppler measures blood flow velocity in the palmar arteries without needles or electrodes. NASA studies in-flight changes in blood flow with ultrasound (Thigh Cuff, Venous Haemostasis); this is screening, not a diagnosis."
     },
     "doppler_flow_right_cms": {
       "name_ru": "Blood flow (right palm)",
@@ -783,7 +871,7 @@
         ],
         "note_ru": "No trajectory for palm blood flow in the sources; personal baseline."
       },
-      "why_ru": "Right palm blood flow is compared with the left and with the personal baseline. Vascular changes in weightlessness fall under the NASA risk \"Cardiovascular Adaptations\"; this is screening, not a diagnosis."
+      "why_ru": "Research module (contact, optional; excluded from the overall status). Right palm blood flow is compared with the left and with the personal baseline. Vascular changes in weightlessness fall under the NASA risk \"Cardiovascular Adaptations\"; this is screening, not a diagnosis."
     },
     "flow_asymmetry_pct": {
       "name_ru": "Blood flow asymmetry L/R",
@@ -799,7 +887,7 @@
         ],
         "note_ru": "Personal baseline; the asymmetry threshold is our estimate."
       },
-      "why_ru": "A noticeable difference in blood flow between the left and right hand is a reason to repeat the measurement and show the data to a physician. NASA and ESA study changes in venous blood flow and the risk of blood clots in flight (Venous Haemostasis); this is screening, not a diagnosis."
+      "why_ru": "Research module (contact, optional; excluded from the overall status). A noticeable difference in blood flow between the left and right hand is a reason to repeat the measurement and show the data to a physician. NASA and ESA study changes in venous blood flow and the risk of blood clots in flight (Venous Haemostasis); this is screening, not a diagnosis."
     },
     "hr_palm": {
       "name_ru": "Heart rate (palm)",
@@ -815,7 +903,7 @@
         ],
         "note_ru": "Personal baseline."
       },
-      "why_ru": "Resting heart rate from the fingertip sensor is a reference cardiac indicator. A shift from your baseline relates to the NASA risk \"Cardiovascular Adaptations\"; this is screening, not a diagnosis."
+      "why_ru": "Research module (contact, optional; excluded from the overall status). Resting heart rate from the fingertip sensor is a reference cardiac indicator. A shift from your baseline relates to the NASA risk \"Cardiovascular Adaptations\"; this is screening, not a diagnosis."
     },
     "hrv_rmssd_ms": {
       "name_ru": "Heart rate variability (RMSSD)",
@@ -831,9 +919,9 @@
           "hrp-risks",
           "hrp-isolation"
         ],
-        "note_ru": "Personal baseline; HRV from PPG/Doppler, without electrodes."
+        "note_ru": "Personal baseline; research module (contact grips), HRV from the grip pulse signal, without electrodes."
       },
-      "why_ru": "Heart rate variability reflects the balance of the heart's nervous regulation and decreases with stress and sleep loss. It connects the NASA cardiovascular and behavioral health risks; this is screening, not a diagnosis."
+      "why_ru": "Research module (contact, optional; excluded from the overall status). Heart rate variability reflects the balance of the heart's nervous regulation and decreases with stress and sleep loss. It connects the NASA cardiovascular and behavioral health risks; this is screening, not a diagnosis."
     },
     "spo2": {
       "name_ru": "Blood oxygen SpO₂",
@@ -850,7 +938,7 @@
         ],
         "note_ru": "Normal on Earth is usually 95 to 100% (general medical reference, not from NASA); here the personal baseline is used."
       },
-      "why_ru": "Blood oxygen saturation shows whether the body is getting enough oxygen. NASA lists hypoxia as one of its risks (for example, during preparation for a spacewalk); this is screening, not a diagnosis."
+      "why_ru": "Research module (contact, optional; excluded from the overall status). Blood oxygen saturation shows whether the body is getting enough oxygen. NASA lists hypoxia as one of its risks (for example, during preparation for a spacewalk); this is screening, not a diagnosis."
     },
     "skin_temp": {
       "name_ru": "Palm temperature",
@@ -866,7 +954,7 @@
         ],
         "note_ru": "Personal baseline; palm temperature depends on the module environment."
       },
-      "why_ru": "Palm temperature changes with blood flow, cooling, or an incipient illness. Together with symptoms, it helps notice the immune changes NASA warns about earlier; this is screening, not a diagnosis."
+      "why_ru": "Research module (contact, optional; excluded from the overall status). Palm temperature changes with blood flow, cooling, or an incipient illness. Together with symptoms, it helps notice the immune changes NASA warns about earlier; this is screening, not a diagnosis."
     },
     "handgrip_hr_response_bpm": {
       "name_ru": "Heart rate response to handgrip test",
@@ -883,7 +971,7 @@
         ],
         "note_ru": "Classic isometric test; NASA resources give no expected values, so the personal baseline is used."
       },
-      "why_ru": "During the handgrip test, heart rate and blood pressure rise; this checks how the heart and blood vessels respond to load. A change in this response relates to the NASA risk \"Cardiovascular Adaptations\"; this is screening, not a diagnosis."
+      "why_ru": "Research module (contact, optional; excluded from the overall status). During the handgrip test, heart rate and blood pressure rise; this checks how the heart and blood vessels respond to load. A change in this response relates to the NASA risk \"Cardiovascular Adaptations\"; this is screening, not a diagnosis."
     },
     "handgrip_recovery_s": {
       "name_ru": "Recovery after handgrip test",
@@ -900,7 +988,7 @@
         ],
         "note_ru": "Classic isometric test; NASA resources give no expected values, so the personal baseline is used."
       },
-      "why_ru": "The time for heart rate to return to rest after the test shows how quickly the circulatory system recovers. Longer recovery is a reason to repeat the test and consult a physician; this is screening, not a diagnosis."
+      "why_ru": "Research module (contact, optional; excluded from the overall status). The time for heart rate to return to rest after the test shows how quickly the circulatory system recovers. Longer recovery is a reason to repeat the test and consult a physician; this is screening, not a diagnosis."
     },
     "sleep_score": {
       "name_ru": "Sleep (self-rating)",
@@ -974,6 +1062,118 @@
         "note_ru": "Cited range: ISS about 0.2 to 0.5 mSv/day, about 40 to 90 mSv per 6 months (NASA/NTRS); 0.35 is the midpoint of the range (estimate). NASA career limit is 600 mSv. Doses are higher for the Moon/Mars; LYRA uses the station dosimeter values."
       },
       "why_ru": "LYRA does not measure radiation; it imports the cumulative dose from the station dosimeter. This helps the physician relate changes in well-being to the NASA radiation risk (cancer, CNS, cataracts); this is screening, not a diagnosis."
+    },
+    "trunk_tilt_deg": {
+      "name_ru": "Trunk tilt (side view)",
+      "unit": "°",
+      "risk_ids": [
+        "sensorimotor",
+        "bone_muscle"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "nasa-hidh",
+          "ntrs-nbp-anthro",
+          "ntrs-nbp-sts57",
+          "hrp-spinal-health"
+        ],
+        "note_ru": "No expected trajectory in the sources; compared with the personal baseline and the environment mode (Earth upright vs microgravity neutral body posture)."
+      },
+      "why_ru": "The side frame shows head and trunk tilt. In weightlessness the relaxed body takes a neutral posture that differs from standing on Earth (NASA), so LYRA flags only sustained or repeated change from your own baseline. Screening, not a diagnosis."
+    },
+    "pelvis_tilt_deg": {
+      "name_ru": "Pelvis tilt (front view)",
+      "unit": "°",
+      "risk_ids": [
+        "sensorimotor",
+        "bone_muscle"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "nasa-hidh",
+          "ntrs-nbp-anthro",
+          "ntrs-nbp-sts57"
+        ],
+        "note_ru": "Personal baseline; no NASA trajectory."
+      },
+      "why_ru": "The front frame compares left and right pelvis height. A single asymmetry can be your normal build; a change that repeats over several scans is worth a recheck."
+    },
+    "scapula_asym_mm": {
+      "name_ru": "Back and scapula asymmetry (back view)",
+      "unit": "mm",
+      "risk_ids": [
+        "bone_muscle"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "nasa-hidh",
+          "ntrs-nbp-anthro",
+          "ntrs-nbp-sts57",
+          "hrp-spinal-health"
+        ],
+        "note_ru": "Personal baseline; no NASA trajectory."
+      },
+      "why_ru": "The back frame shows the shoulder blades and visible back symmetry. The camera sees external geometry only; it does not measure bone, discs or muscle strength."
+    },
+    "spine_length_mm": {
+      "name_ru": "Spine keypoint distance (C7 to pelvis)",
+      "unit": "mm",
+      "risk_ids": [
+        "bone_muscle"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "ntrs-nbp-anthro",
+          "skylab-anthropometry",
+          "nasa-hidh",
+          "hrp-spinal-health"
+        ],
+        "note_ru": "Spinal elongation in microgravity is expected (NASA: stature up to about 3%); magnitude per person varies, so no fixed corridor."
+      },
+      "why_ru": "NASA describes spine elongation in microgravity. LYRA tracks the distance between spine keypoints against your baseline so expected elongation is not reported as illness; back pain plus a sustained change goes to the medical team."
+    },
+    "pose_return_s": {
+      "name_ru": "Time to return to usual pose",
+      "unit": "s",
+      "risk_ids": [
+        "sensorimotor"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "nasa-hidh",
+          "ntrs-nbp-anthro",
+          "ntrs-nbp-sts57"
+        ],
+        "note_ru": "Team estimate; personal baseline."
+      },
+      "why_ru": "How long it takes to settle back into the marked pose. Slower return can reflect sensorimotor adaptation or fatigue; it is a reason to repeat the scan, not a diagnosis."
+    },
+    "back_pain_flag": {
+      "name_ru": "Back pain (self-report)",
+      "unit": "yes/no",
+      "risk_ids": [
+        "bone_muscle"
+      ],
+      "expected": {
+        "model": "none",
+        "basis": "estimated",
+        "source_ids": [
+          "hrp-spinal-health",
+          "ntrs-nbp-anthro"
+        ],
+        "note_ru": "Self-report."
+      },
+      "why_ru": "A posture change combined with back pain or fatigue is what LYRA escalates to the medical team; posture changes alone are compared with your baseline first."
     }
   },
   "environments": {

@@ -7,12 +7,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const reduceMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 // ---------------- text hygiene: English, no emoji, no em dashes ----------------
-const CYR = /[Ѐ-ӿ]/;
+const CYR = /[\u0400-\u04FF]/;
 const EMOJI = /[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{FE0F}\u{200D}\u{20E3}]/gu;
 function clean(s) {
   return String(s ?? "")
     .replace(EMOJI, "")
-    .replace(/\s*—\s*/g, ", ")
+    .replace(/\s*\u2014\s*/g, ", ")
     .replace(/\s+·\s+/g, ", ")
     .replace(/,\s*,/g, ",")
     .replace(/\s{2,}/g, " ")
@@ -45,20 +45,50 @@ const hydrateIcons = (root = document) => $$("[data-icon]", root).forEach((el) =
 
 // ---------------- vocabulary ----------------
 const ST = {
-  green: { icon: "CircleCheck", word: "Normal" },
-  yellow: { icon: "TriangleAlert", word: "Recheck" },
-  red: { icon: "OctagonAlert", word: "Deviation" },
-  retry: { icon: "RotateCcw", word: "Remeasure" },
+  green: { icon: "CircleCheck", word: "Within baseline" },
+  yellow: { icon: "TriangleAlert", word: "Repeat measurement" },
+  red: { icon: "OctagonAlert", word: "Refer to specialist" },
+  retry: { icon: "RotateCcw", word: "Measurement not confirmed" },
 };
 const badge = (st, sm = false) => st && ST[st]
   ? `<span class="st ${st} ${sm ? "sm" : ""}">${icon(ST[st].icon)}<span class="word">${ST[st].word}</span></span>`
   : `<span class="st none ${sm ? "sm" : ""}">${icon("CircleDashed")}<span class="word">No data</span></span>`;
+const REJECT = { motion: "Too much motion", low_light: "Light too low", light: "Light too low", face_not_visible: "Face not visible",
+  face: "Face not visible", pose_not_reached: "Pose not reached", pose: "Pose not reached", weak_signal: "Weak signal", signal: "Weak signal" };
+const rejectText = (r) => r ? (REJECT[String(r).toLowerCase().replace(/[\s-]+/g, "_")] || clean(en(r, "Signal check failed"))) : "";
 const OVERALL = {
-  green: { title: "Stable", summary: "All measurements are within your norm and NASA's expected adaptation." },
-  yellow: { title: "Recheck needed", steps: ["Follow the action in each measurement marked Recheck.", "Repeat the scan tomorrow."] },
-  red: { title: "Possible deviation", steps: ["Stop and secure yourself at the station. Breathe calmly for 5 minutes.",
-    "Follow the steps in the measurements marked Deviation.", "Repeat the session in 15 minutes.",
-    "The flight surgeon is already receiving the data. If the deviation persists, call them."] },
+  green: { title: "Within baseline", summary: "All core measurements are within your baseline and NASA's expected adaptation." },
+  yellow: { title: "Repeat measurement", steps: ["Follow the action listed under each measurement marked Repeat measurement.", "Repeat the scan tomorrow at the same time of day."] },
+  red: { title: "Refer to specialist", steps: ["Stop and secure yourself at the station. Breathe calmly for 5 minutes.",
+    "Follow the steps under the measurements marked Refer to specialist.", "Repeat the session in 15 minutes.",
+    "The flight surgeon is already receiving the data. If the change persists, call them."] },
+  retry: { title: "Measurement not confirmed", steps: ["Fix the issue shown, then repeat the scan."] },
+};
+const PROV = { team: ["Team recording", "Video"], team_recording: ["Team recording", "Video"], recording: ["Team recording", "Video"],
+  open_dataset: ["Open dataset (CameraVitals)", "Database"], dataset: ["Open dataset (CameraVitals)", "Database"], cameravitals: ["Open dataset (CameraVitals)", "Database"],
+  nasa: ["NASA material", "BookOpen"], nasa_material: ["NASA material", "BookOpen"], simulation: ["Simulation", "FlaskConical"], simulated: ["Simulation", "FlaskConical"] };
+function provenance(p, simulated = true, note = "") {
+  const raw = typeof p === "object" && p ? (p.kind || p.type || p.id || p.source) : p;
+  const k = String(raw || (simulated ? "simulation" : "")).toLowerCase().replace(/[\s-]+/g, "_");
+  const [label, ic] = PROV[k] || (raw ? [clean(en(typeof p === "object" ? (p.label || p.title || raw) : raw, "Data source")), "Database"] : PROV.simulation);
+  return `<span class="tag prov" title="Data provenance${note ? `: ${esc(note)}` : ""}">${icon(ic)}${esc(label)}</span>`;
+}
+/** Environment mode: Earth / microgravity / partial gravity. */
+function envMode(st) {
+  if (st?.env_mode_label && !CYR.test(st.env_mode_label)) return st.env_mode_label.replace(/\s*\(.*\)$/, "");
+  const m = st?.env_mode || st?.gravity_mode;
+  if (m) return clean(en(String(m).replace(/_/g, " "), "")).replace(/^./, (c) => c.toUpperCase());
+  const g = st?.gravity_g;
+  if (g == null) return "";
+  return g >= 0.9 ? "Earth" : g <= 0.01 ? "Microgravity" : "Partial gravity";
+}
+/** Optional contact research module (vertical grips). Excluded from the main status. Fallback when meta lacks research_keys. */
+const RESEARCH_KEYS = new Set(["grip_left_kg", "grip_right_kg", "doppler_flow_left_cms", "doppler_flow_right_cms", "flow_asymmetry_pct",
+  "hr_palm", "hrv_rmssd_ms", "spo2", "skin_temp", "handgrip_hr_response_bpm", "handgrip_recovery_s"]);
+const isResearch = (m) => {
+  if (m && typeof m === "object" && m.module) return m.module === "research";
+  const k = m?.key ?? m;
+  return (S.meta?.research_keys ? S.meta.research_keys.includes(k) : RESEARCH_KEYS.has(k));
 };
 const SCEN = {
   day1: ["Day 1, ISS", "Fluid shift toward the head has just started. The face reference has not caught up yet, so some crew identify with the NFC card."],
@@ -79,20 +109,20 @@ const METRIC = {
   flow_asymmetry_pct: "Blood flow asymmetry L/R", hr_palm: "Pulse (palm)", hrv_rmssd_ms: "Heart rate variability (RMSSD)",
   spo2: "Blood oxygen (SpO₂)", skin_temp: "Palm temperature", handgrip_hr_response_bpm: "Pulse response to handgrip test",
   handgrip_recovery_s: "Recovery after handgrip test", sleep_score: "Sleep (self-rated)", wellbeing_score: "Wellbeing (self-rated)",
-  symptoms_flag: "Symptoms (self-reported)", radiation_dose_msv: "Accumulated dose (station dosimeter)",
+  symptoms_flag: "Symptoms (self-reported)", back_pain_flag: "Back pain (self-reported)", trunk_tilt_deg: "Trunk tilt",
+  pelvis_tilt_deg: "Pelvis tilt", scapula_asym_mm: "Scapula asymmetry", spine_length_mm: "Spine length", pose_return_s: "Time to reach pose", radiation_dose_msv: "Accumulated dose (station dosimeter)",
 };
-const UNIT = { "мл": "mL", "мм": "mm", "кг": "kg", "см/с": "cm/s", "уд/мин": "bpm", "мс": "ms", "л": "L", "см": "cm",
-  "мЗв": "mSv", "/мин": "/min", "раз": "count", "индекс 0–1": "index 0 to 1", "1–5": "1 to 5", "да/нет": "yes/no", "с": "s",
-  "% от исходного к плато": "% of baseline at plateau", "мм к плато": "mm at plateau", "% к плато": "% at plateau",
-  "%/мес": "%/month", "мЗв/сут (МКС)": "mSv/day (ISS)" };
+const UNIT = { "\u043C\u043B": "mL", "\u043C\u043C": "mm", "\u043A\u0433": "kg", "\u0441\u043C/\u0441": "cm/s", "\u0443\u0434/\u043C\u0438\u043D": "bpm", "\u043C\u0441": "ms", "\u043B": "L", "\u0441\u043C": "cm",
+  "\u043C\u0417\u0432": "mSv", "/\u043C\u0438\u043D": "/min", "\u0440\u0430\u0437": "count", "\u0438\u043D\u0434\u0435\u043A\u0441 0–1": "index 0 to 1", "1–5": "1 to 5", "\u0434\u0430/\u043D\u0435\u0442": "yes/no", "\u0441": "s",
+  "% \u043E\u0442 \u0438\u0441\u0445\u043E\u0434\u043D\u043E\u0433\u043E \u043A \u043F\u043B\u0430\u0442\u043E": "% of baseline at plateau", "\u043C\u043C \u043A \u043F\u043B\u0430\u0442\u043E": "mm at plateau", "% \u043A \u043F\u043B\u0430\u0442\u043E": "% at plateau",
+  "%/\u043C\u0435\u0441": "%/month", "\u043C\u0417\u0432/\u0441\u0443\u0442 (\u041C\u041A\u0421)": "mSv/day (ISS)" };
 const unitEn = (u) => UNIT[u] ?? clean(u);
 const mName = (key, fb) => METRIC[key] || clean(en(fb, key));
-const GROUPS = [["face", "Face", "Structured light and RGB camera"], ["body", "Body", "Time-of-flight cameras"],
-  ["hands", "Handles", "Doppler, PPG, load cell"], ["self", "Self-report", "Three-question survey"]];
-const PKT = { "Сеанс (история)": "Session (history)", "Полный тест (неделя)": "Weekly full test", "Экспресс-скан": "Daily scan" };
-const LIGHT = { "🟢": "green", "🟡": "yellow", "🔴": "red" };
+const GROUPS = [["face", "Face", "IR structured light and RGB camera"], ["body", "Body and posture", "Skeletal keypoints from front, side and back views"],
+  ["hands", "Vertical grips", "Load cell, PPG and SpO\u2082"], ["self", "Self-report", "Three-question survey"]];
+const LIGHT = { "\u{1F7E2}": "green", "\u{1F7E1}": "yellow", "\u{1F534}": "red" };
 
-const S = { meta: null, state: null, ref: null, aid: "a1", latest: null, flow: null, chartKey: "face_volume_ml",
+const S = { report: null, meta: null, state: null, ref: null, aid: "a1", latest: null, flow: null, chartKey: "face_volume_ml",
   series: null, link: null, linkAt: 0, dose: null, body: null, chartDay: null };
 
 const crewName = (c) => en(c?.name, CREW[c?.id]?.[0]);
@@ -190,9 +220,14 @@ function initBody() {
   } catch (e) {
     console.error(e);
     $("#body3d").innerHTML = `<div class="fallback-3d">3D view is not available in this browser</div>`;
-    S.body = { setParams() {}, setView() {}, scan() {}, setLabels() {} };
+    S.body = { setParams() {}, setView() {}, scan() {}, setLabels() {}, setSkeleton() {} };
   }
   $$(".views button").forEach((b) => b.onclick = () => setView(b.dataset.view));
+  $("#btn-skel").onclick = () => {
+    const on = $("#btn-skel").getAttribute("aria-pressed") !== "true";
+    $("#btn-skel").setAttribute("aria-pressed", String(on));
+    S.body.setSkeleton?.(on);
+  };
 }
 function setView(v) {
   $$(".views button").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.view === v)));
@@ -208,7 +243,7 @@ function showBody(res) {
   if (Math.abs(b.face_pct) >= 0.5) L.push({ zone: "face", text: `Face ${sgn(b.face_pct)}%`, status: z.face || "green" });
   if (Math.abs(b.legs_pct) >= 0.5) L.push({ zone: "legs", text: `Calves ${sgn(b.legs_pct)}%`, status: z.legs || "green" });
   if (Math.abs(b.height_pct) >= 0.3) L.push({ zone: "body", text: `Height ${sgn(b.height_pct)}%`, status: z.body || "green" });
-  if (z.hands && z.hands !== "green") L.push({ zone: "hands", text: "Handles: grip, blood flow", status: z.hands });
+  if (z.hands && z.hands !== "green") L.push({ zone: "hands", text: "Research grips", status: z.hands });
   if (z.posture && z.posture !== "green") L.push({ zone: "posture", text: "Posture", status: z.posture });
   S.body.setLabels(L);
 }
@@ -226,7 +261,8 @@ function renderHeader() {
     `<button type="button" data-sc="${s.id}" aria-pressed="${s.id === st.scenario}">${esc(en(s.title, SCEN[s.id]?.[0]))}</button>`).join("");
   $$("#scenarios button").forEach((b) => b.onclick = () => switchScenario(b.dataset.sc));
   const g = st.gravity_g != null ? `, ${fmt(st.gravity_g, st.gravity_g ? 2 : 0)} g` : "";
-  $("#env").innerHTML = `${icon(ENV_ICON[st.env] || "Orbit")} <b>${esc(en(st.env_name, ENV[st.env]))}</b>${g}, mission day <b class="tnum">${st.day}</b>`;
+  const mode = envMode(st);
+  $("#env").innerHTML = `${icon(ENV_ICON[st.env] || "Orbit")} <b>${esc(en(st.env_name, ENV[st.env]))}</b>, ${mode ? `${mode.toLowerCase()} ` : ""}${g.replace(/^, /, "")}, mission day <b class="tnum">${st.day}</b>`;
   $("#scenario-sub").textContent = clean(en(st.scenario_subtitle, SCEN[st.scenario]?.[1]));
   renderCrew();
 }
@@ -258,8 +294,10 @@ async function selectAstronaut(aid) {
   S.dose = a.dose;
   showBody(S.latest);
   renderIdle();
+  renderScan();
   renderLink();
   loadChart();
+  loadReport();
 }
 
 // ---------------- tabs (ARIA tabs with arrow keys) ----------------
@@ -272,6 +310,7 @@ function tab(name, focus = false) {
   });
   $$(".tab").forEach((t) => { t.hidden = t.id !== `tab-${name}`; });
   if (name === "chart") drawChart();
+  if (name === "scan") paintStages($("#tab-scan"));
 }
 $$(".tabs [role=tab]").forEach((b) => {
   b.onclick = () => tab(b.dataset.tab);
@@ -304,7 +343,7 @@ function renderIdle() {
         <button type="button" class="btn lg" data-start="weekly">${icon("Activity")}Weekly Full Test</button>
         <button type="button" class="btn quiet lg" data-start="training">${icon("GraduationCap")}Training${first ? " (recommended)" : ""}</button>
       </div>
-      <p class="hint">Daily scan takes about 90 s: 3D scan, handles, two squeezes, three questions. The weekly test adds a 2 min handgrip hold. Training records nothing.</p>
+      <p class="hint">Daily scan takes about 90 s: stand on the marks, face and body scan, three short questions. Grips with Doppler are an optional research module. The weekly test adds a 2 min handgrip hold. Training records nothing.</p>
     </div>
     <div id="last-result"></div>`;
   $$("[data-start]", box).forEach((b) => b.onclick = () => startFlow(b.dataset.start));
@@ -332,21 +371,29 @@ function overallText(o, res) {
 
 function verdictView(res, fresh) {
   const o = res.overall, t = overallText(o, res);
-  const fast = (o.faster_than_nasa || []);
+  const fast = (o.faster_than_nasa || []).filter((k) => !isResearch(k));
+  const offNorm = (o.flagged || []).filter((k) => !fast.includes(k) && !isResearch(k));
+  const research = [...new Set([...(o.flagged || []).filter(isResearch), ...(o.research?.flagged || [])])];
+  const reasons = (o.flag_reasons || []).filter((r) => r.module !== "research" && !isResearch(r.key));
   const dl = res.downlink;
+  const mode = envMode({ ...S.state, ...res });
   const el = document.createElement("section");
   el.className = `verdict ${o.status}`;
   el.setAttribute("aria-label", "Overall status");
   el.innerHTML = `
     <div class="head"><span class="title">${icon(ST[o.status]?.icon || "CircleDashed")}${esc(t.title)}</span>
-      <span class="when">${res.live ? (res.training ? "Training result, not recorded" : `Today, mission day ${res.day}`) : `Last session, day ${res.day}, simulated history`}${res.mode === "weekly" ? ", weekly test" : ""}</span></div>
-    ${t.summary ? `<p class="summary">${esc(t.summary)}</p>` : ""}
+      <span class="when">${res.live ? (res.training ? "Training result, not recorded" : `Today, mission day ${res.day}`) : `Last session, day ${res.day}`}${res.mode === "weekly" ? ", weekly test" : ""}${mode ? `, ${mode.toLowerCase()}` : ""}</span>
+      ${provenance(res.provenance ?? res.data_source, res.simulated !== false, en(res.provenance_note, ""))}</div>
+    ${o.status === "green" && t.summary ? `<p class="summary">${esc(t.summary)}</p>` : ""}
     <dl class="facts">
       <dt>Vs NASA expectation</dt>
       <dd>${fast.length ? `Faster than expected: ${fast.map((k) => `<button type="button" class="linkbtn" data-chart="${k}">${esc(mName(k))}</button>`).join(", ")}`
         : "All tracked changes are within NASA's expected adaptation corridor."}</dd>
+      ${offNorm.length ? `<dt>Vs your own baseline</dt><dd>Outside your 14-day baseline: ${offNorm.map((k) => `<button type="button" class="linkbtn" data-chart="${k}">${esc(mName(k))}</button>`).join(", ")}</dd>` : ""}
+      ${reasons.length ? `<dt>Why flagged</dt><dd>${reasons.map((r) => `<div>${badge(r.status, true)} ${esc(mName(r.key, r.name))}: ${esc(en(r.reason, ST[r.status]?.word || ""))}</div>`).join("")}</dd>` : ""}
       ${t.steps.length ? `<dt>${o.status === "red" ? "Do this now" : "Next step"}</dt><dd><ol class="steps-list">${t.steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></dd>`
         : `<dt>Next step</dt><dd>${res.streak != null ? `Keep the streak going: scan again tomorrow.` : "Scan again tomorrow."}</dd>`}
+      ${research.length ? `<dt>Research module</dt><dd class="muted">${badge(o.research?.status || "yellow", true)} ${research.map((k) => esc(mName(k))).join(", ")}. Contact grips are shown separately and do not set the main status.</dd>` : ""}
     </dl>
     ${dl ? `<p class="linkline">${icon("SatelliteDish")}Sent to the flight surgeon: <b>${dl.status === "delivered" ? "delivered" : "in transit"}</b>${dl.status !== "delivered" ? `, ${fmtDur(dl.delay_s)} one-way delay` : ""}</p>` : ""}
     ${fresh && res.training ? `<p class="linkline">${icon("GraduationCap")}Training run. Nothing was recorded or sent.</p>` : ""}`;
@@ -362,7 +409,7 @@ function openChart(key) {
 // ---------------- measurements ----------------
 function describeMetric(m) {
   if (m.text && !CYR.test(m.text)) return m.text;
-  if (m.status === "retry") return "Signal quality was too low for a reliable reading. Remeasure.";
+  if (m.status === "retry") return `The reading was rejected${m.reject_reason ? `: ${rejectText(m.reject_reason).toLowerCase()}` : ""}. It is not used for status.`;
   const u = unitEn(m.unit), pre = m.preflight;
   const parts = [];
   if (m.mission_pct != null && m.group !== "self") parts.push(`${sgn(m.mission_pct)}% vs your preflight baseline.`);
@@ -378,8 +425,8 @@ function describeMetric(m) {
 }
 
 function valueOf(m) {
-  if (m.value == null) return "-";
-  if (m.key === "symptoms_flag") return m.value >= 1 ? "Yes" : "No";
+  if (m.value == null || m.confirmed === false) return '<span class="faint">-</span>';
+  if (m.key === "symptoms_flag" || m.key === "back_pain_flag") return m.value >= 1 ? "Yes" : "No";
   if (m.group === "self") return `${fmt(m.value, 0)}<small>/ 5</small>`;
   const d = m.key === "facial_tension" ? 2 : Math.abs(m.value) >= 100 ? 0 : 1;
   return `${fmt(m.value, d)}<small>${esc(unitEn(m.unit))}</small>`;
@@ -397,9 +444,31 @@ function gauge(m) {
     <span class="mid" style="left:${P(c.center)}"></span><span class="dot ${dotSt}" style="left:${P(m.value)}"></span></span>`;
 }
 
+function signalText(sg) {
+  if (!sg || typeof sg !== "object") return "";
+  const parts = [];
+  if (sg.usable_seconds != null && sg.window_seconds != null) parts.push(`${fmt(sg.usable_seconds, 0)} of ${fmt(sg.window_seconds, 0)} s usable`);
+  if (sg.motion != null) parts.push(`motion ${typeof sg.motion === "number" ? fmt(sg.motion, 2) : esc(sg.motion)}`);
+  if (sg.light != null) parts.push(`light ${typeof sg.light === "number" ? fmt(sg.light, 2) : esc(sg.light)}`);
+  return parts.length ? `. ${parts.join(", ")}` : "";
+}
+const reliability = (q) => q == null ? "" : q >= 0.85 ? "reliable" : q >= 0.6 ? "usable, moderate quality" : "low quality";
+function metricAction(m) {
+  const steps = (m.steps || []).filter(Boolean);
+  const act = m.action || "";
+  if (m.status === "retry") return { act: `${rejectText(m.reject_reason) || "Signal check failed"}. Fix it, then repeat the scan.`, steps: [] };
+  if (CYR.test(act) || steps.some((x) => CYR.test(x))) {
+    if (m.status === "red") return { act: "", steps: ["Repeat the measurement at rest.", "Note any symptoms in the survey.", "The flight surgeon already has the data. Call them if this persists."] };
+    if (m.status === "yellow") return { act: "Repeat the measurement tomorrow at the same time of day.", steps: [] };
+    return { act: "", steps: [] };
+  }
+  return { act: m.status === "red" ? "" : act, steps };
+}
+
 function mRow(m) {
-  const open = m.status === "red" || m.status === "yellow";
-  const steps = (m.steps || []);
+  const open = m.status === "red" || m.status === "yellow" || m.status === "retry";
+  const { act, steps } = metricAction(m);
+  const q = m.quality ?? m.signal_quality;
   return `<details class="mrow" ${open ? "open" : ""}>
     <summary>
       <span class="nm">${esc(mName(m.key, m.name))}</span>
@@ -410,12 +479,15 @@ function mRow(m) {
       <span class="chev">${icon("ChevronDown")}</span>
     </summary>
     <div class="detail">
-      <p>${esc(describeMetric(m))}</p>
-      ${m.action && m.status !== "red" ? `<p class="act">${esc(m.action)}</p>` : ""}
-      ${steps.length ? `<ol class="steps-list act">${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>` : ""}
+      <dl class="facts tight">
+        <dt>What changed</dt><dd>${esc(describeMetric(m)) || "No change from your baseline."}</dd>
+        ${q != null ? `<dt>Signal</dt><dd>${fmt(q * 100, 0)}% quality, ${reliability(q)}${m.reject_reason ? `. Rejected: ${esc(rejectText(m.reject_reason))}` : ""}${signalText(m.signal)}</dd>` : ""}
+        <dt>Action</dt><dd>${act ? esc(act) : steps.length ? "" : "No action needed."}${steps.length ? `<ol class="steps-list">${steps.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : ""}</dd>
+      </dl>
       <div class="btn-row">
         <button type="button" class="linkbtn" data-why="${m.key}">${icon("BookOpen")}Why it matters</button>
         ${m.group !== "self" ? `<button type="button" class="linkbtn" data-chart="${m.key}">${icon("ChartSpline")}Open chart</button>` : ""}
+        ${m.provenance ? provenance(m.provenance) : ""}
       </div>
     </div>
   </details>`;
@@ -425,14 +497,21 @@ function metricsView(res) {
   const el = document.createElement("section");
   el.setAttribute("aria-labelledby", "mh");
   const order = { red: 0, yellow: 1, retry: 2, green: 3 };
+  const sort = (a, b) => (order[a.status] ?? 4) - (order[b.status] ?? 4);
   let html = `<h2 class="h-section" id="mh">Measurements</h2>
     <div class="colhead" aria-hidden="true"><span>Measure</span><span class="vcol">Today</span><span class="dcol">Vs preflight</span><span class="gcol">NASA corridor</span><span class="scol">Status</span><span></span></div>`;
   for (const [g, title, sensor] of GROUPS) {
-    const ms = res.metrics.filter((m) => m.group === g).sort((a, b) => order[a.status] - order[b.status]);
+    const ms = res.metrics.filter((m) => m.group === g && !isResearch(m)).sort(sort);
     if (!ms.length) continue;
     html += `<h3 class="h-sub">${title} <span class="faint" style="font-weight:400">${sensor}</span></h3><div class="metrics">${ms.map(mRow).join("")}</div>`;
   }
-  html += `<p class="small faint" style="margin-top:var(--s4)">${esc(en(res.overall.disclaimer, "This is screening, not a diagnosis."))} Values are simulated along NASA expected-adaptation curves.</p>`;
+  const rs = res.metrics.filter(isResearch).sort(sort);
+  if (rs.length) {
+    html += `<section class="research" aria-labelledby="rh"><h3 class="h-sub" id="rh"><span class="tag">${icon("FlaskConical")}Research module</span> Contact grips
+      <span class="faint" style="font-weight:400">${esc(en(res.overall?.research?.note, "Optional contact grips in the side posts with a hydrogel cassette. Not part of the main status."))}</span></h3>
+      <div class="metrics">${rs.map(mRow).join("")}</div></section>`;
+  }
+  html += `<p class="small faint" style="margin-top:var(--s4)">${esc(en(res.overall.disclaimer, "This is screening, not a diagnosis."))} Core LYRA is contactless. Values here are simulated along NASA expected-adaptation curves.</p>`;
   el.innerHTML = html;
   $$("[data-why]", el).forEach((b) => b.onclick = () => whyCard(b.dataset.why));
   $$("[data-chart]", el).forEach((b) => b.onclick = () => openChart(b.dataset.chart));
@@ -440,18 +519,18 @@ function metricsView(res) {
 }
 
 // ---------------- session flow ----------------
-const STEP_NAMES = { identify: "Identify", scan: "3D scan", rest: "Handles", grip: "Grip", handgrip: "Handgrip test",
-  recovery: "Recovery", survey: "Survey", send: "Result" };
+const STEP_NAMES = { position: "Position", identify: "Identify", palms: "Palms", scan: "Face scan", turn: "Body views",
+  rest: "Doppler (research)", grip: "Grip (research)", handgrip: "Handgrip (research)", recovery: "Recovery", survey: "Survey", send: "Result" };
 
 class Cancelled extends Error {}
 
 class Flow {
   constructor(mode, training) {
     this.mode = mode; this.training = training; this.stopped = false;
-    this.steps = ["identify", "scan", "rest", "grip", ...(mode === "weekly" ? ["handgrip", "recovery"] : []), "survey", "send"];
+    this.steps = ["position", "identify", "palms", "scan", "turn", "rest", "grip", ...(mode === "weekly" ? ["handgrip", "recovery"] : []), "survey", "send"];
     this.i = 0; this.held = false; this.squeezes = 0; this.answer = null; this.nfc = null;
     const fast = S.meta.fast;
-    this.dur = { scan: fast ? 3000 : 8000, rest: fast ? 3000 : 8000, handgrip: fast ? 8000 : 20000, recovery: fast ? 3000 : 6000 };
+    this.dur = { pose: fast ? 1600 : 3200, view: fast ? 1500 : 3500, scan: fast ? 3600 : 8000, rest: fast ? 3000 : 8000, handgrip: fast ? 8000 : 20000, recovery: fast ? 3000 : 6000 };
   }
   stop() {
     this.stopped = true;
@@ -477,6 +556,7 @@ class Flow {
   }
   frame(step, prompt, sub, body = "", say = prompt) {
     this.i = this.steps.indexOf(step);
+    this.prompt = prompt;
     $("#tab-session").innerHTML = `
       ${this.training ? `<p class="notice training">${icon("GraduationCap", "ico-20")}<span><b>Training run.</b> Nothing is recorded or sent.</span></p><div style="height:var(--s4)"></div>` : ""}
       <ol class="stepper" aria-label="Session steps">${this.steps.map((s, k) => `<li class="${k < this.i ? "done" : k === this.i ? "now" : ""}" ${k === this.i ? 'aria-current="step"' : ""}>${STEP_NAMES[s]}</li>`).join("")}</ol>
@@ -510,6 +590,7 @@ async function startFlow(kind) {
   renderCrew();
   tab("session");
   try {
+    await stepPosition(f);
     await stepIdentify(f);
     if (!training && !trained(S.aid)) {
       const go = await ask(f, "This looks like your first session. Run the training first? It records nothing.",
@@ -517,19 +598,24 @@ async function startFlow(kind) {
       markTrained(S.aid);
       if (go) { S.flow = null; return startFlow("training"); }
     }
+    await stepPalms(f);
     await stepScan(f);
+    await stepTurn(f);
     await stepRest(f);
-    await stepGrip(f);
     let handgrip = null;
-    if (mode === "weekly") { handgrip = await stepHandgrip(f); await stepRecovery(f); }
+    if (!f.skipResearch) {
+      await stepGrip(f);
+      if (mode === "weekly") { handgrip = await stepHandgrip(f); await stepRecovery(f); }
+    }
     const survey = await stepSurvey(f);
     f.frame("send", training ? "Training complete" : "Sending your result…", training ? "This is what a real result would look like." : "Data goes to the flight surgeon automatically.");
-    const res = await api("/api/sessions", { astronaut_id: S.aid, mode, training, survey, handgrip });
+    const res = await api("/api/sessions", { astronaut_id: S.aid, mode, training, survey, handgrip, include_research: false, skip_research: !!f.skipResearch });
     if (training) markTrained(S.aid);
     finishFlow(res);
   } catch (e) {
     S.flow = null;
     S.body.scan(false);
+    S.body.setSkeleton(false); $("#btn-skel")?.setAttribute("aria-pressed", "false");
     if (e instanceof Cancelled) { toast("Session stopped. Nothing was recorded.", "Square"); Voice.say("Session stopped."); }
     else { console.error(e); toast(`Something went wrong: ${e.message}. Try the session again.`, "TriangleAlert", 6000); }
     renderCrew();
@@ -548,7 +634,7 @@ function ask(f, question, options) {
 }
 
 async function stepIdentify(f) {
-  f.frame("identify", "Step into the foot restraints and look at the mirror", "3D face identification: infrared dot projector and infrared camera. Voice is never used for identification.",
+  f.frame("identify", "Look at the mirror", "3D face identification: infrared dot projector and infrared camera. Voice is never used for identification.",
     `<div class="readouts"><div><b id="id-conf">…</b><span>Match confidence</span></div><div><b>${fmt(S.meta.face_id_threshold * 100, 0)}%</b><span>Required</span></div></div><div id="id-msg"></div>`);
   setView("front");
   S.body.scan(true);
@@ -564,7 +650,7 @@ async function stepIdentify(f) {
     return;
   }
   const reason = en(r.reason, "Your face has changed with early-mission swelling, and the reference is still updating.");
-  const hint = en(r.hint, "Hold the NFC card to the right handle.");
+  const hint = en(r.hint, "Hold your NFC card to the station reader.");
   $("#id-msg").innerHTML = `<div class="idcard">${icon("Nfc")}
       <div><p><b>Face match is not confident enough.</b> ${esc(reason)}</p>
       <p class="muted">${esc(hint)} The card is kept at the station.</p>
@@ -585,18 +671,155 @@ async function stepIdentify(f) {
   await f.wait(1300);
 }
 
+// ---- live quality checks before capture ----
+const CHECKS = { feet: ["Footprints", "Feet on the marks"], face: ["ScanFace", "Face visible"], light: ["Sun", "Light level"],
+  motion: ["Move", "Holding still"], pose: ["PersonStanding", "Pose reached"], palms: ["Hand", "Both palms on the zones"] };
+const checksHTML = (ids) => `<ul class="checks" aria-label="Quality checks">${ids.map((id) =>
+  `<li data-check="${id}" class="pending">${icon("CircleDashed")}<span>${CHECKS[id][1]}</span><em class="faint">checking…</em></li>`).join("")}</ul>`;
+/** Ticks the checks one by one; "motion" briefly fails once to show the gate is real. */
+async function runChecks(f, ids, ms) {
+  const per = ms / ids.length;
+  for (const id of ids) {
+    const li = $(`[data-check="${id}"]`);
+    if (id === "motion" && !f._motionShown) {
+      f._motionShown = true;
+      if (li) { li.className = "fail"; li.innerHTML = `${icon("TriangleAlert")}<span>${CHECKS[id][1]}</span><em>Movement detected, hold still</em>`; }
+      mirror("Hold still");
+      await f.wait(per * 1.2);
+    } else await f.wait(per);
+    if (li) { li.className = "ok"; li.innerHTML = `${icon("CircleCheck")}<span>${CHECKS[id][1]}</span><em>OK</em>`; }
+  }
+  mirror(f.prompt);
+}
+
+const FEET_SVG = `<svg class="marks" viewBox="0 0 240 150" role="img" aria-label="Marked standing area with two foot contours">
+  <rect x="6" y="6" width="228" height="138" rx="6" class="area"/>
+  <g class="foot" id="foot-l"><path d="M92 40c-14 0-20 16-20 34s4 46 18 46 16-20 16-40-2-40-14-40z"/></g>
+  <g class="foot" id="foot-r"><path d="M148 40c14 0 20 16 20 34s-4 46-18 46-16-20-16-40 2-40 14-40z"/></g>
+  <text x="120" y="138" text-anchor="middle">Marked area, about 1.2 x 1.2 m</text></svg>`;
+const PALMS_SVG = `<svg class="marks" viewBox="0 0 240 150" role="img" aria-label="Mirror with two marked palm zones">
+  <rect x="6" y="6" width="228" height="138" rx="6" class="area"/>
+  <g class="foot" id="palm-l"><rect x="40" y="38" width="60" height="74" rx="14"/></g>
+  <g class="foot" id="palm-r"><rect x="140" y="38" width="60" height="74" rx="14"/></g>
+  <text x="70" y="80" text-anchor="middle" class="lab">L</text><text x="170" y="80" text-anchor="middle" class="lab">R</text>
+  <text x="120" y="138" text-anchor="middle">Palm zones on the mirror, for pose only</text></svg>`;
+
+async function stepPosition(f) {
+  f.frame("position", "Step into the marked area", "Place your feet on the two foot contours and secure the foot restraints. The same stance every day makes scans comparable.",
+    `<div class="pose-grid">${FEET_SVG}${checksHTML(["feet", "pose"])}</div>`,
+    f.training ? "Step into the marked area and put your feet on the two foot contours. In microgravity, secure the foot restraints." : "Step into the marked area.");
+  setView("front");
+  await f.timed(f.dur.pose, (p) => { $("#foot-l")?.classList.toggle("on", p > 0.3); $("#foot-r")?.classList.toggle("on", p > 0.55); });
+  await runChecks(f, ["feet", "pose"], 700);
+}
+
+async function stepPalms(f) {
+  f.frame("palms", "Place both palms on the marked zones of the mirror", "The palm zones only standardize your pose and shoulder height. They are not a medical sensor.",
+    `<div class="pose-grid">${PALMS_SVG}${checksHTML(["palms", "pose"])}</div>`,
+    f.training ? "Place both palms flat on the marked zones of the mirror. This only fixes your pose. It does not measure anything." : "Place both palms on the marked zones.");
+  await f.timed(f.dur.pose, (p) => { $("#palm-l")?.classList.toggle("on", p > 0.3); $("#palm-r")?.classList.toggle("on", p > 0.55); });
+  await runChecks(f, ["palms", "pose"], 700);
+}
+
+// ---- face IR pipeline: dot pattern -> depth map -> point cloud -> triangle mesh ----
+const FACE_STAGES = [["IR dot pattern", "Projector lights the face with invisible infrared dots"], ["Depth map", "Dot shifts become distance per pixel"],
+  ["Point cloud", "Depth pixels become 3D points"], ["Triangle mesh", "Points are joined into a surface; volume is computed"]];
+function faceDepth(x, y) { // x, y in -1..1 inside the face ellipse
+  const r = x * x + y * y;
+  if (r >= 1) return -1;
+  const nose = 0.35 * Math.exp(-((x * x) / 0.02 + ((y - 0.05) ** 2) / 0.08));
+  const eyes = -0.12 * (Math.exp(-(((x - 0.35) ** 2) + ((y + 0.15) ** 2)) / 0.02) + Math.exp(-(((x + 0.35) ** 2) + ((y + 0.15) ** 2)) / 0.02));
+  return Math.sqrt(1 - r) * 0.8 + nose + eyes;
+}
+function drawStage(canvas, k) {
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1, W = canvas.clientWidth || 120, H = canvas.clientHeight || 140;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const c = canvas.getContext("2d"); c.scale(dpr, dpr); c.clearRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2, rx = W * 0.34, ry = H * 0.4;
+  let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const P = (x, y) => [cx + x * rx, cy + y * ry];
+  if (k === 0) {
+    c.fillStyle = "rgba(143,178,232,0.9)";
+    for (let i = 0; i < 900; i++) { const x = rnd() * 2.2 - 1.1, y = rnd() * 2.2 - 1.1, d = faceDepth(x, y); const [px, py] = P(x + (d > 0 ? d * 0.06 : 0), y);
+      c.globalAlpha = d > 0 ? 0.9 : 0.25; c.fillRect(px, py, 1.4, 1.4); }
+    c.globalAlpha = 1;
+  } else if (k === 1) {
+    const img = c.createImageData(Math.round(W * dpr), Math.round(H * dpr));
+    for (let py = 0; py < img.height; py++) for (let px = 0; px < img.width; px++) {
+      const d = faceDepth((px / dpr - cx) / rx, (py / dpr - cy) / ry), o = (py * img.width + px) * 4;
+      const v = d > 0 ? 40 + Math.min(1, d) * 200 : 14;
+      img.data[o] = v * 0.85; img.data[o + 1] = v * 0.92; img.data[o + 2] = v; img.data[o + 3] = 255;
+    }
+    c.putImageData(img, 0, 0);
+  } else if (k === 2) {
+    for (let gy = -1; gy <= 1; gy += 0.07) for (let gx = -1; gx <= 1; gx += 0.07) {
+      const x = gx + (rnd() - 0.5) * 0.03, y = gy + (rnd() - 0.5) * 0.03, d = faceDepth(x, y);
+      if (d <= 0) continue;
+      const [px, py] = P(x * 0.95 + 0.12 * d * 0.4, y);
+      const v = Math.round(90 + d * 150);
+      c.fillStyle = `rgb(${v * 0.8 | 0},${v * 0.88 | 0},${v})`; c.fillRect(px - 1, py - 1, 2, 2);
+    }
+  } else {
+    const N = 14, pts = [];
+    for (let j = 0; j <= N; j++) { pts[j] = []; for (let i = 0; i <= N; i++) { const x = -1 + (2 * i) / N, y = -1 + (2 * j) / N; pts[j][i] = [x, y, faceDepth(x, y)]; } }
+    c.lineWidth = 0.8;
+    const seg = (a, b) => { if (a[2] <= 0 || b[2] <= 0) return; const v = Math.round(80 + ((a[2] + b[2]) / 2) * 140);
+      c.strokeStyle = `rgba(${v * 0.75 | 0},${v * 0.85 | 0},${v},0.9)`; c.beginPath(); c.moveTo(...P(a[0] + a[2] * 0.05, a[1])); c.lineTo(...P(b[0] + b[2] * 0.05, b[1])); c.stroke(); };
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { seg(pts[j][i], pts[j][i + 1]); seg(pts[j][i], pts[j + 1][i]); seg(pts[j][i], pts[j + 1][i + 1]); }
+  }
+}
+const stagesHTML = (active = 4) => `<ol class="stages" aria-label="Face IR pipeline">${FACE_STAGES.map(([t, d], k) =>
+  `<li class="${k < active ? "on" : ""}" ${k === active - 1 ? 'aria-current="step"' : ""}><canvas data-stage="${k}" width="120" height="140" aria-hidden="true"></canvas><b>${k + 1}. ${t}</b><span>${d}</span></li>`).join("")}</ol>`;
+const paintStages = (root = document) => $$("canvas[data-stage]", root).forEach((cv) => drawStage(cv, +cv.dataset.stage));
+
 async function stepScan(f) {
-  f.frame("scan", "Stand still and keep your arms relaxed", `Face: structured light, projectors take turns. Body: time-of-flight cameras on three posts. <span class="faint">A real scan takes 20 s.</span>`,
-    `<div class="readouts"><div><b id="pts-face">0</b><span>Face points</span></div><div><b id="pts-body">0</b><span>Body points</span></div><div><b id="proj">1 of 3</b><span>Active projector</span></div></div>`,
-    f.training ? "Now the 3D scan. Stand straight with your arms relaxed. The projectors use invisible infrared dots. They are safe." : "Stand still and keep your arms relaxed.");
-  setView(reduceMotion() ? "front" : "orbit");
+  f.frame("scan", "Keep your face still and look straight ahead", `IR structured light builds the face surface in four stages. The RGB camera runs as a separate channel: expression, skin tone and pulse from video (rPPG). <span class="faint">A real scan takes 20 s.</span>`,
+    `${checksHTML(["face", "light", "motion"])}${stagesHTML(0)}
+     <div class="readouts"><div><b id="pts-face">0</b><span>Face points</span></div><div><b id="proj">1 of 3</b><span>Active projector</span></div>
+       <div><b id="rppg">-</b><span>RGB channel: rPPG pulse, bpm</span></div><div><b id="rq">-</b><span>rPPG signal quality</span></div></div>`,
+    f.training ? "Now the face scan. Look straight ahead and keep still. The projectors use invisible infrared dots. They are safe." : "Keep your face still and look straight ahead.");
+  setView("front");
+  await runChecks(f, ["face", "light", "motion"], 1400);
+  paintStages($("#flow-body"));
   S.body.scan(true);
+  const lis = $$("#flow-body .stages li");
   await f.timed(f.dur.scan, (p) => {
+    const st = Math.min(4, 1 + Math.floor(p * 4));
+    lis.forEach((li, k) => { li.classList.toggle("on", k < st); li.toggleAttribute("aria-current", k === st - 1); });
     $("#pts-face").textContent = fmt(p * 31000, 0);
-    $("#pts-body").textContent = fmt(p * 214000, 0);
     $("#proj").textContent = `${1 + (Math.floor(p * 9) % 3)} of 3`;
+    if (p > 0.25) { $("#rppg").textContent = fmt(63 + Math.sin(p * 9), 0); $("#rq").textContent = `${fmt(78 + p * 14, 0)}%`; }
   });
   S.body.scan(false);
+}
+
+/** Which reference posture is used in this environment (drives the on-screen wording). */
+function postureRef(res) {
+  const mode = envMode({ ...S.state, ...(res || {}) });
+  if (mode === "Earth") return "your standing preflight baseline";
+  if (mode === "Microgravity") return "the microgravity neutral body posture (NASA), not the standing posture on Earth";
+  return "the partial-gravity upright stance, not the standing posture on Earth";
+}
+
+async function stepTurn(f) {
+  const views = [["front", "Face the mirror"], ["side", "Turn your right side to the mirror"], ["back", "Turn your back to the mirror"]];
+  f.frame("turn", views[0][1], `Three synced views give the skeletal keypoint model: head, shoulders, elbows, pelvis, knees, feet. Posture is compared with ${postureRef()}.`,
+    `<ol class="views3" aria-label="Body views">${views.map(([v]) => `<li data-v="${v}">${icon("CircleDashed")}<span>${v[0].toUpperCase() + v.slice(1)}</span></li>`).join("")}</ol>
+     ${checksHTML(["light", "motion", "pose"])}
+     <div class="readouts"><div><b id="kp">0 of 10</b><span>Keypoints found</span></div><div><b id="bodypts">0</b><span>Body points</span></div></div>`,
+    f.training ? "Now three body views. Face the mirror, then turn your right side, then your back, when I ask." : views[0][1]);
+  S.body.setSkeleton(true); $("#btn-skel")?.setAttribute("aria-pressed", "true");
+  await runChecks(f, ["light", "motion", "pose"], 1200);
+  let total = 0;
+  for (const [k, [v, say]] of views.entries()) {
+    if (k) { $(".prompt").textContent = say; f.prompt = say; mirror(say); Voice.say(say); }
+    setView(v);
+    const li = $(`[data-v="${v}"]`); li.classList.add("now");
+    await f.timed(f.dur.view, (p) => { $("#kp").textContent = `${Math.round(p * 10)} of 10`; $("#bodypts").textContent = fmt(total + p * 71000, 0); });
+    total += 71000;
+    li.classList.remove("now"); li.classList.add("ok"); const ic = li.querySelector("svg"); if (ic) ic.outerHTML = icon("CircleCheck");
+  }
   setView("front");
 }
 
@@ -616,11 +839,14 @@ function waveDraw(canvas, t, hr, amp = 1) {
 }
 
 async function stepRest(f) {
-  f.frame("rest", "Rest both palms on the handles", `Doppler under the palm arteries, PPG and SpO₂ under the finger, palm temperature. A fresh hydrogel strip is advanced automatically. <span class="faint">A real reading takes 30 s.</span>`,
-    `<canvas class="wave" id="wave" aria-hidden="true"></canvas><div class="readouts"><div><b id="hr">-</b><span>Pulse, bpm</span></div><div><b id="spo2">-</b><span>SpO₂, %</span></div><div><b id="tmp">-</b><span>Palm temperature, °C</span></div><div><b id="flow">-</b><span>Blood flow L / R, cm/s</span></div></div>`,
-    f.training ? "Rest your palms on the handles. The ultrasound window should sit under your palm, with your index finger on the pulse sensor. Gel is applied automatically." : "Rest both palms on the handles and relax.");
+  f.frame("rest", "Hold the vertical grips in the side posts", `<span class="tag">${icon("FlaskConical")}Research module</span> Optional contact Doppler ultrasound under the palm arteries, plus PPG, SpO₂ and palm temperature. A fresh hydrogel strip is advanced from the cassette. Excluded from the main status. <span class="faint">A real reading takes 30 s.</span>`,
+    `<div class="btn-row" style="margin-bottom:var(--s3)"><button type="button" class="btn quiet" id="skip-rest">${icon("SkipForward")}Skip Research Module</button></div><canvas class="wave" id="wave" aria-hidden="true"></canvas><div class="readouts"><div><b id="hr">-</b><span>Pulse, bpm</span></div><div><b id="spo2">-</b><span>SpO₂, %</span></div><div><b id="tmp">-</b><span>Palm temperature, °C</span></div><div><b id="flow">-</b><span>Blood flow L / R, cm/s</span></div></div>`,
+    f.training ? "Rest your palms on the vertical grips. The ultrasound window should sit under your palm, with your index finger on the pulse sensor. Gel is applied automatically." : "Rest both palms on the grips and relax.");
   const t0 = performance.now();
+  let skip = false;
+  $("#skip-rest").onclick = () => { skip = true; };
   await f.timed(f.dur.rest, (p) => {
+    if (skip) throw "skip";
     const t = (performance.now() - t0) / 1000;
     const hr = 62 + Math.sin(t * 0.7) * 2;
     waveDraw($("#wave"), reduceMotion() ? 0 : t, hr);
@@ -630,11 +856,12 @@ async function stepRest(f) {
       $("#tmp").textContent = fmt(33.4 + Math.sin(t) * 0.05, 1);
       $("#flow").textContent = `${fmt(21 + Math.sin(t * 2) * 0.6, 0)} / ${fmt(22 + Math.cos(t * 2) * 0.6, 0)}`;
     }
-  });
+  }).catch((e) => { if (e !== "skip") throw e; });
+  if (skip) { f.skipResearch = true; toast("Research module skipped. Nothing from it is recorded. Main status is not affected.", "SkipForward"); }
 }
 
 async function stepGrip(f) {
-  f.frame("grip", "Squeeze both handles as hard as you can, twice", "Load cells in the handles measure grip strength. In this demo press <kbd>Space</kbd> or the button.",
+  f.frame("grip", "Squeeze both grips as hard as you can, twice", `<span class="tag">${icon("FlaskConical")}Research module</span> Load cells in the grips measure grip strength. Excluded from the main status. In this demo press <kbd>Space</kbd> or the button.`,
     `<button type="button" class="squeeze" id="sq">${icon("Hand", "ico-24")}Squeeze</button><div class="readouts"><div><b id="sq1">-</b><span>Squeeze 1</span></div><div><b id="sq2">-</b><span>Squeeze 2</span></div></div>`);
   f.squeezes = 0;
   const press = () => {
@@ -655,7 +882,7 @@ async function stepGrip(f) {
 
 async function stepHandgrip(f) {
   const ZONE = [25, 35];
-  f.frame("handgrip", "Hold the bar in the green zone", `Isometric handgrip test at 30% of your maximum. Hold <kbd>Space</kbd> or press and hold the button: the bar rises while you hold and falls when you let go. <span class="faint">The real test lasts 2 min, the demo ${f.dur.handgrip / 1000} s.</span>`,
+  f.frame("handgrip", "Hold the bar in the green zone", `<span class="tag">${icon("FlaskConical")}Research module</span> Isometric handgrip test at 30% of your maximum. Hold <kbd>Space</kbd> or press and hold the button: the bar rises while you hold and falls when you let go. <span class="faint">The real test lasts 2 min, the demo ${f.dur.handgrip / 1000} s.</span>`,
     `<div class="game"><div class="meter" role="meter" aria-label="Grip force, percent of maximum" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="meter">
         <div class="zone" style="bottom:${ZONE[0]}%;height:${ZONE[1] - ZONE[0]}%"></div><div class="fill" id="fill"></div>
         <span class="lbl" style="bottom:${ZONE[1]}%">35%</span><span class="lbl" style="bottom:${ZONE[0] - 7}%">25%</span></div>
@@ -722,22 +949,25 @@ async function stepSurvey(f) {
     ["sleep_score", "How did you sleep? Rate from 1 to 5.", [1, 2, 3, 4, 5], ["Poor", "", "", "", "Great"]],
     ["wellbeing_score", "How do you feel? Rate from 1 to 5.", [1, 2, 3, 4, 5], ["Poor", "", "", "", "Great"]],
     ["symptoms_flag", "Any symptoms: headache, vision changes, stuffy nose, chills?", [true, false], ["", ""]],
+    ["back_pain_flag", "Any back pain today? This one is optional.", [true, false, null], ["", "", ""]],
   ];
   const out = {};
   for (const [key, q, opts, hints] of Q) {
     f.frame("survey", q, "Answer by voice (a number, “yes” or “no”) or with a button.",
-      `<div class="answers" role="group" aria-label="Answers">${opts.map((o, k) => `<button type="button" data-k="${k}">${o === true ? "Yes" : o === false ? "No" : o}${hints[k] ? `<small>${hints[k]}</small>` : ""}</button>`).join("")}</div>`, q);
+      `<div class="answers" role="group" aria-label="Answers">${opts.map((o, k) => `<button type="button" data-k="${k}">${o === true ? "Yes" : o === false ? "No" : o === null ? "Skip" : o}${hints[k] ? `<small>${hints[k]}</small>` : ""}</button>`).join("")}</div>`, q);
     progress(Object.keys(out).length / Q.length);
     out[key] = await new Promise((resolve, reject) => {
       f.answer = (v) => {
-        if (typeof v === "boolean" && key !== "symptoms_flag") return;
-        if (typeof v === "number" && key === "symptoms_flag") return;
+        const yesNo = key === "symptoms_flag" || key === "back_pain_flag";
+        if (typeof v === "boolean" && !yesNo) return;
+        if (typeof v === "number" && yesNo) return;
         resolve(v);
       };
       $$("#flow-body [data-k]").forEach((b) => b.onclick = () => resolve(opts[+b.dataset.k]));
       const iv = setInterval(() => { if (f.stopped) { clearInterval(iv); reject(new Cancelled()); } }, 200);
     });
     f.answer = null;
+    if (out[key] === null) delete out[key];
   }
   return out;
 }
@@ -748,13 +978,17 @@ function finishFlow(res) {
   mirror("");
   if (!f.training) S.latest = res;
   showBody(res);
+  S.body.setSkeleton(false); $("#btn-skel")?.setAttribute("aria-pressed", "false");
+  renderScan(res);
+  if (!f.training) loadReport();
   const box = $("#tab-session");
   const m = member();
   box.innerHTML = `<div class="who"><h1>${esc(crewName(m))}</h1><span class="role">${esc(crewRole(m))}</span>
     ${res.streak != null && !f.training ? `<span class="streak">${icon("CalendarCheck")}<span class="tnum">${res.streak}-day scan streak</span></span>` : ""}</div>`;
   box.append(verdictView(res, true));
   const row = document.createElement("div");
-  row.className = "btn-row start";
+  row.className = "btn-row";
+  row.style.marginTop = "var(--s5)";
   row.innerHTML = `<button type="button" class="btn primary" id="to-chart">${icon("ChartSpline")}Compare With NASA</button><button type="button" class="btn" id="again">${icon("RotateCcw")}New Session</button>`;
   box.append(row, metricsView(res));
   $("#again").onclick = () => renderIdle();
@@ -766,6 +1000,142 @@ function finishFlow(res) {
   renderCrew();
   $(".verdict .title")?.setAttribute("tabindex", "-1");
   $(".verdict .title")?.focus({ preventScroll: true });
+}
+
+// ---------------- Scan tab: how LYRA sees you ----------------
+const metricOf = (res, key) => res?.metrics?.find((m) => m.key === key);
+function stickFromKeypoints(view, kp) {
+  const pts = Object.values(kp);
+  const xs = pts.map((q) => q[0]), ys = pts.map((q) => q[1]);
+  const top = Math.max(...ys) + 140, bottom = Math.min(...ys, 0), span = top - bottom || 1;
+  const k = 188 / span, P = (q) => [50 + q[0] * k * (view === "side" ? 1 : -1), 196 - (q[1] - bottom) * k]; // backend back view is already mirrored
+  const get = (n) => kp[n] && P(kp[n]);
+  const L = (a, b2) => a && b2 ? `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b2[0].toFixed(1)}" y2="${b2[1].toFixed(1)}"/>` : "";
+  const head = get("head"), sl = get("shoulder_left"), sr = get("shoulder_right"), pel = get("pelvis");
+  const neck = sl && sr ? [(sl[0] + sr[0]) / 2, (sl[1] + sr[1]) / 2] : head;
+  const bones = [L(head, neck), L(neck, pel), L(sl, sr), L(sl, get("elbow_left")), L(sr, get("elbow_right")),
+    L(pel, get("knee_left")), L(pel, get("knee_right")), L(get("knee_left"), get("foot_left")), L(get("knee_right"), get("foot_right"))];
+  const joints = Object.keys(kp).filter((n) => n !== "head").map((n) => { const q = get(n); return `<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="3"/>`; }).join("");
+  return `<svg class="stick" viewBox="0 0 100 200" role="img" aria-label="${view} view keypoints">
+    <line class="plumb" x1="50" y1="6" x2="50" y2="196"/><g class="bones">${bones.join("")}</g>
+    ${head ? `<circle class="headc" cx="${head[0].toFixed(1)}" cy="${(head[1] - 2).toFixed(1)}" r="10"/>` : ""}<g class="joints">${joints}</g></svg>`;
+}
+function stickFigure(view, b) {
+  const kp = b?.skeleton?.views?.[view];
+  if (kp && Object.keys(kp).length >= 5) return stickFromKeypoints(view, kp);
+  // 2D keypoints for a 100 x 200 box; posture parameters bend the figure.
+  const hf = (b?.head_forward_deg || 0) * 1.6, sa = (b?.shoulder_asym_deg || 0) * 2.2;
+  const side = view === "side";
+  const flip = view === "back" ? -1 : 1;
+  const sx = (x) => 50 + x * flip;
+  const P = side
+    ? { head: [50 + hf * 0.5, 22], neck: [50 + hf * 0.15, 40], sh: [[50, 46], [50, 46]], el: [[46, 82], [46, 82]], wr: [[60, 106], [60, 106]],
+        pel: [50, 108], hip: [[50, 110], [50, 110]], kn: [[52, 150], [52, 150]], ft: [[50, 190], [50, 190]] }
+    : { head: [50, 22], neck: [50, 40], sh: [[sx(-20), 46 + sa], [sx(20), 46 - sa]], el: [[sx(-27), 78], [sx(27), 78]], wr: [[sx(-30), 104], [sx(30), 104]],
+        pel: [50, 108], hip: [[sx(-10), 110], [sx(10), 110]], kn: [[sx(-11), 150], [sx(11), 150]], ft: [[sx(-12), 190], [sx(12), 190]] };
+  const L = (a, b2) => `<line x1="${a[0]}" y1="${a[1]}" x2="${b2[0]}" y2="${b2[1]}"/>`;
+  const bones = [L(P.head, P.neck), L(P.neck, P.pel), ...[0, 1].flatMap((i) => [L(P.neck, P.sh[i]), L(P.sh[i], P.el[i]), L(P.el[i], P.wr[i]), L(P.pel, P.hip[i]), L(P.hip[i], P.kn[i]), L(P.kn[i], P.ft[i])])];
+  if (!side) bones.push(L(P.sh[0], P.sh[1]), L(P.hip[0], P.hip[1]));
+  const joints = [P.neck, P.pel, ...P.sh, ...P.el, ...P.wr, ...P.hip, ...P.kn, ...P.ft].map((q) => `<circle cx="${q[0]}" cy="${q[1]}" r="3"/>`).join("");
+  return `<svg class="stick" viewBox="0 0 100 200" role="img" aria-label="${view} view keypoints">
+    <line class="plumb" x1="50" y1="6" x2="50" y2="196"/>
+    <g class="bones">${bones.join("")}</g><circle class="headc" cx="${P.head[0]}" cy="${P.head[1]}" r="11"/><g class="joints">${joints}</g></svg>`;
+}
+
+function renderScan(res = S.latest) {
+  const el = $("#tab-scan");
+  if (!el) return;
+  const b = res?.body || {};
+  const posture = res?.posture || b.skeleton?.features || {};
+  const mode = envMode({ ...S.state, ...(res || {}) });
+  const neutralNote = `Posture is compared with ${postureRef(res)}.`;
+  const ok = (m) => (m && m.confirmed !== false && m.value != null ? m : null);
+  const rppg = ok(metricOf(res, "hr_rppg")), tension = ok(metricOf(res, "facial_tension")), face = ok(metricOf(res, "face_volume_ml"));
+  const rppgQ = metricOf(res, "hr_rppg");
+  // abs: absolute posture value (no sign); otherwise a change with a sign
+  const feat = (label, v, unit, d = 1, abs = false) => `<div><dt>${label}</dt><dd>${v == null || isNaN(v) ? `<span class="faint">not measured in this session</span>` : `${abs ? fmt(v, d) : sgn(v, d)}${unit}`}</dd></div>`;
+  el.innerHTML = `
+    <h1 style="font-size:var(--fs-20)">How LYRA sees you</h1>
+    <p class="muted" style="margin-top:var(--s2);max-width:68ch">Core LYRA is contactless: an IR structured-light face channel, an RGB video channel and a body keypoint model from three synced views.
+      ${provenance(res?.provenance ?? res?.data_source, res?.simulated !== false, en(res?.provenance_note, ""))}</p>
+    <h2 class="h-section">Face, IR structured light</h2>
+    ${stagesHTML(4)}
+    <p class="small faint" style="margin-top:var(--s2)">Stylized reconstruction. ${face ? `Face volume today: ${fmt(face.value, 0)} mL (${sgn(face.mission_pct ?? 0)}% vs preflight).` : ""}</p>
+    <h2 class="h-section">RGB channel <span class="faint" style="font-weight:400;font-size:var(--fs-13)">separate from IR</span></h2>
+    <dl class="kpis">
+      <div><dt>${icon("Smile")} Expression</dt><dd>${tension ? `${fmt(tension.value, 2)}<small class="faint"> tension index</small>` : "-"}</dd></div>
+      <div><dt>${icon("Droplet")} Skin tone</dt><dd>${res?.skin?.label ? esc(en(res.skin.label, "Stable")) : "Stable"}</dd></div>
+      <div><dt>${icon("HeartPulse")} rPPG pulse</dt><dd>${rppg ? `${fmt(rppg.value, 0)}<small class="faint"> bpm</small>` : "-"}</dd></div>
+      <div><dt>${icon("Signal")} rPPG signal quality</dt><dd>${rppgQ?.quality != null ? `${fmt(rppgQ.quality * 100, 0)}%<small class="faint"> ${reliability(rppgQ.quality)}</small>` : "-"}</dd></div>
+    </dl>
+    <h2 class="h-section">Body, skeletal keypoints from three synced views</h2>
+    <div class="views3d">${["front", "side", "back"].map((v) => `<figure>${stickFigure(v, b)}<figcaption>${v[0].toUpperCase() + v.slice(1)}</figcaption></figure>`).join("")}</div>
+    <p class="small faint">Keypoints: head, shoulders, elbows, pelvis, knees, feet.</p>
+    <dl class="kpis" style="margin-top:var(--s4)">
+      ${feat("Head tilt forward", posture.head_forward_deg, "°", 1, true)}
+      ${feat("Trunk tilt", posture.trunk_tilt_deg, "°", 1, true)}
+      ${feat("Shoulder height difference", posture.shoulder_asym_deg, "°", 1, true)}
+      ${feat("Pelvis tilt", posture.pelvis_tilt_deg, "°", 1, true)}
+    </dl>
+    <dl class="kpis" style="margin-top:var(--s3)">
+      ${feat("Scapula asymmetry", posture.scapula_asym_mm, " mm", 1, true)}
+      ${feat("Height change", b.height_pct, "%")}
+      ${feat("Calf volume change", b.legs_pct, "%")}
+      <div><dt>Environment mode</dt><dd>${esc(mode || "-")}</dd></div>
+    </dl>
+    <p class="notice" style="margin-top:var(--s4)">${icon("Info", "ico-20")}<span>${neutralNote}</span></p>
+    <h2 class="h-section">Optional research module</h2>
+    <p class="notice">${icon("FlaskConical", "ico-20")}<span><b>Doppler ultrasound grips.</b> Vertical grips in the side posts with a hydrogel cassette measure palm blood flow. This is a contact research module, shown separately and excluded from the main status.</span></p>`;
+  if (!el.hidden) paintStages(el);
+}
+
+// ---------------- Report: medical report for the flight surgeon ----------------
+const CORE_REPORT = ["face_volume_ml", "periorbital_puffiness_mm", "leg_volume_ml", "height_cm", "head_forward_deg", "trunk_tilt_deg", "hr_rppg"];
+async function loadReport() {
+  const res = S.latest, aid = S.aid;
+  if (!res) { S.report = null; return renderLink(); }
+  const flagged = (res.overall?.flagged || []);
+  const keys = [...new Set([...flagged, ...CORE_REPORT])].filter((k) => metricOf(res, k));
+  const series = await Promise.all(keys.map((k) => api(`/api/astronauts/${aid}/series/${k}`).catch(() => null)));
+  if (aid !== S.aid || res !== S.latest) return; // the user switched astronaut meanwhile
+  S.report = { aid, res, rows: keys.map((k, i) => ({ m: metricOf(res, k), s: series[i] })) };
+  renderLink();
+}
+function spark(s) {
+  const pts = (s?.points || []).slice(-30);
+  if (pts.length < 2) return "";
+  const vs = pts.map((p) => p.value), lo = Math.min(...vs), hi = Math.max(...vs), W = 96, H = 24;
+  const X = (i) => (i / (pts.length - 1)) * W, Y = (v) => H - 2 - ((v - lo) / ((hi - lo) || 1)) * (H - 4);
+  return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">
+    <polyline points="${pts.map((p, i) => `${X(i)},${Y(p.value)}`).join(" ")}"/><circle cx="${W}" cy="${Y(vs[vs.length - 1])}" r="2.2"/></svg>`;
+}
+function reportHTML() {
+  const R = S.report;
+  if (!R || R.aid !== S.aid) return `<p class="empty">Loading the report…</p>`;
+  const res = R.res, m0 = member(), mode = envMode({ ...S.state, ...res });
+  const row = ({ m, s }) => {
+    const pts = s?.points || [];
+    const prev = m.previous_value != null ? { value: m.previous_value, day: m.previous_day } : pts.length > 1 ? pts[pts.length - 2] : null;
+    const d = m.key === "facial_tension" ? 2 : Math.abs(m.value) >= 100 ? 0 : 1;
+    const reason = m.status === "green" ? "" : m.flag_reason && !CYR.test(m.flag_reason) ? m.flag_reason : m.faster_than_nasa ? "Faster than NASA expects" : m.z_status && m.z_status !== "green" ? "Outside personal baseline"
+      : m.status === "retry" ? `Not confirmed${m.reject_reason ? `: ${rejectText(m.reject_reason).toLowerCase()}` : ""}` : "Flagged";
+    return `<tr>
+      <th scope="row">${esc(mName(m.key, m.name))}${isResearch(m) ? ` <span class="tag">Research</span>` : ""}</th>
+      <td class="r">${m.confirmed === false ? "-" : fmt(m.value, d)} <small class="faint">${esc(unitEn(m.unit))}</small></td>
+      <td class="r">${prev ? `${fmt(prev.value, d)}<small class="faint"> d${prev.day}</small>` : "-"}</td>
+      <td class="r">${prev && m.confirmed !== false && m.value != null ? sgn(m.value - prev.value, d) : "-"}</td>
+      <td>${spark(s)}</td>
+      <td class="r">${m.quality != null ? `${fmt(m.quality * 100, 0)}%` : "-"}</td>
+      <td>${badge(m.status, true)}${reason ? `<div class="small faint">${esc(reason)}</div>` : ""}</td></tr>`;
+  };
+  return `<div class="report-head">
+      <div><b>${esc(crewName(m0))}</b> <span class="faint">${esc(crewRole(m0))}</span></div>
+      <div class="small muted">Session day ${res.day}${res.mode === "weekly" ? ", weekly test" : ""}. ${esc(en(S.state.env_name, ENV[S.state.env]))}, ${esc((mode || "").toLowerCase())}.
+        Overall: ${badge(res.overall.status, true)} ${provenance(res.provenance ?? res.data_source, res.simulated !== false, en(res.provenance_note, ""))}</div></div>
+    <div class="table-wrap"><table class="report">
+      <thead><tr><th scope="col">Measure</th><th scope="col" class="r">Today</th><th scope="col" class="r">Previous</th><th scope="col" class="r">Change</th><th scope="col">Last 30 days</th><th scope="col" class="r">Signal</th><th scope="col">Status and reason</th></tr></thead>
+      <tbody>${R.rows.map(row).join("")}</tbody></table></div>
+    <p class="small faint" style="margin-top:var(--s2)">Flagged measures first, then the core set. Signal is the capture quality score. Research module rows do not set the main status.</p>`;
 }
 
 // ---------------- why it matters ----------------
@@ -906,8 +1276,8 @@ function drawChart(animate = false) {
   }
   g += `<text x="${P.l - 8}" y="${P.t - 8}" text-anchor="end">${esc(unit)}</text>`;
   const step = Math.max(5, Math.ceil((x1 - x0) / (narrow ? 5 : 8) / 5) * 5);
-  for (let d = Math.ceil(x0 / step) * step; d <= x1; d += step) g += `<text x="${X(d)}" y="${H - 12}" text-anchor="middle">${d}</text>`;
-  g += `<text x="${W - P.r}" y="${H - 12}" text-anchor="end" dx="${narrow ? 0 : 40}">Mission day</text>`;
+  for (let d = Math.ceil(x0 / step) * step; d <= x1; d += step) if (X(d) < W - (narrow ? 40 : 84)) g += `<text x="${X(d)}" y="${H - 12}" text-anchor="middle">${d}</text>`;
+  g += `<text x="${W - 2}" y="${H - 12}" text-anchor="end">${narrow ? "Day" : "Mission day"}</text>`;
   if (band.length) {
     const poly = band.map((c) => `${X(c.day)},${Y(c.hi)}`).concat([...band].reverse().map((c) => `${X(c.day)},${Y(c.lo)}`)).join(" ");
     g += `<polygon class="band ${s.modeled ? "" : "personal"}" points="${poly}"/>`;
@@ -959,7 +1329,7 @@ function drawChart(animate = false) {
     tip.hidden = false;
     const r = svg.getBoundingClientRect(), k = r.width / W;
     const left = X(day) * k;
-    tip.style.left = `${left + 14 + tip.offsetWidth > r.width ? Math.max(left - tip.offsetWidth - 14, 0) : left + 14}px`;
+    tip.style.left = `${left > r.width / 2 || left + 14 + tip.offsetWidth > r.width ? Math.max(left - tip.offsetWidth - 14, 0) : left + 14}px`;
     tip.style.top = `${Math.max((pp ? Y(pp.value) : H / 2) * k - 40, 0)}px`;
     $("#chart-sum").textContent = tip.textContent.replace(/\s+/g, " ").trim();
   };
@@ -1002,12 +1372,12 @@ function renderLink() {
   const items = L.items.map((p) => {
     const rem = p.status === "delivered" ? 0 : Math.max(p.remaining_s - (S.linkAt ? sinceRecv : 0), 0);
     const prog = p.delay_s > 0 ? 1 - rem / p.delay_s : 1;
-    const st = LIGHT[p.status_light] || null;
+    const st = LIGHT[p.status_light] || (ST[p.status_light] ? p.status_light : null);
     const who = en(p.astronaut_name, CREW[p.astronaut_id]?.[0]);
     return `<li class="${p.status}">
       ${st ? `<span title="${ST[st].word}">${badge(st, true).replace('class="word"', 'class="word sr"')}</span>` : "<span></span>"}
-      <span><b>${esc(who)}</b>, ${esc(en(p.title, PKT[p.title] || "Session"))} <span class="pmeta">day ${p.day}, ${p.size_kb} KB${st ? `, ${ST[st].word.toLowerCase()}` : ""}</span></span>
-      <span class="pstate ${p.status}">${p.status === "delivered" ? `${icon("Check")}Delivered` : `${icon("Send")}In transit, ${fmtDur(rem)} left`}</span>
+      <span><b>${esc(who)}</b>, ${esc(en(p.title, p.size_kb >= 400 ? "Weekly full test" : p.status === "delivered" && p.day < S.state.day ? "Session (history)" : "Daily scan"))} <span class="pmeta">day ${p.day}, ${p.size_kb} KB${st ? `, ${ST[st].word.toLowerCase()}` : ""}</span></span>
+      <span class="pstate ${p.status}">${p.has_report && p.status === "delivered" ? `<button type="button" class="linkbtn" data-report="${esc(p.id)}">${icon("FileText")}Report</button>` : ""}${p.status === "delivered" ? `${icon("Check")}Delivered` : `${icon("Send")}In transit, ${fmtDur(rem)} left`}</span>
       <span class="bar" aria-hidden="true"><i style="transform:scaleX(${Math.max(0, Math.min(1, prog)).toFixed(3)})"></i></span></li>`;
   }).join("");
   const env = en(S.state.env_name, ENV[S.state.env]);
@@ -1015,8 +1385,8 @@ function renderLink() {
   const d = S.dose;
   const focused = document.activeElement?.id === "dose-in" ? $("#dose-in").value : null;
   el.innerHTML = `
-    <h1 style="font-size:var(--fs-20)">Downlink to the flight surgeon</h1>
-    <p class="muted" style="margin-top:var(--s2);max-width:68ch">Every session is queued for Earth automatically. The crew never waits for a reply: Recheck and Deviation instructions are shown on board right away.</p>
+    <h1 style="font-size:var(--fs-20)">Report and downlink to the flight surgeon</h1>
+    <p class="muted" style="margin-top:var(--s2);max-width:68ch">Every session is queued for Earth automatically. The crew never waits for a reply: “Repeat measurement” and “Refer to specialist” instructions are shown on board right away.</p>
     <dl class="kpis">
       <div><dt>Environment</dt><dd>${esc(env)}</dd></div>
       <div><dt>One-way delay now</dt><dd>${fmtDur(L.delay_s)}</dd></div>
@@ -1024,7 +1394,9 @@ function renderLink() {
       <div><dt>Earliest reply</dt><dd>${fmtDur(L.round_trip_s)}</dd></div>
     </dl>
     ${scale > 1 && L.delay_s >= 1 ? `<p class="small faint" style="margin-top:var(--s3)">${icon("Clock")} Transfer time is sped up ${fmt(scale, 0)}x for the demo.</p>` : ""}
-    <h2 class="h-section">Queue</h2>
+    <h2 class="h-section">Medical report <span class="faint" style="font-weight:400;font-size:var(--fs-13)">what the flight surgeon receives</span></h2>
+    ${reportHTML()}
+    <h2 class="h-section">Downlink queue</h2>
     ${items ? `<ul class="packets">${items}</ul>` : `<p class="empty">The queue is empty. Finish a session to send data.</p>`}
     <section class="dose" aria-labelledby="dose-h">
       <h2 class="h-section" id="dose-h" style="margin-bottom:0">${icon("Radiation")} ${esc(en(pick(d, "name"), "Accumulated dose, station dosimeter"))}</h2>
@@ -1042,6 +1414,7 @@ function renderLink() {
       ${sourceLinks(d?.sources)}
     </section>`;
   if (focused != null) { $("#dose-in").value = focused; $("#dose-in").focus(); }
+  $$("[data-report]", el).forEach((b) => b.onclick = () => openPacketReport(b.dataset.report));
   $("#dose-form").onsubmit = async (e) => {
     e.preventDefault();
     const v = parseFloat($("#dose-in").value);
@@ -1056,6 +1429,29 @@ function renderLink() {
   $("#link-badge").setAttribute("aria-label", `${n} in transit`);
 }
 setInterval(() => { if (!$("#tab-link").hidden && S.link?.in_transit && document.activeElement?.id !== "dose-in") renderLink(); }, 1000);
+
+async function openPacketReport(id) {
+  let d;
+  try { d = await api(`/api/downlink/${encodeURIComponent(id)}`); } catch (e) { return toast(`Could not open the report: ${e.message}.`, "TriangleAlert"); }
+  const r = d.report;
+  if (!r) return toast("This packet has no report attached.", "Info");
+  const rows = (r.metrics || []).filter((m) => m.status && m.status !== "green" || ["face_volume_ml", "leg_volume_ml", "height_cm", "hr_rppg"].includes(m.key));
+  const row = (m) => {
+    const dd = Math.abs(m.value ?? 0) >= 100 ? 0 : 1;
+    return `<tr><th scope="row">${esc(mName(m.key, m.name))}${m.module === "research" ? ` <span class="tag">Research</span>` : ""}</th>
+      <td class="r">${m.value == null || m.confirmed === false ? "-" : fmt(m.value, dd)} <small class="faint">${esc(unitEn(m.unit))}</small></td>
+      <td class="r">${m.previous_value != null ? fmt(m.previous_value, dd) : "-"}</td>
+      <td class="r">${m.quality != null ? `${fmt(m.quality * 100, 0)}%` : "-"}</td>
+      <td>${badge(m.status, true)}${m.flag_reason ? `<div class="small faint">${esc(en(m.flag_reason, ""))}</div>` : ""}</td></tr>`;
+  };
+  modal(`Medical report: ${en(r.astronaut?.name, "crew member")}, day ${r.day}`, `
+    <p>${badge(r.overall?.status, true)} ${esc(en(r.overall?.summary, ""))}</p>
+    <p class="small">${esc(en(r.env_mode_label, envMode(r)))}. ${provenance(r.provenance, true, en(r.provenance_note, ""))}
+      ${r.signal_quality?.mean != null ? ` Mean signal quality ${fmt(r.signal_quality.mean * 100, 0)}%.` : ""}</p>
+    <div class="table-wrap"><table class="report"><thead><tr><th scope="col">Measure</th><th scope="col" class="r">Value</th><th scope="col" class="r">Previous</th><th scope="col" class="r">Signal</th><th scope="col">Status and reason</th></tr></thead>
+      <tbody>${rows.map(row).join("")}</tbody></table></div>
+    ${r.research?.note ? `<p class="small faint">${esc(en(r.research.note, ""))}</p>` : ""}`);
+}
 
 // ---------------- risks ----------------
 function renderRisks() {

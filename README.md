@@ -1,92 +1,142 @@
-# LYRA — 3D health scan for long-duration missions
+# LYRA: 3D health scan for long-duration missions
 
-**Step in. Grip. Know.** Веб-приложение на симуляции для NASA Space Apps Challenge
-(«Create Health Monitoring Software for Astronauts on Space Missions»).
+**Step in. Scan. Know.** A web app running on simulated data, built for the NASA Space Apps Challenge 2026
+("Create Health Monitoring Software for Astronauts on Space Missions"). Team: Alina Dmitriyeva, Daniil Shabalin.
 
-Станция LYRA — три тонкие стойки вокруг астронавта и зеркальная панель с экраном. Лицо снимает structured light
-(ИК-точки, как Face ID — отёк в несколько мм), тело — ToF-камеры, две рукояти — ультразвуковой допплер, PPG/SpO₂,
-температура, тензодатчик и NFC. Ничего не надевается на тело.
+The LYRA station is three slim posts around the astronaut and a mirror panel with a screen behind it. The core scan
+is **contactless**: RGB cameras, structured IR light (a dot projector, like Face ID, for millimeter-level facial
+swelling) and depth (ToF) cameras that build a skeletal keypoint model of the body from three synced views
+(front, side, back). The palms rest on marked zones of the touch mirror only to standardize the pose. Nothing is
+worn on the body.
 
-Главная идея: LYRA сравнивает не только «ты против себя вчерашнего», но и **«ты против ожидания NASA»** —
-опубликованных траекторий адаптации (сдвиг жидкости к голове, «bird legs», вытяжение позвоночника, потеря силы).
-Статус = «меняешься ли ты быстрее, чем ожидает NASA». Каждая метрика связана с риском NASA HRP.
+An optional **contact research module** (vertical grips in the side posts with Doppler ultrasound and a hydrogel
+cassette, PPG/SpO₂, palm temperature and a load cell) is shown separately and is not part of the overall result
+by default. LYRA makes no heart assessment through the palm.
 
-> Скрининг и самоконтроль, **не медицинское устройство и не диагноз**. Все данные в демо **смоделированы**.
+The main idea: LYRA compares you not only with **your own baseline** but also with **NASA expected adaptation**,
+the published adaptation trajectories (headward fluid shift, "bird legs", spinal elongation, strength loss).
+The question is "are you changing faster than NASA expects?" Every metric is linked to a NASA HRP risk.
 
-## Запуск одной командой
+> Screening and self-monitoring, **not a medical device and not a diagnosis**. LYRA reports "change detected",
+> never a diagnosis. All data in the demo is **simulated**.
+
+## Run with one command
 
 ```bash
 python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/python -m lyra.server
 ```
-Открыть http://127.0.0.1:8000 (ноутбук 16:9, полноэкранный браузер; работает и на узком экране).
-Нужен интернет для Three.js с CDN (`three@0.160.0`, jsdelivr).
+Open http://127.0.0.1:8000 (16:9 laptop, full-screen browser; narrow screens work too).
+Internet access is needed for Three.js from the CDN (`three@0.160.0`, jsdelivr).
 
-Флаги: `--scenario day1|day40|mars180|anomaly` (по умолчанию day40), `--fast` — короткие фазы сеанса,
-`--time-scale 60` — ускорение задержки связи для демо, `--port 8000`.
+Flags: `--scenario day1|day40|mars180|anomaly` (default day40), `--fast` for short session phases,
+`--time-scale 60` to speed up the comm delay for the demo, `--port 8000`.
 
-## Сценарии (переключаются кнопками в шапке)
+## Result categories
 
-| Сценарий | Среда | Что показать |
+| Code | Label | Meaning |
 |---|---|---|
-| **День 1 · МКС** | 0 g, связь ~1 с | Сдвиг жидкости только начался — всё 🟢 «в коридоре NASA». У Миры и Леи 3D-лицо узнаётся неуверенно (отёк) → «приложите NFC-карту». |
-| **День 40 · МКС** | 0 g | Лицо +4 %, голени −8 %, рост +2 % — большие изменения, но **ожидаемые** → 🟢. Серии дней, пропуски у Ивана и Леи. |
-| **День 180 · Марс** | 0,38 g, задержка 14 мин (3–20 мин) | Очередь передачи: пакет «в пути» → «доставлено», ответ врача не раньше 28 мин. Экипаж получает инструкции сразу. |
-| **Аномалия · Луна/Gateway, день 60** | 0,17 g | У **Миры Сато** сила хвата падает быстрее NASA (личная норма этого не видит — дрейф медленный), отёк лица сильнее ожидаемого, кровоток левой ладони упал → 🔴 и пошаговая инструкция. |
+| green | **Within baseline** | Within your personal baseline and the NASA expected-adaptation corridor. |
+| yellow | **Repeat measurement** | A change was detected once; do the suggested action and repeat. |
+| red | **Refer to specialist** | A sustained change, beyond what NASA expects; the medical team reviews it. |
+| retry | **Measurement not confirmed** | Quality too low (motion, low light, face not visible, pose not reached, weak signal). No averaged value is substituted; repeat. |
 
-Демо-сценарий для судей: «Аномалия» → выбрать Миру → «Полный тест» → пройти → вкладка «Ты vs ожидание NASA»
-(траектория выходит из коридора красным).
+Every result says **why** it is flagged (not just a color), shows its measurement quality and its data
+provenance ("team recording", "open dataset (CameraVitals)", "NASA material" or "simulation"; in this demo it is
+"simulation").
 
-## Что в интерфейсе
+## Two comparison levels
 
-- **3D-облако точек тела** (Three.js): виды спереди / сбоку / сверху / вращение, подсветка меняющихся зон
-  (лицо, голени, рост, рукояти, осанка) цветом статуса и подписью «Лицо +4,1 %».
-- **Сеанс**: опознание по 3D-лицу (NFC-карта при низкой уверенности; голос для опознания не используется) →
-  3D-скан → ладони на рукоятях (пульс, SpO₂, кровоток) → 2 максимальных сжатия → (в полном тесте) изометрическая проба
-  «удержи в зелёной зоне» (**Пробел** или кнопка мыши) + восстановление → опрос из 3 вопросов (голос или кнопки 1–5, да/нет) → результат.
-  Экспресс-скан ≈90 с, полный тест ≈5 мин (в демо фазы сжаты, это подписано).
-- **Голос**: подсказки `speechSynthesis` (ru-RU) 🔊; команды «начать / повторить / стоп» через `webkitSpeechRecognition` 🎤
-  (включаются кнопкой); у всего есть кнопки-дубли. Клавиши: Enter — начать, Esc — стоп.
-- **Обучение** при первом запуске астронавта (предлагается автоматически) — без записи и отправки.
-- **Статусы** 🟢 ✓ норма / 🟡 ▲ внимание / 🔴 ‼ отклонение / 🟣 ↻ переизмерить — всегда значок + слово.
-  🟢 — кратко + 🔥 серия дней; 🟡 — конкретное действие + «повторите»; 🔴 — «что сделать сейчас» по шагам.
-- **«Почему это важно»**: объяснение, риск NASA HRP, угроза из 5 Hazards, источник, пометка «цифра из источника» / «оценка команды».
-- **График «ты против ожидания NASA»**: коридор, линия ожидания, твоя траектория, точки вне коридора — 🟡/🔴, наведение — значения.
-- **Связь с Землёй**: очередь пакетов лётному врачу с задержкой по среде; **доза дозиметра** — импорт, «LYRA не измеряет радиацию».
+1. **Personal baseline**: the pre-flight mean, updated during the mission (last 14 measurements, adjusted for the
+   NASA trajectory).
+2. **Environment mode**: Earth, microgravity, or partial gravity (rover or base). Posture is interpreted against
+   the **microgravity neutral body posture**, not the Earth upright stance. A posture flag escalates only if it
+   repeats across several measurements or comes together with reported back pain or fatigue.
 
-## Что смоделировано
+## Scenarios (switch with the buttons in the header)
 
-Вся история (7 дней до полёта + дни полёта), значения датчиков в сеансе, уверенность опознания, доза дозиметра,
-задержка связи (внутри диапазона справочника, ускорена для демо). Кривые симуляции — **те же**, что коридор NASA
-(+ индивидуальность астронавта, шум датчика, аномалия сценария). Цифры NASA берутся только из
-[`data/nasa_reference.json`](data/nasa_reference.json) (поддерживает команда концепции; у каждой цифры — источник и `basis`).
+| Scenario | Environment | What to show |
+|---|---|---|
+| **Day 1, ISS** | microgravity, ~1 s delay | Fluid shift has just started, everything is Within baseline. For Mira and Leia, 3D face ID is not confident (swelling), so they use the NFC card. |
+| **Day 40, ISS** | microgravity | Face +4%, calves -8%, height +2%: big changes, but **expected**, so Within baseline. Streaks, with missed days for Ivan and Leia. Leia's camera pulse is "Measurement not confirmed" (low light). |
+| **Day 180, Mars** | partial gravity 0.38 g, 14 min delay (3 to 20 min) | Downlink queue: packet "in transit", then "delivered"; the surgeon's reply cannot come sooner than 28 min. The crew gets instructions immediately. |
+| **Anomaly, Moon day 60** | partial gravity 0.17 g | **Mira Sato**: facial swelling above the NASA corridor, so Refer to specialist with step-by-step instructions. In the research module her grip strength and palm blood flow also drop faster than NASA expects (shown separately). |
 
-## Архитектура
+Demo path for judges: "Anomaly" -> pick Mira -> "Full test" -> go through it -> "You vs. NASA" tab
+(the trajectory leaves the corridor).
 
-Кратко — [lyra/ARCHITECTURE.md](lyra/ARCHITECTURE.md).
+## What is in the interface
+
+- **3D body point cloud** (Three.js): front / side / top / rotate views, highlighted changing zones (face, calves,
+  height, posture) in the status color with a label such as "Face +4.1%". The backend also returns a skeletal
+  keypoint model (head, shoulders, elbows, pelvis, knees, feet) for the front, side and back views.
+- **Session**: 3D face ID (NFC card when confidence is low; voice is not used for identification) -> 3D scan ->
+  palms on the marked mirror zones -> (full test, research module) handgrip test "hold it in the green zone"
+  (**Space** or mouse button) + recovery -> 15 s survey of 3 questions plus optional back pain (voice or buttons)
+  -> result. Express scan about 90 s, full test about 5 min (phases are shortened in the demo, and labeled so).
+- **Voice**: prompts via `speechSynthesis`; commands "start / repeat / stop" via `webkitSpeechRecognition`
+  (turned on with a button); every voice action has a button too. Keys: Enter starts, Esc stops.
+- **Training mode** on an astronaut's first run (offered automatically): nothing is recorded or sent.
+- **"Why it matters"** cards: explanation, NASA HRP risk, hazard from the 5 Hazards, source, and a "cited" or
+  "team estimate" marker.
+- **"You vs. NASA" chart**: corridor, expected line, your trajectory, points outside the corridor, values on hover.
+- **Downlink to Earth**: packets to the flight surgeon with the environment's delay. Each packet carries a medical
+  report (time series, signal quality, environment mode, comparison with previous measurements, reason for each
+  flag). **Dosimeter dose** is imported: LYRA does not measure radiation.
+
+## What is simulated
+
+The whole history (7 pre-flight days + mission days), sensor values in the session, rPPG signal quality,
+identification confidence, the dosimeter dose, and the comm delay (inside the reference range, sped up for the
+demo). The simulation curves are **the same** as the NASA corridor (plus individual variation, sensor noise, the
+environment posture shift and the scenario anomaly). NASA figures come only from
+[`data/nasa_reference.json`](data/nasa_reference.json) (each figure has a source and a `basis` of `cited` or
+`estimated`).
+
+## Architecture
+
+Short version: [lyra/ARCHITECTURE.md](lyra/ARCHITECTURE.md).
 
 ```
-lyra/core       справочник NASA, модель ожидаемой адаптации, статусы, очередь связи, хранилище
-lyra/sim        экипаж, сценарии, симулятор
-lyra/service.py сценарии использования;  lyra/server.py — FastAPI REST + WebSocket
-lyra/dashboard  index.html, style.css, app.js, body3d.js (без сборки)
-lyra/feasibility реальная камера (MediaPipe, rPPG) и ESP32 — проверка осуществимости, демо от них не зависит
+lyra/core        NASA reference, expected-adaptation model, result categories, downlink queue, store
+lyra/sim         crew, scenarios, simulator
+lyra/service.py  use cases (incl. the medical report); lyra/server.py: FastAPI REST + WebSocket
+lyra/dashboard   index.html, style.css, app.js, body3d.js (no build step)
+lyra/feasibility real camera (MediaPipe, rPPG) and ESP32 grip prototype: feasibility check, the demo does not depend on it
 ```
 
 API: `GET /api/meta`, `GET /api/state`, `POST /api/scenario/{id}`, `GET /api/reference`, `GET /api/astronauts/{id}`,
 `GET /api/astronauts/{id}/series/{metric}`, `POST /api/identify`, `POST /api/identify/nfc`, `POST /api/sessions`,
-`POST /api/astronauts/{id}/dose`, `GET /api/downlink`, WebSocket `/ws`. Подробнее — в начале `lyra/server.py`;
-интерактивно — http://127.0.0.1:8000/docs.
+`POST /api/astronauts/{id}/dose`, `GET /api/downlink`, `GET /api/downlink/{packet_id}`, WebSocket `/ws`.
+Details at the top of `lyra/server.py`; interactive docs at http://127.0.0.1:8000/docs.
 
-## Тесты
+## Stack
+
+Python 3.12, FastAPI, Uvicorn, Pydantic, NumPy, SciPy, pytest; vanilla JS (no build step), Three.js 0.160.0 via
+jsdelivr, Web Speech API. Feasibility module: OpenCV, MediaPipe 0.10.14, pyserial, ESP32 (Arduino).
+
+## Tests
 
 ```bash
 .venv/bin/python -m pytest -q
 ```
-Модель ожидаемой адаптации (плато, линейная, абсолютные единицы, «none»), статусы и их комбинация, «медленный дрейф
-ловит только коридор», сценарии (норма / аномалия / NFC / обучение / серия), очередь связи, REST и WebSocket.
+Expected-adaptation model (plateau, linear, absolute units, "none"), result categories and labels, "slow drift is
+caught only by the corridor", measurement quality and reject reasons, rPPG signal fields, environment mode and
+the neutral body posture, posture escalation rule, research module excluded from the overall result, skeletal
+keypoints, medical report, scenarios (normal / anomaly / NFC / training / streak), downlink queue, REST and
+WebSocket.
 
-## Проверка осуществимости (не центр демо)
+## Drawings
 
-`lyra/feasibility/vision` — MediaPipe (отёк лица, моргание, PERCLOS, осанка) и пульс по видео (rPPG);
-`lyra/feasibility/palm` — прототип рукояти на ESP32. Зависимости: `pip install -r lyra/feasibility/requirements.txt`.
-На реальном железе ещё не проверялись. Старые чертежи — `docs/drawings/archive/`.
+English drawings are the primary set in [`docs/drawings/`](docs/drawings/) (PNG exports in `docs/drawings/png/`).
+Older drawings are kept in `docs/drawings/archive/`. Dimensions are approximate.
+
+## Feasibility check (not the center of the demo)
+
+`lyra/feasibility/vision`: MediaPipe (facial swelling, blinking, PERCLOS, posture) and video pulse (rPPG);
+`lyra/feasibility/palm`: ESP32 prototype of the research-module grip. Dependencies:
+`pip install -r lyra/feasibility/requirements.txt`. Not yet tested on real hardware.
+
+## Use of AI
+
+An AI assistant (Claude) helped with code, docs, drawings and research, under the team's direction. The idea and
+the decisions are the team's own.

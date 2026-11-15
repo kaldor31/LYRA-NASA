@@ -1,6 +1,6 @@
 # LYRA: NASA/CSA sources and how we use them
 
-> Checked 2026-11-14 (Agent B). Machine-readable version: `data/nasa_reference.json` (36 sources; every number has `source_ids` and `basis`).
+> Checked 2026-11-14, updated 2026-11-15 to the team concept paper (`docs/research/LYRA_concept_paper_ru.pdf`). Machine-readable version: `data/nasa_reference.json` (47 sources; every number has `source_ids` and `basis`).
 > Rule: we mark a number `cited` only if it appears directly in the source. Everything else is `estimated`, with an explanation in `note_ru`. LYRA is screening, not a diagnosis.
 
 ## 1. Challenge resources (Resources tab)
@@ -38,7 +38,7 @@ The tab has **5 links**: 3 from NASA HRP and 2 from CSA. **There are no ready-ma
 | hrp-b-complex | B-Complex | https://www.nasa.gov/reference/b-complex/ | Vitamin B against eye/brain changes | Risk fluid_shift_eyes |
 | hrp-archer | ARCHeR | https://www.nasa.gov/reference/archer/ | Wellbeing, activity, sleep (actigraphy), crew interaction on Artemis II | facial_tension, sleep_score, wellbeing_score |
 | hrp-immune-biomarkers | Immune Biomarkers | https://www.nasa.gov/reference/immune-biomarkers/ | Blood and saliva of the Artemis II crew, immunity | Risk immune |
-| hrp-zero-t2 | Zero T2 | https://www.nasa.gov/reference/zero-t2/ | Exercise without a treadmill | grip_* (measures on Recheck) |
+| hrp-zero-t2 | Zero T2 | https://www.nasa.gov/reference/zero-t2/ | Exercise without a treadmill | grip_* (research module; countermeasure on Repeat measurement) |
 | hrp-tempus-pro | Tempus Pro | https://www.nasa.gov/reference/tempus-pro/ | Telemedicine device for remote assessment | Analog of the "data → doctor" flow |
 | hrp-omics-archive | Omics Archive | https://www.nasa.gov/reference/omics-archive/ | Molecular changes over time | Risk immune (LYRA does not measure this) |
 | hrp-space-radiation-element | HRP Space Radiation / NSRL | https://www.nasa.gov/hrp/radiation/ | NSRL (Brookhaven): ground experiments on radiation risks | Risk radiation_cancer |
@@ -91,9 +91,36 @@ The tab has **5 links**: 3 from NASA HRP and 2 from CSA. **There are no ready-ma
 
 **ToF on the ISS (Astrobee).** NASA Astrobee documentation: HazCam and PerchCam are **pmd PicoFlexx** ToF depth cameras (point cloud + amplitude, factory calibration). Besides them there are NavCam and DockCam (color, fixed focus), SciCam (HD RGB) and SpeedCam. One media article calls HazCam "LIDAR", but the NASA documentation describes a PicoFlexx ToF. **Conclusion:** ToF sensors have already flown on the ISS. We **did not find** structured light (on the Face ID principle) on the ISS; it is our proposal, state this honestly.
 
-**Solid hydrogel for ultrasound (MIT).** Wang C., Chen X., ..., Zhao X. "Bioadhesive ultrasound for long-term continuous imaging of diverse organs", *Science* 377(6605):517-523, 2022-07-29. It is a soft but tough hydrogel (chitosan + polyacrylamide, about 90% water) under an elastomer membrane that keeps it from drying out. The sticker is about 2 cm², about 3 mm thick, and was worn for 48 h or more by 15 volunteers. **Conclusion:** solid hydrogel as an acoustic medium without liquid gel is proven. **The hydrogel tape cassette in the handle is our design; no such device exists.**
+**Solid hydrogel for ultrasound (MIT).** Wang C., Chen X., ..., Zhao X. "Bioadhesive ultrasound for long-term continuous imaging of diverse organs", *Science* 377(6605):517-523, 2022-07-29. It is a soft but tough hydrogel (chitosan + polyacrylamide, about 90% water) under an elastomer membrane that keeps it from drying out. The sticker is about 2 cm², about 3 mm thick, and was worn for 48 h or more by 15 volunteers. **Conclusion:** solid hydrogel as an acoustic coupling medium without liquid gel is published. **The 4-part hydrogel cassette (holder on the transducer, thin replaceable pad, soft rim, membrane) on LYRA's vertical Doppler grips is our design; no such device exists, and its acoustic efficiency for a given transducer and palm contact is not verified.** Pad thickness and press force must be found on a ground mock-up. The earlier tape-cassette idea is archived.
 
-## 6. Datasets
-- The challenge page has **no datasets**, only 5 article resources (see §1).
-- NASA open repositories that can be mentioned (not used in the demo): **OSDR** (Open Science Data Repository, includes GeneLab/ALSDA) https://osdr.nasa.gov and **LSDA** (Life Sciences Data Archive) https://nlsp.nasa.gov/explore/lsdahome. Standard Measures and Artemis II Standard Measures data are available on request through LSDA.
-- In the LYRA simulation all trajectories come from `data/nasa_reference.json`. It contains no real individual astronaut data.
+## 6. Datasets and data provenance
+
+The concept paper requires: pick **one concrete NASA dataset** (name, variables, units, role in the demo) and show the provenance of every result. No single NASA dataset combines IR face points, RGB video, 3D posture and medical references, so LYRA is a prototype that needs validation.
+
+### 6.1 The chosen NASA dataset: OSDR OSD-575 (Inspiration4 Comprehensive Metabolic Panel)
+
+| Field | Value (verified 2026-11-15 via the OSDR API and the data file) |
+|---|---|
+| Name | **OSD-575: SpaceX Inspiration4 Blood Serum Metabolic Panel and Immune/Cardiac Cytokine Arrays** (NASA OSDR, ALSDA study LSDS-8) |
+| URL | https://osdr.nasa.gov/bio/repo/data/studies/OSD-575 |
+| File used | `LSDS-8_Comprehensive_Metabolic_Panel_CMP.upload_SUBMITTED.csv` (25 KB, 531 rows) |
+| Variables | `ANALYTE`, `VALUE`, `RANGE_MIN`, `RANGE_MAX`, `UNITS`, `TEST_TYPE`, `SUBJECT_ID`, `SEX`, `timepoint` |
+| Subjects and times | 4 crew (C001 to C004); 19 analytes; timepoints L-92, L-44, L-3 (pre-flight) and R+1, R+45, R+82, R+194 (post-flight) |
+| Units (examples) | GLUCOSE, BUN, CREATININE, CALCIUM, BILIRUBIN: mg/dL; SODIUM, POTASSIUM, CHLORIDE, CARBON DIOXIDE: mmol/L; PROTEIN TOTAL, ALBUMIN, GLOBULIN: g/dL; ALKALINE PHOSPHATASE, AST, ALT: U/L; eGFR: mL/min/1.73m2 |
+| Role in the demo | Provenance tag **NASA material**. Shows LYRA's core logic on real crew data: a personal pre-flight baseline (mean of L-92, L-44, L-3) vs the R+1 value and the lab reference range, with the same three outcomes as the mirror (within baseline / repeat / refer). It explains why LYRA compares a person with themself, not with one population number. |
+| Worked example (deck slide 5) | Serum SODIUM, mmol/L, pre-flight mean (L-92, L-44, L-3) vs R+1: C001 140.7 to 138; C002 142.0 to 137; C003 138.7 to 137; C004 139.7 to 140. Lab range 135 to 146. C002 stays inside the population range but drops 5 mmol/L below their own baseline: an illustration of why LYRA uses a personal baseline. Not a clinical interpretation. |
+| What it is not | Not camera, IR or posture data; LYRA is not trained on it. A 3-day mission with 4 crew; no microgravity posture conclusions. |
+
+### 6.2 Other data and their roles
+
+| Source | Provenance tag | Role in LYRA | Status |
+|---|---|---|---|
+| NASA Life Sciences Portal / LSDA, https://nlsp.nasa.gov/ | NASA material | Human research in spaceflight and ground analogs since 1961: context and choice of indicators. Standard Measures data are on request. | URL checked |
+| NASA Open Data Portal, https://data.nasa.gov/ | NASA material | Catalog of NASA open datasets | Official URL; did not respond from our network during the check |
+| NASA OSDR incl. Inspiration4, https://osdr.nasa.gov/bio/ and https://www.nasa.gov/osdr-latest-news-i4-mission-datasets/ | NASA material | Visualizing real spaceflight changes (OSD-575 above). Not camera training data. | Checked |
+| NASA neutral body posture and anthropometry: HIDH https://www.nasa.gov/organizations/ochmo/human-integration-design-handbook/ , NASA-STD-3001 Vol. 2 https://www.nasa.gov/reference/nasa-std-3001v2/ , NTRS 20150020939 (in-flight anthropometry and NBP), NTRS 20040200967 (NBP on STS-57) | NASA material | Environment mode: microgravity reference posture differs from Earth's; spine elongation (stature up to about 3%); large individual differences, hence a personal baseline. Rules and scenarios, not 3D video. | URLs checked |
+| "CameraVitals" (COHFACE), https://cameravitals.github.io/datasets.html , https://www.idiap.ch/en/scientific-research/data/cohface | Open dataset | rPPG validation on Earth: RGB video synced with cardiac (PPG) and respiratory signals, **160 one-minute sequences from 40 participants**. Does not represent microgravity. | Verified: the numbers match the COHFACE entry on the Camera Vitals dataset list (McDuff survey site). There is no separate dataset literally named "CameraVitals"; we write "CameraVitals (COHFACE)". Download needs Idiap registration; not downloaded yet. |
+| Team recordings on the mirror mock-up | Team recording | Mirror demo: pose check, face, posture scenarios (rest, talking, head turn, lighting, distance). Split by person between training and testing. | Planned |
+| LYRA web app crew | Simulation | All time series in the live demo are simulated from `data/nasa_reference.json` corridors. | In the app |
+
+In the LYRA simulation all trajectories come from `data/nasa_reference.json`. It contains no real individual astronaut camera data.

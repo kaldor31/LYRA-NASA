@@ -1,21 +1,21 @@
 /*
-  LYRA — прошивка станции ладони (ESP32 DevKit, Arduino IDE).
+  LYRA: grip research-module firmware (ESP32 DevKit, Arduino IDE). Feasibility prototype only.
 
-  Библиотеки (Arduino Library Manager):
-    • "SparkFun MAX3010x Pulse and Proximity Sensor Library"  — MAX30102 (пульс, SpO2)
-    • "Adafruit MLX90614 Library"                              — ИК-термометр
-    • "HX711" (Bogdan Necula)                                  — тензодатчик хвата
+  Libraries (Arduino Library Manager):
+    * "SparkFun MAX3010x Pulse and Proximity Sensor Library": MAX30102 (pulse, SpO2)
+    * "Adafruit MLX90614 Library": IR thermometer
+    * "HX711" (Bogdan Necula): grip load cell
 
-  Подключение — docs/drawings/wiring.svg:
-    I2C: SDA=GPIO21, SCL=GPIO22 (MAX30102 0x57, MLX90614 0x5A), питание 3V3
+  Wiring: docs/drawings/archive/wiring.svg
+    I2C: SDA=GPIO21, SCL=GPIO22 (MAX30102 0x57, MLX90614 0x5A), 3V3 power
     HX711: DT=GPIO16, SCK=GPIO4
 
-  Вывод в Serial 115200, одна JSON-строка в секунду:
+  Serial output at 115200, one JSON line per second:
     {"finger":1,"hr":72,"hr_ok":1,"spo2":98,"spo2_ok":1,"temp":33.21,"grip":0.12}
-  Команды из Serial: 't' — обнулить тензодатчик (рукоять не трогать).
+  Serial commands: 't' tares the load cell (do not touch the grip).
 
-  Калибровка хвата: положите груз известной массы (напр. 5 кг), посмотрите сырое
-  значение и подберите GRIP_CAL так, чтобы "grip" показывал 5.0.
+  Grip calibration: put a known mass on it (for example 5 kg), read the raw value,
+  and adjust GRIP_CAL so that "grip" shows 5.0.
 */
 #include <Wire.h>
 #include "MAX30105.h"
@@ -26,14 +26,14 @@
 const int PIN_SDA = 21, PIN_SCL = 22;
 const int HX_DT = 16, HX_SCK = 4;
 const int LED_PIN = 2;
-float GRIP_CAL = 21000.0;          // единиц АЦП на 1 кг — подобрать калибровкой
-const uint32_t FINGER_IR = 50000;  // ниже — пальца на датчике нет
+float GRIP_CAL = 21000.0;          // ADC units per 1 kg; set by calibration
+const uint32_t FINGER_IR = 50000;  // below this: no finger on the sensor
 
 MAX30105 ppg;
 Adafruit_MLX90614 mlx;
 HX711 scale;
 
-const int32_t BUF = 100;           // 4 секунды при 25 отсчётах/с
+const int32_t BUF = 100;           // 4 seconds at 25 samples/s
 uint32_t irBuf[BUF], redBuf[BUF];
 bool ppgOk = false, mlxOk = false;
 
@@ -56,8 +56,8 @@ void setup() {
 
   ppgOk = ppg.begin(Wire, I2C_SPEED_FAST);
   if (ppgOk) {
-    // яркость LED, усреднение 4, режим 2 (красный+ИК), 100 Гц → 25 отсч/с после усреднения,
-    // ширина импульса 411 мкс, диапазон АЦП 4096
+    // LED brightness, averaging 4, mode 2 (red + IR), 100 Hz -> 25 samples/s after averaging,
+    // pulse width 411 us, ADC range 4096
     ppg.setup(60, 4, 2, 100, 411, 4096);
     for (int i = 0; i < BUF; i++) readSample(i);
   }
@@ -78,7 +78,7 @@ void loop() {
   bool finger = false;
 
   if (ppgOk) {
-    // сдвигаем окно на 25 отсчётов (1 секунда) и дочитываем новые
+    // shift the window by 25 samples (1 second) and read the new ones
     for (int i = 25; i < BUF; i++) { redBuf[i - 25] = redBuf[i]; irBuf[i - 25] = irBuf[i]; }
     for (int i = 75; i < BUF; i++) readSample(i);
     finger = irBuf[BUF - 1] > FINGER_IR;

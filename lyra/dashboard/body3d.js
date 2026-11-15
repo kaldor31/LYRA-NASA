@@ -1,12 +1,13 @@
 // LYRA: 3D point cloud of the astronaut body (ToF for the body, structured light for the face).
-// API: createBody(container) → { setParams, setView, scan, setLabels, resize, dispose }
+// API: createBody(container) -> { setParams, setView, scan, setLabels, setSkeleton, resize, dispose }
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 const STATUS_COLORS = { green: "#5BC98A", yellow: "#E8B04B", red: "#F0686A" };
-const NEUTRAL = new THREE.Color("#B9C7D6");
+const NEUTRAL = new THREE.Color("#A3A9AF");
+const ACCENT = new THREE.Color("#8FB2E8");
 const ZONES = ["face", "legs", "body", "hands", "posture"];
-// Части тела (id) → зона
+// Body parts (id) -> zone
 const P = { HEAD: 0, EYE: 1, NOSE: 2, NECK: 3, TORSO: 4, PELVIS: 5, THIGH: 6, SHIN: 7, FOOT: 8, UARM: 9, FARM: 10, HAND: 11, DELT: 12 };
 const PART_ZONE = [0, 0, 0, 4, 2, 2, 1, 1, 1, 2, 3, 3, 2];
 const FACE_PARTS = new Set([P.HEAD, P.EYE, P.NOSE]);
@@ -16,7 +17,7 @@ const SPINE_LO = 0.98, SPINE_HI = 1.45, NECK_BASE = 1.47;
 const FOV = 35;
 const REDUCED = () => !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
-// Детерминированный ГПСЧ, чтобы облако было одинаковым при каждой загрузке
+// Deterministic PRNG so the cloud is identical on every load
 function rng(seed) {
   return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -24,15 +25,15 @@ function rng(seed) {
 const rand = rng(1717);
 const gauss = () => (rand() + rand() + rand() - 1.5) * 0.8;
 
-// ---------- Генерация процедурной модели ----------
+// ---------- Procedural body model ----------
 function buildBodyPoints() {
   const pts = []; // {x,y,z, nx,ny,nz, cx,cy,cz, part, size}
   const add = (x, y, z, nx, ny, nz, cx, cy, cz, part, noise) => {
     pts.push({ x: x + gauss() * noise, y: y + gauss() * noise, z: z + gauss() * noise, nx, ny, nz, cx, cy, cz, part });
   };
-  const BODY_D = 7200, FACE_D = 24000; // точек на м² (ToF / structured light)
+  const BODY_D = 7200, FACE_D = 24000; // points per m2 (ToF / structured light)
 
-  // Капсула (усечённый конус) между a и b; caps: [начало, конец] — замыкать ли полусферой
+  // Capsule (truncated cone) between a and b; caps: [start, end] close with a hemisphere
   function limb(a, b, r1, r2, part, bulge = 0, caps = [false, false]) {
     const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b);
     const axis = B.clone().sub(A), L = axis.length(); axis.normalize();
@@ -56,7 +57,7 @@ function buildBodyPoints() {
       }
     });
   }
-  // Эллипсоид; shape(x,y,z) может подправить точку (например, сузить подбородок)
+  // Ellipsoid; shape(x,y,z) may adjust a point (for example narrow the chin)
   function blob(c, r, part, density, noise, shape) {
     const area = 4 * Math.PI * Math.pow((Math.pow(r[0] * r[1], 1.6) + Math.pow(r[0] * r[2], 1.6) + Math.pow(r[1] * r[2], 1.6)) / 3, 1 / 1.6);
     const n = Math.round(density * area);
@@ -69,25 +70,25 @@ function buildBodyPoints() {
     }
   }
 
-  // Голова: эллипсоид с сужением к подбородку
+  // Head: ellipsoid narrowing toward the chin
   const HC = [0, 1.655, 0.01], HR = [0.076, 0.108, 0.095];
   const chin = (x, y, z) => { if (y < 0) { const k = 1 - 0.32 * (-y / HR[1]); x *= k; z = z * (0.85 + 0.15 * k) + (z > 0 ? 0 : 0.01 * (1 - k)); } return [x, y, z]; };
   blob(HC, HR, P.HEAD, FACE_D, 0.0012, chin);
-  // Зоны вокруг глаз — плотные патчи на поверхности (для «периорбитального отёка»)
+  // Dense patches around the eyes (periorbital puffiness)
   for (const sx of [-1, 1]) {
     for (let i = 0; i < 200; i++) {
       const dx = sx * 0.032 + gauss() * 0.02, dy = 0.008 + gauss() * 0.012;
-      // проецируем на поверхность эллипсоида спереди
+      // project onto the front of the ellipsoid
       const zz = HR[2] * Math.sqrt(Math.max(0.02, 1 - (dx / HR[0]) ** 2 - (dy / HR[1]) ** 2));
       const nn = new THREE.Vector3(dx / HR[0] ** 2, dy / HR[1] ** 2, zz / HR[2] ** 2).normalize();
       add(HC[0] + dx, HC[1] + dy, HC[2] + zz - 0.004, nn.x, nn.y, nn.z, HC[0], HC[1], HC[2], P.EYE, 0.001);
     }
   }
-  limb([0, 1.66, 0.098], [0, 1.625, 0.118], 0.011, 0.014, P.NOSE, 0, [true, true]);       // нос
-  for (const sx of [-1, 1]) blob([sx * 0.078, 1.655, 0.0], [0.012, 0.03, 0.02], P.HEAD, FACE_D * 0.6, 0.001); // уши
-  limb([0, 1.45, -0.005], [0, 1.575, 0.005], 0.055, 0.05, P.NECK);                          // шея
+  limb([0, 1.66, 0.098], [0, 1.625, 0.118], 0.011, 0.014, P.NOSE, 0, [true, true]);       // nose
+  for (const sx of [-1, 1]) blob([sx * 0.078, 1.655, 0.0], [0.012, 0.03, 0.02], P.HEAD, FACE_D * 0.6, 0.001); // ears
+  limb([0, 1.45, -0.005], [0, 1.575, 0.005], 0.055, 0.05, P.NECK);                          // neck
 
-  // Торс: стопка эллипсов по профилю (талия уже, грудь и плечи шире)
+  // Torso: stacked ellipses along a profile (narrow waist, wider chest and shoulders)
   const prof = [[0.84, 0.15, 0.1], [0.92, 0.163, 0.106], [1.0, 0.148, 0.098], [1.07, 0.134, 0.094], [1.16, 0.143, 0.1], [1.28, 0.166, 0.113], [1.37, 0.174, 0.106], [1.44, 0.135, 0.082]];
   const at = (y) => { for (let i = 1; i < prof.length; i++) if (y <= prof[i][0]) {
     const t = (y - prof[i - 1][0]) / (prof[i][0] - prof[i - 1][0]);
@@ -96,33 +97,33 @@ function buildBodyPoints() {
   const torsoN = Math.round(BODY_D * 2 * Math.PI * 0.135 * 0.6);
   for (let i = 0; i < torsoN; i++) {
     const y = 0.84 + rand() * 0.6, [rx, rz] = at(y), a = rand() * Math.PI * 2;
-    const cz = 0.008 * Math.sin(((y - 0.84) / 0.6) * Math.PI); // грудь чуть вперёд
+    const cz = 0.008 * Math.sin(((y - 0.84) / 0.6) * Math.PI); // chest slightly forward
     const nn = new THREE.Vector3(Math.cos(a) / rx, 0, Math.sin(a) / rz).normalize();
     add(Math.cos(a) * rx, y, cz + Math.sin(a) * rz, nn.x, 0.1, nn.z, 0, y, cz, P.TORSO, 0.003);
   }
-  // Верх торса — скат от плеч к шее
+  // Top of the torso: slope from shoulders to neck
   for (let i = 0; i < 900; i++) {
     const s = Math.sqrt(rand()), a = rand() * Math.PI * 2;
     const k = 0.36 + 0.64 * s, rx = 0.135 * k, rz = 0.082 * k, y = 1.44 + 0.04 * (1 - s);
     add(Math.cos(a) * rx, y, Math.sin(a) * rz, Math.cos(a) * 0.5, 0.85, Math.sin(a) * 0.5, 0, y, 0, P.TORSO, 0.003);
   }
-  blob([0, 0.84, -0.005], [0.15, 0.07, 0.1], P.PELVIS, BODY_D * 0.5, 0.003, (x, y, z) => [x, -Math.abs(y), z]); // низ таза
+  blob([0, 0.84, -0.005], [0.15, 0.07, 0.1], P.PELVIS, BODY_D * 0.5, 0.003, (x, y, z) => [x, -Math.abs(y), z]); // bottom of the pelvis
 
   for (const sx of [-1, 1]) {
-    // Ноги
+    // Legs
     limb([sx * 0.095, 0.89, 0], [sx * 0.098, 0.49, 0.012], 0.085, 0.054, P.THIGH, 0.006);
     limb([sx * 0.098, 0.49, 0.012], [sx * 0.1, 0.085, -0.005], 0.05, 0.034, P.SHIN, 0.012);
     blob([sx * 0.103, 0.045, 0.05], [0.042, 0.035, 0.11], P.FOOT, BODY_D, 0.003, (x, y, z) => [x, Math.max(y, -0.035 + 0.0), z]);
-    // Руки: плечо → локоть (чуть в стороны) → кисть вперёд к рукояти
+    // Arms: shoulder -> elbow (slightly out) -> hand forward to the grip
     blob([sx * 0.188, 1.41, 0], [0.058, 0.06, 0.06], P.DELT, BODY_D, 0.003);
     limb([sx * 0.2, 1.4, 0], [sx * 0.265, 1.13, -0.03], 0.046, 0.037, P.UARM, 0.004);
     limb([sx * 0.265, 1.13, -0.03], [sx * 0.3, 1.045, 0.22], 0.037, 0.027, P.FARM, 0.005, [true, false]);
-    blob([sx * 0.305, 1.035, 0.27], [0.03, 0.045, 0.05], P.HAND, BODY_D * 1.3, 0.002);      // кулак на рукояти
+    blob([sx * 0.305, 1.035, 0.27], [0.03, 0.045, 0.05], P.HAND, BODY_D * 1.3, 0.002);      // fist on the grip
   }
   return pts;
 }
 
-// ---------- Стили подписей (один раз) ----------
+// ---------- Label styles (once) ----------
 function injectStyles() {
   if (document.getElementById("body3d-styles")) return;
   const st = document.createElement("style"); st.id = "body3d-styles";
@@ -147,10 +148,10 @@ function stubApi(container) {
   const d = document.createElement("div"); d.className = "body3d-fallback"; d.textContent = "3D view is not available in this browser";
   container.appendChild(d);
   const noop = () => {};
-  return { setParams: noop, setView: noop, scan: noop, setLabels: noop, resize: noop, dispose: () => d.remove() };
+  return { setParams: noop, setView: noop, scan: noop, setLabels: noop, setSkeleton: noop, resize: noop, dispose: () => d.remove() };
 }
 
-// ---------- Основная функция ----------
+// ---------- Main function ----------
 export function createBody(container) {
   if (!webglAvailable()) return stubApi(container);
   let renderer;
@@ -171,7 +172,7 @@ export function createBody(container) {
   controls.enableDamping = true; controls.enablePan = false; controls.autoRotateSpeed = 0.8;
   controls.minDistance = 1.2; controls.maxDistance = 9;
 
-  // --- Облако точек ---
+  // --- Point cloud ---
   const src = buildBodyPoints(), N = src.length;
   const base = new Float32Array(N * 3), cen = new Float32Array(N * 3), part = new Uint8Array(N), zone = new Uint8Array(N);
   const pos = new Float32Array(N * 3), nrm = new Float32Array(N * 3), col = new Float32Array(N * 3), colT = new Float32Array(N * 3);
@@ -180,7 +181,7 @@ export function createBody(container) {
     base.set([p.x, p.y, p.z], i * 3); cen.set([p.cx, p.cy, p.cz], i * 3);
     const nl = Math.hypot(p.nx, p.ny, p.nz) || 1; nrm.set([p.nx / nl, p.ny / nl, p.nz / nl], i * 3);
     part[i] = p.part; zone[i] = PART_ZONE[p.part];
-    // «Осанка» — ещё и полоса вдоль позвоночника на спине
+    // Posture zone also includes a strip along the spine
     if (p.part === P.TORSO && Math.abs(p.x) < 0.035 && p.z < -0.05 && p.y > 1.0) zone[i] = 4;
     const face = FACE_PARTS.has(p.part);
     size[i] = face ? 0.0042 : 0.0068;
@@ -193,7 +194,7 @@ export function createBody(container) {
   geom.setAttribute("aColor", new THREE.BufferAttribute(col, 3));
   geom.setAttribute("aSize", new THREE.BufferAttribute(size, 1));
   geom.setAttribute("aPulse", new THREE.BufferAttribute(pulse, 1));
-  const uniforms = { uTime: { value: 0 }, uScale: { value: 500 }, uScanOn: { value: 0 }, uScanY: { value: 1 }, uScanDown: { value: 1 } };
+  const uniforms = { uTime: { value: 0 }, uScale: { value: 500 }, uScanOn: { value: 0 }, uScanY: { value: 1 }, uScanDown: { value: 1 }, uFade: { value: 1 } };
   const mat = new THREE.ShaderMaterial({
     uniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: `
@@ -215,13 +216,13 @@ export function createBody(container) {
         gl_Position = projectionMatrix * mv;
       }`,
     fragmentShader: `
-      varying vec3 vColor; varying float vAlpha;
+      uniform float uFade; varying vec3 vColor; varying float vAlpha;
       void main(){ vec2 c = gl_PointCoord - 0.5; float d = dot(c, c); if (d > 0.25) discard;
-        gl_FragColor = vec4(vColor, vAlpha * smoothstep(0.25, 0.02, d) * 0.8); }`,
+        gl_FragColor = vec4(vColor, vAlpha * uFade * smoothstep(0.25, 0.02, d) * 0.8); }`,
   });
   const cloud = new THREE.Points(geom, mat); cloud.frustumCulled = false; scene.add(cloud);
 
-  // --- Станция LYRA: рабочая зона, стойки, рукояти ---
+  // --- LYRA station: work area, posts, grips ---
   const station = new THREE.Group(); scene.add(station);
   const lineMat = (o) => new THREE.LineBasicMaterial({ color: 0x8fa3b8, transparent: true, opacity: o, depthWrite: false });
   const seg = (arr, o) => { const g = new THREE.BufferGeometry().setFromPoints(arr.map((a) => new THREE.Vector3(...a))); station.add(new THREE.LineSegments(g, lineMat(o))); };
@@ -233,25 +234,25 @@ export function createBody(container) {
   seg(ring, 0.25);
   const posts = [[-0.55, 0.45], [0.55, 0.45], [0, -0.6]], ticks = [];
   posts.forEach(([x, z]) => { ticks.push([x, 0, z], [x, 2.0, z]);
-    for (const h of [0.5, 1.0, 1.5, 1.95]) ticks.push([x - 0.025, h, z], [x + 0.025, h, z]); }); // датчики ToF
+    for (const h of [0.5, 1.0, 1.5, 1.95]) ticks.push([x - 0.025, h, z], [x + 0.025, h, z]); }); // ToF sensors
   seg(ticks, 0.4);
-  // Рукояти на передних стойках на уровне локтя
+  // Grips on the front posts at elbow height
   for (const sx of [-1, 1]) seg([[sx * 0.55, 1.04, 0.45], [sx * 0.305, 1.035, 0.29], [sx * 0.305, 0.97, 0.28], [sx * 0.305, 1.1, 0.28]], 0.55);
 
-  // --- Плоскость сканирования ---
+  // --- Scan plane ---
   const scanGroup = new THREE.Group(); scanGroup.visible = false; scene.add(scanGroup);
   const disc = new THREE.Mesh(new THREE.CircleGeometry(0.62, 48), new THREE.MeshBasicMaterial({ color: 0x8fb2e8, transparent: true, opacity: 0.06, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }));
   disc.rotation.x = -Math.PI / 2; scanGroup.add(disc);
   const sring = []; for (let i = 0; i <= 64; i++) { const a = (i / 64) * Math.PI * 2; sring.push(new THREE.Vector3(Math.cos(a) * 0.62, 0, Math.sin(a) * 0.62)); }
   scanGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(sring), new THREE.LineBasicMaterial({ color: 0x8fb2e8, transparent: true, opacity: 0.7 })));
 
-  // --- Параметры и деформация ---
+  // --- Parameters and deformation ---
   const KEYS = ["face_pct", "periorbital_mm", "legs_pct", "body_pct", "height_pct", "head_forward_deg", "shoulder_asym_deg"];
   const cur = Object.fromEntries(KEYS.map((k) => [k, 0])), tgt = { ...cur };
   let geomDirty = true, colorDirty = true, zones = {};
   const tmp = [0, 0, 0];
 
-  // Деформация одной точки по текущим параметрам (визуальное усиление: лицо ×2.2, ноги ×3, рост ×3)
+  // Deform one point by current parameters (visual gain: face x2.2, legs x3, height x3)
   function deform(x, y, z, pt, cx, cy, cz, nx, ny, nz, out) {
     const fk = cur.face_pct * 0.022, lk = cur.legs_pct * 0.03, bk = cur.body_pct * 0.02;
     let s = 1, sy = 1;
@@ -264,15 +265,15 @@ export function createBody(container) {
     s = Math.max(0.55, s);
     x = cx + (x - cx) * s; z = cz + (z - cz) * s; if (sy !== 1) y = cy + (y - cy) * sy;
     if (pt === P.EYE) { const e = cur.periorbital_mm * 0.003; x += nx * e; y += ny * e; z += nz * e; }
-    // Асимметрия плеч: наклон линии плеч
+    // Shoulder asymmetry: tilt of the shoulder line
     const sa = Math.tan((cur.shoulder_asym_deg * 2 * Math.PI) / 180);
     const w = ARM_PARTS.has(pt) ? 1 : pt === P.TORSO ? Math.min(1, Math.max(0, (y - 1.2) / 0.25)) : 0;
     y += x * sa * w;
-    // Рост: вытягивание позвоночника
+    // Height: spinal elongation
     const stretch = cur.height_pct * 0.03 * (SPINE_HI - SPINE_LO);
     if (pt === P.TORSO) y += Math.min(1, Math.max(0, (y - SPINE_LO) / (SPINE_HI - SPINE_LO))) * stretch;
     else if (UPPER_PARTS.has(pt)) y += stretch;
-    // Наклон головы вперёд вокруг основания шеи
+    // Head forward tilt around the base of the neck
     if (FACE_PARTS.has(pt) || pt === P.NECK) {
       const py = NECK_BASE + stretch;
       let th = (cur.head_forward_deg * 1.3 * Math.PI) / 180;
@@ -298,7 +299,9 @@ export function createBody(container) {
     return false;
   }
   function rebuildColorTargets() {
-    const zc = ZONES.map((zn) => (STATUS_COLORS[zones[zn]] ? new THREE.Color(STATUS_COLORS[zones[zn]]) : NEUTRAL));
+    // Status colour only for Recheck/Deviation; a normal but changing zone gets the accent; the rest stays neutral.
+    const zc = ZONES.map((zn) => (zones[zn] && zones[zn] !== "green" && STATUS_COLORS[zones[zn]] ? new THREE.Color(STATUS_COLORS[zones[zn]])
+      : changing(zn) ? ACCENT : NEUTRAL));
     const zp = ZONES.map((zn) => (changing(zn) ? 1 : 0));
     for (let i = 0; i < N; i++) {
       const c = zc[zone[i]], b = c === NEUTRAL ? bright[i] : 0.9 + (bright[i] - 0.82) * 0.5;
@@ -308,9 +311,36 @@ export function createBody(container) {
   }
   rebuildColorTargets();
 
-  // --- Камера и виды ---
+  // --- Skeletal keypoint model (front, side and back views are fused into these joints) ---
+  const KP = [ // [x, y, z, part, cx, cy, cz]
+    [0, 1.66, 0.01, P.HEAD, 0, 1.655, 0.01], [0, 1.47, 0, P.NECK, 0, 1.5, 0],
+    [-0.19, 1.41, 0, P.DELT, -0.188, 1.41, 0], [0.19, 1.41, 0, P.DELT, 0.188, 1.41, 0],
+    [-0.265, 1.13, -0.03, P.UARM, -0.265, 1.13, -0.03], [0.265, 1.13, -0.03, P.UARM, 0.265, 1.13, -0.03],
+    [-0.3, 1.045, 0.22, P.FARM, -0.3, 1.045, 0.22], [0.3, 1.045, 0.22, P.FARM, 0.3, 1.045, 0.22],
+    [0, 0.92, 0, P.PELVIS, 0, 0.92, 0], [-0.095, 0.89, 0, P.THIGH, -0.095, 0.89, 0], [0.095, 0.89, 0, P.THIGH, 0.095, 0.89, 0],
+    [-0.098, 0.49, 0.012, P.SHIN, -0.098, 0.49, 0.012], [0.098, 0.49, 0.012, P.SHIN, 0.098, 0.49, 0.012],
+    [-0.1, 0.07, 0.02, P.FOOT, -0.1, 0.07, 0.02], [0.1, 0.07, 0.02, P.FOOT, 0.1, 0.07, 0.02]];
+  const BONES = [[0, 1], [1, 2], [1, 3], [2, 4], [3, 5], [4, 6], [5, 7], [1, 8], [8, 9], [8, 10], [9, 11], [10, 12], [11, 13], [12, 14], [2, 3], [9, 10]];
+  const kpPos = new Float32Array(KP.length * 3), bonePos = new Float32Array(BONES.length * 6);
+  const kpGeom = new THREE.BufferGeometry(); kpGeom.setAttribute("position", new THREE.BufferAttribute(kpPos, 3));
+  const boneGeom = new THREE.BufferGeometry(); boneGeom.setAttribute("position", new THREE.BufferAttribute(bonePos, 3));
+  const skeleton = new THREE.Group(); skeleton.visible = false; skeleton.renderOrder = 5; scene.add(skeleton);
+  skeleton.add(new THREE.LineSegments(boneGeom, new THREE.LineBasicMaterial({ color: 0x8fb2e8, transparent: true, opacity: 0.95, depthTest: false })));
+  const dotTex = (() => { const cv = document.createElement("canvas"); cv.width = cv.height = 32; const g = cv.getContext("2d");
+    g.fillStyle = "#fff"; g.beginPath(); g.arc(16, 16, 12, 0, Math.PI * 2); g.fill(); g.strokeStyle = "#0D1114"; g.lineWidth = 4; g.stroke(); return new THREE.CanvasTexture(cv); })();
+  const kpPts = new THREE.Points(kpGeom, new THREE.PointsMaterial({ color: 0xe7ecf0, size: 8, map: dotTex, alphaTest: 0.4, transparent: true, sizeAttenuation: false, depthTest: false }));
+  kpPts.renderOrder = 6; skeleton.add(kpPts);
+  function rebuildSkeleton() {
+    KP.forEach((k, i) => { deform(k[0], k[1], k[2], k[3], k[4], k[5], k[6], 0, 0, 1, tmp); kpPos.set(tmp, i * 3); });
+    BONES.forEach(([a, b], i) => { bonePos.set(kpPos.subarray(a * 3, a * 3 + 3), i * 6); bonePos.set(kpPos.subarray(b * 3, b * 3 + 3), i * 6 + 3); });
+    kpGeom.attributes.position.needsUpdate = true; boneGeom.attributes.position.needsUpdate = true;
+  }
+  rebuildSkeleton();
+  function setSkeleton(on) { skeleton.visible = !!on; uniforms.uFade.value = on ? 0.4 : 1; }
+
+  // --- Camera and views ---
   const VIEWS = { front: { theta: 0, phi: Math.PI / 2 - 0.06, ty: 0.98 }, side: { theta: Math.PI / 2, phi: Math.PI / 2 - 0.06, ty: 0.98 },
-    top: { theta: 0, phi: 0.02, ty: 0.9 }, orbit: { theta: Math.PI / 5, phi: Math.PI / 2 - 0.22, ty: 0.98 } };
+    back: { theta: Math.PI, phi: Math.PI / 2 - 0.06, ty: 0.98 }, top: { theta: 0, phi: 0.02, ty: 0.9 }, orbit: { theta: Math.PI / 5, phi: Math.PI / 2 - 0.22, ty: 0.98 } };
   let view = "front", tween = null, W = 0, H = 0;
   const half = Math.tan(((FOV / 2) * Math.PI) / 180);
   function fitDistance(name) {
@@ -328,12 +358,12 @@ export function createBody(container) {
     view = name; controls.autoRotate = name === "orbit" && !REDUCED();
     const off = camera.position.clone().sub(controls.target), from = new THREE.Spherical().setFromVector3(off);
     const v = VIEWS[name];
-    let dth = v.theta - from.theta; dth = Math.atan2(Math.sin(dth), Math.cos(dth)); // кратчайший путь
+    let dth = v.theta - from.theta; dth = Math.atan2(Math.sin(dth), Math.cos(dth)); // shortest path
     tween = { t: 0, from: { th: from.theta, ph: from.phi, r: from.radius, ty: controls.target.y }, to: { th: from.theta + dth, ph: v.phi, r: fitDistance(name), ty: v.ty } };
   }
   placeCamera(VIEWS.front.theta, VIEWS.front.phi, fitDistance("front"), VIEWS.front.ty);
 
-  // --- Подписи ---
+  // --- Labels ---
   const ANCHORS = { face: [[0.075, 1.67, 0.04], P.HEAD, [0, 1.655, 0.01], 1], legs: [[-0.15, 0.3, 0.01], P.SHIN, [-0.1, 0.3, 0.005], -1],
     body: [[-0.15, 1.12, 0.03], P.TORSO, [0, 1.12, 0], -1], hands: [[0.32, 1.035, 0.3], P.HAND, [0.305, 1.035, 0.27], 1],
     posture: [[0, 1.5, -0.06], P.NECK, [0, 1.5, 0], -1] };
@@ -370,14 +400,14 @@ export function createBody(container) {
     }
   }
 
-  // --- Размеры ---
+  // --- Sizing ---
   function resize() {
     W = container.clientWidth; H = container.clientHeight;
     if (!W || !H) return;
     renderer.setSize(W, H, false);
     camera.aspect = W / H; camera.updateProjectionMatrix();
     uniforms.uScale.value = canvas.height / (2 * half);
-    if (!tween) { // сохраняем направление, подбираем дистанцию под новое соотношение сторон
+    if (!tween) { // keep direction, refit distance to the new aspect ratio
       const off = camera.position.clone().sub(controls.target).setLength(fitDistance(view));
       camera.position.copy(controls.target).add(off);
     }
@@ -386,29 +416,29 @@ export function createBody(container) {
   if (ro) ro.observe(container); else window.addEventListener("resize", resize);
   resize();
 
-  // --- Цикл анимации ---
+  // --- Animation loop ---
   let raf = 0, last = performance.now(), scanning = false, scanT = 0, disposed = false;
   function frame(now) {
     raf = requestAnimationFrame(frame);
     const dt = Math.min(0.1, (now - last) / 1000); last = now;
     if (!W || !H) { resize(); if (!W || !H) return; }
     if (!REDUCED()) uniforms.uTime.value += dt;
-    // Плавный переход параметров (~0.5 с)
+    // Smooth parameter transition (about 0.5 s)
     const k = 1 - Math.exp(-dt / 0.15);
     for (const key of KEYS) { const d = tgt[key] - cur[key]; if (Math.abs(d) > 1e-4) { cur[key] += d * k; geomDirty = true; } else cur[key] = tgt[key]; }
-    if (geomDirty) { rebuildPositions(); geomDirty = false; }
+    if (geomDirty) { rebuildPositions(); rebuildSkeleton(); geomDirty = false; }
     if (colorDirty) {
       let maxd = 0;
       for (let i = 0; i < col.length; i++) { const d = colT[i] - col[i]; col[i] += d * k; if (Math.abs(d) > maxd) maxd = Math.abs(d); }
       geom.attributes.aColor.needsUpdate = true; if (maxd < 0.002) colorDirty = false;
     }
-    // Сканирование: вниз 2.4 с, вверх 1.6 с
+    // Scan sweep: down 2.4 s, up 1.6 s
     if (scanning) {
       scanT = (scanT + dt) % 4.0;
       const down = scanT < 2.4, y = down ? 1.85 - (scanT / 2.4) * 1.85 : ((scanT - 2.4) / 1.6) * 1.85;
       uniforms.uScanY.value = y; uniforms.uScanDown.value = down ? 1 : 0; scanGroup.position.y = y;
     }
-    // Камера
+    // Camera
     if (tween) {
       tween.t = Math.min(1, tween.t + dt / 0.9);
       const e = tween.t < 0.5 ? 2 * tween.t * tween.t : 1 - Math.pow(-2 * tween.t + 2, 2) / 2, f = tween.from, t = tween.to;
@@ -429,6 +459,7 @@ export function createBody(container) {
     setView,
     scan(on) { scanning = !!on; scanGroup.visible = scanning; uniforms.uScanOn.value = scanning ? 1 : 0; if (scanning) scanT = 0; },
     setLabels,
+    setSkeleton,
     resize,
     dispose() {
       if (disposed) return; disposed = true;

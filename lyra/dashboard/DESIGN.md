@@ -49,7 +49,8 @@ Colour (dark only; the device is a mirror display):
 | `--retry` | `#C9A2E6` | status Remeasure only |
 
 Rules
-- Status colours are used only for status, and always with an icon and a word: Normal (circle-check), Recheck (triangle-alert), Deviation (octagon-alert), Remeasure (rotate-ccw). Readable in greyscale.
+- Status colours are used only for status, and always with an icon and a label (concept paper wording): Within baseline (circle-check, green), Repeat measurement (triangle-alert, amber), Refer to specialist (octagon-alert, red), Measurement not confirmed (rotate-ccw, violet, with reject reason: motion, low light, face not visible, pose not reached, weak signal). Readable in greyscale.
+- Every expanded measurement explains three things: what changed, how reliable the signal is (quality %, usable seconds, motion, light), and what to do.
 - The primary action is a light filled button (`--text` on `--bg`), not a coloured one, so it never competes with status colour.
 - No gradients, no glows, no shadows except the modal scrim.
 
@@ -105,9 +106,22 @@ Desktop 1440x810, no page scroll; the right panel scrolls internally.
 
 - English only. Backend strings that still contain Cyrillic are replaced client-side by English fallbacks keyed by id (scenario, crew, environment, metric names, units, status words, packet titles) or regenerated from numeric fields (metric explanation line).
 - No emoji anywhere: `clean()` strips pictographs and variation selectors from every backend string.
-- No em dashes: `clean()` turns " — " into ", " and " · " into ", ". Ranges are written "1 to 1.5%".
+- No em dashes: `clean()` turns the em dash (U+2014) into ", " and a spaced middle dot into ", ". Ranges are written "1 to 1.5%".
 - Voice prompts and commands in English (en-US): "start", "repeat", "stop", numbers one to five, "yes" / "no", "card".
 
 ## 7. Accessibility checklist
 
 Skip link, landmarks, one h1, `aria-live` toast, native `<dialog>` for "Why it matters" (Esc closes, focus returns), `:focus-visible` 2 px accent ring with offset, 44 px touch targets for primary controls, `touch-action: manipulation`, `color-scheme: dark`, `theme-color` meta, labelled inputs, tabular numbers, reduced motion honoured.
+
+## 8. Concept paper update (2026-11-15)
+
+Decisions taken to follow docs/research/LYRA_concept_paper_ru.pdf and the backend contract:
+
+- **Contactless core, research module apart.** Grips (Doppler, PPG, SpO2, palm temperature, load cell, handgrip test) are an optional contact research module. Their rows sit in a dashed "Research module" section under the core measurements and never set the main status (backend `module: "research"`, `overall.research`). In the 3D view the hand label reads "Research grips". In the session the Doppler, grip and handgrip steps carry a "Research module" tag; the Doppler step can be skipped.
+- **Session flow on the touch mirror**: Position (marked area with two foot contours) > Identify (3D face, NFC card on the station reader as fallback) > Palms (two marked palm zones on the mirror, pose only, not a sensor) > Face scan > Body views (front, side, back on prompt) > research steps > Survey (sleep, wellbeing, symptoms, optional back pain) > Result. Live quality checks (feet, palms, face visible, light, holding still, pose reached) tick before each capture; "holding still" fails once on purpose so judges see the gate is real.
+- **Scan tab** shows how LYRA sees you: the face IR pipeline as four numbered stages (IR dot pattern, depth map, point cloud, triangle mesh; stylized, drawn procedurally on canvas), the RGB channel separately (expression, skin tone, rPPG pulse with signal quality), the body keypoint model as three stick figures from `body.skeleton.views` (front, side, back), posture features (head and trunk tilt, shoulder height difference, pelvis tilt, scapula asymmetry) and the environment mode note: in space posture is compared with the microgravity neutral body posture.
+- **Keypoints toggle** in the 3D view overlays the skeleton (15 joints, accent bones, round markers) on a dimmed point cloud; the 3D views are Front, Side, Back, Rotate.
+- **Environment mode** (Earth, Microgravity, Partial gravity) is shown in the header, in the verdict line and in the report. The parenthetical "(rover or base)" is trimmed for space.
+- **Data provenance** is a small tag with an icon (Simulation, Team recording, Open dataset (CameraVitals), NASA material) next to the verdict, in the Scan tab and in reports; the backend note is the tooltip.
+- **Report tab** (was Downlink): the medical report for the selected astronaut (measure, today, previous session, change, 30-day sparkline, signal quality, status and reason) above the downlink queue. Each delivered packet with `has_report` opens its own report in a dialog. Unconfirmed values are shown as "-", never as a number.
+- Tagline is "Step in. Scan. Know." (grips are research-only).

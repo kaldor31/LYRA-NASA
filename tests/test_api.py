@@ -44,3 +44,26 @@ def test_scenario_switch_series_dose():
 def test_websocket_sends_state():
     with client() as c, c.websocket_connect("/ws") as ws:
         assert ws.receive_json()["type"] == "state"
+
+
+def test_session_new_fields_and_medical_report_endpoint():
+    c = client()
+    r = c.post("/api/sessions", json={"astronaut_id": "a1", "survey": {"back_pain_flag": True},
+                                      "include_research": True}).json()
+    assert r["env_mode"] == "microgravity" and r["overall"]["include_research"]
+    assert r["overall"]["label"] in ("Within baseline", "Repeat measurement", "Refer to specialist")
+    m = r["metrics"][0]
+    assert {"label", "module", "quality", "confirmed", "reject_reason", "provenance", "env_mode"} <= set(m)
+    rep = c.get(f"/api/downlink/{r['downlink']['id']}").json()
+    assert rep["report"]["type"] == "medical_report" and rep["packet"]["status_light"] == r["overall"]["status"]
+    assert c.get("/api/downlink/pkt-9999").status_code == 404
+    meta = c.get("/api/meta").json()
+    assert meta["status_labels"]["retry"] == "Measurement not confirmed"
+
+
+def test_session_skip_research_flag():
+    c = client()
+    r = c.post("/api/sessions", json={"astronaut_id": "a1", "skip_research": True,
+                                      "survey": {"sleep_score": 4}}).json()
+    keys = {m["key"] for m in r["metrics"]}
+    assert not keys & set(c.get("/api/meta").json()["research_keys"]) and "back_pain_flag" not in keys

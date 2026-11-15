@@ -23,7 +23,7 @@
   <header class="top">
     <div class="brand">
       <span class="wordmark" translate="no">LYRA</span>
-      <span class="tagline">3D health scan</span>
+      <span class="tagline">Step in. Scan. Know.</span>
     </div>
     <nav id="scenarios" class="scenarios" aria-label="Demo scenario"></nav>
     <div class="top-right">
@@ -51,21 +51,24 @@
         <div class="views" role="group" aria-label="3D view">
           <button type="button" data-view="front" aria-pressed="true">Front</button>
           <button type="button" data-view="side" aria-pressed="false">Side</button>
-          <button type="button" data-view="top" aria-pressed="false">Top</button>
+          <button type="button" data-view="back" aria-pressed="false">Back</button>
           <button type="button" data-view="orbit" aria-pressed="false">Rotate</button>
         </div>
-        <p class="body-caption">Face: structured light. Body: time-of-flight. Highlighted zones are changing.</p>
+        <button type="button" class="layer-btn" id="btn-skel" aria-pressed="false"><span data-icon="PersonStanding"></span>Keypoints</button>
+        <p class="body-caption">Face: IR structured light. Body: skeletal keypoints from front, side and back views. Highlighted zones are changing.</p>
       </div>
     </section>
 
     <main id="main" class="panel" tabindex="-1">
       <div class="tabs" role="tablist" aria-label="Views">
         <button role="tab" type="button" id="t-session" aria-controls="tab-session" aria-selected="true" data-tab="session">Today</button>
+        <button role="tab" type="button" id="t-scan" aria-controls="tab-scan" aria-selected="false" tabindex="-1" data-tab="scan">Scan</button>
         <button role="tab" type="button" id="t-chart" aria-controls="tab-chart" aria-selected="false" tabindex="-1" data-tab="chart">You vs NASA</button>
-        <button role="tab" type="button" id="t-link" aria-controls="tab-link" aria-selected="false" tabindex="-1" data-tab="link">Downlink <span id="link-badge" class="count" hidden></span></button>
+        <button role="tab" type="button" id="t-link" aria-controls="tab-link" aria-selected="false" tabindex="-1" data-tab="link">Report <span id="link-badge" class="count" hidden></span></button>
         <button role="tab" type="button" id="t-risks" aria-controls="tab-risks" aria-selected="false" tabindex="-1" data-tab="risks">Why It Matters</button>
       </div>
       <div id="tab-session" class="tab" role="tabpanel" aria-labelledby="t-session"></div>
+      <div id="tab-scan" class="tab" role="tabpanel" aria-labelledby="t-scan" hidden></div>
       <div id="tab-chart" class="tab" role="tabpanel" aria-labelledby="t-chart" hidden></div>
       <div id="tab-link" class="tab" role="tabpanel" aria-labelledby="t-link" hidden></div>
       <div id="tab-risks" class="tab" role="tabpanel" aria-labelledby="t-risks" hidden></div>

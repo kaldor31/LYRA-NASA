@@ -1,129 +1,142 @@
 # LYRA: concept specification
 
-> "LYRA: 3D health scan for long-duration missions" · "Step in. Grip. Know."
-> Status: concept for NASA Space Apps 2026 (challenge "Create Health Monitoring Software for Astronauts on Space Missions"). There is no hardware; the software runs on simulation. Source of decisions: `docs/DECISIONS.md`; numbers and links: `data/nasa_reference.json` and `docs/research/nasa_sources.md`.
-> **LYRA is a screening and self-monitoring system. The result is not a diagnosis.** Health decisions are made by the flight surgeon.
+> **LYRA: Life-signs & Yield-based Readiness Analytics** (also: Lunar-to-orbit Your Readiness Assessment). "Step in. Scan. Know."
+> Team: Alina Dmitriyeva, Daniil Shabalin. NASA Space Apps 2026, challenge "Create Health Monitoring Software for Astronauts on Space Missions".
+> Status: concept + web app running on simulated crew data. Source of truth: the team concept paper `docs/research/LYRA_concept_paper_ru.pdf`, summarized in `docs/DECISIONS.md`. Numbers and links: `data/nasa_reference.json`, `docs/research/nasa_sources.md`.
+> **LYRA detects changes and checks measurement quality. It does not diagnose.** The medical team makes medical decisions.
 
 ---
 
 ## 1. Problem
 
-On a long mission (ISS 6 months, Moon, Mars about 3 years) the body changes continuously: bone loses **1 to 1.5% of mineral density per month** (NASA, Gravity Fields), fluids shift toward the head (facial puffiness, pressure on the eyes, the leading SANS risk), legs lose volume ("bird legs": more than 2 L of fluid leaves the legs by day 3, Skylab 4), and blood vessels "age" faster (CSA). On Mars, communication with a doctor takes **up to 20 min one way** (NASA, Distance From Earth), so the crew must notice deviations on its own.
+On long missions the body adapts continuously: fluid shifts toward the head, the spine elongates (NASA: stature up to about 3%), muscle and bone are lost (bone 1 to 1.5% per month, NASA Gravity hazard), and the relaxed body in microgravity takes a **neutral body posture** that differs from standing on Earth. On Mars, a message to the flight surgeon takes up to 20 minutes one way. The crew needs a short, repeatable, **contactless** check that separates expected adaptation from a sustained change, tells when its own measurement is unreliable, and hands a structured report to the medical team.
 
-Today many things are measured episodically, with heavy equipment and with an operator involved. What is needed is **daily, fast, (almost) contactless screening** that understands **which changes are expected** and which are not.
+## 2. Solution in one paragraph
 
-## 2. The solution in one paragraph
+LYRA is a stationary **touch mirror between three camera frames** (front, side, back). The crew member steps into the marked area; the mirror shows **contours for the feet, torso and palms**, and the cameras check pose and frame quality. LYRA then captures RGB video, **structured IR depth of the face** and a **3-view skeleton of the body**, filters motion, checks quality, and **AI modules** compare the result with the person's **own baseline** and the current **environment mode** (Earth, microgravity, partial gravity; rover or module context). The mirror shows one of three statuses: **Within baseline**, **Repeat measurement**, or **Refer to specialist**, with an explanation: which indicator changed, how reliable the signal is, and what to do. A low-quality capture gives **"Measurement not confirmed"**, never a made-up number. A report (time series, quality, environment mode, comparison with earlier scans) queues to the medical team on Earth.
 
-LYRA is a "smart frame" by the module wall: a mirror panel with a display and three slim posts with 3D cameras. The astronaut steps in, stands in front of the mirror for 20 s (3D scan of face and body), holds two handles for 30 s (ultrasound Doppler, PPG/SpO₂, temperature, grip strength), and in **about 90 s** gets a color-coded status and an instruction. The core idea: status = **"are you changing faster than NASA expects"**. The personal trajectory is compared with a corridor of expected adaptation built from published NASA/CSA data. All data automatically go to the flight surgeon through a queue that accounts for communication delay.
+## 3. Station
 
-## 3. Station (hardware, concept)
-
-See drawings: `docs/drawings/01_general_view.svg`, `02_front_side_fov.svg`.
+Drawings: `docs/drawings/01_general_view.svg`, `02_front_side_views.svg`.
 
 | Element | Design (dimensions approximate) |
 |---|---|
-| Front | Mirror panel about 500 x 900 mm, display behind it (head + torso) |
-| Posts | 3 posts, profile about 40 x 40 mm: 2 front posts at the sides + 1 rear post, giving a 360° view |
-| Mounting | Floor to ceiling about 2 m, attached to the module structure (on the ISS, the standard mounting rails), **no legs**; they fold on hinges against the wall |
-| Working area | About 1.2 x 1.2 m; foot restraints (microgravity) |
-| Modules | On each post, at three heights (head, torso, legs) |
-| Handles | Left/right on the front posts at elbow height |
-| Identification | 3D face recognition; if uncertain, an NFC card (kept at the station). **Voice is not used for identification.** The face reference updates slowly (the face changes from puffiness in the first days) |
-| Principle | **Nothing is worn on the body, no electrodes** (no ECG; HRV from PPG/Doppler) |
+| Touch mirror | Display behind a mirror surface; shows foot, torso and palm contours, light cues, live mesh and skeleton, results. Touch passes commands to the UI; it does not measure physiology. |
+| Palm zones | Standardize pose and body orientation for repeatable scans. Not a medical sensor. |
+| Front frame | Face, chest, arms: RGB camera, IR camera, structured IR projector, illumination |
+| Side frame | Profile: head and trunk tilt, chest position, spine curve |
+| Back frame | Shoulders, scapulae, pelvis, visible back symmetry |
+| Identification | 3D face recognition; fallback **NFC reader on the mirror frame** (card kept at the station) |
+| Mounting | Frames attached to the module structure (ISS seat tracks), foot restraints for microgravity |
+| Research option | **Vertical Doppler grips** in the side posts (section 6) |
 
-### 3.1 Sensors: hybrid
+## 4. Face: structured IR light to a mesh
 
-- **Face: structured light** (IR dot projector + IR camera, the Face ID principle): facial puffiness means changes of a few mm at about 0.5 m.
-- **Body: ToF cameras**: at 1-2 m, ToF accuracy is nearly constant. ToF has already flown on the ISS: the HazCam/PerchCam cameras of the **Astrobee** robot are pmd PicoFlexx ToF sensors (NASA Astrobee docs). We did not find structured light on the ISS; this is our proposal.
-- **RGB cameras**: pulse from video (rPPG), skin color.
-- Dot projectors fire **in turn** (patterns do not overlap); ToF cameras use **different modulation frequencies** (see `04_system_diagram.svg`, timing diagram).
+Drawing: `docs/drawings/04_face_pipeline.svg`.
 
-| Parameter | Structured light (face) | ToF (body) |
+1. The IR projector sends an invisible pattern (dots, stripes or coded elements) onto the face.
+2. The IR camera captures the pattern deformed by the nose, cheeks, forehead and lips.
+3. Software matches projected elements with the image (correspondence).
+4. Triangulation computes the distance to each surface region (camera-projector geometry).
+5. The result is a depth map and a **point cloud**.
+6. Surface reconstruction joins neighbouring points into triangles: a **mesh**.
+7. The mesh is aligned with the RGB image.
+8. On the next frames, vertex displacement describes expression.
+
+**The projector does not build the mesh**; it provides the optical pattern used to measure shape. Software: **OpenCV** for calibration, pattern decoding and depth; **Open3D or PCL** for the point cloud and mesh. No need for 30,000 polygons: LYRA tracks stable **key regions** (eyes, brows, nose, cheeks, lips, chin) as a few dozen features; the dense mesh is a visual layer.
+
+**RGB is a separate channel**: visible expression, skin color, head position, light conditions and **rPPG** (pulse from tiny changes in reflected light). IR is less dependent on color texture and part of ambient light, so RGB and IR do not duplicate each other. **RGB + IR + depth are fused** at the feature level after each channel passes its own quality check.
+
+## 5. Body and posture in 3 planes
+
+- **Skeletal keypoints** (head, shoulders, elbows, pelvis, knees, feet) from the 3 synchronized views, merged into one coordinate system. A full body mesh would need more cameras, compute and calibration; joint positions are enough for posture.
+- Depth for the body: structured light is possible; **ToF is an alternative** for larger distance, motion and full coverage. An engineering choice to verify on a prototype.
+- **Front:** shoulder height difference, pelvis position, lateral symmetry. **Side:** head and trunk tilt, chest position, spine curve. **Back:** scapulae, shoulder girdle, visible back symmetry. One view can hide a deviation (equal shoulders in front, trunk tilt in profile).
+
+| Posture metric (key) | View | Meaning |
 |---|---|---|
-| Accuracy at close range (0.3-0.6 m) | High, sub-mm to mm | Lower, about mm to cm, depth noise |
-| Accuracy at distance (1-2 m) | Drops roughly quadratically with distance | Nearly constant |
-| Resolution | High (dense dot pattern) | Lower (typically about 0.04-0.3 Mpx) |
-| Baseline (projector to camera) | Required, sets accuracy | Not required, compact module |
-| Calibration drift from launch vibration | Sensitive (baseline geometry), so self-calibration against a reference target on the station | Less sensitive |
-| Multipath errors | Few | Present (corners, shiny module surfaces) |
-| Mutual interference | Patterns overlap, so sensors fire in turn | Different modulation frequencies |
-| Role in LYRA | Face volume, puffiness around the eyes, identification | Leg volume/girth, body volume, height, posture |
+| `head_forward_deg` | side | Forward head tilt |
+| `trunk_tilt_deg` | side | Trunk tilt |
+| `shoulder_asym_deg` | front | Shoulder height difference |
+| `pelvis_tilt_deg` | front | Pelvis tilt |
+| `scapula_asym_mm` | back | Scapula / back asymmetry |
+| `spine_length_mm` | side + back | Distance between spine keypoints (expected elongation in microgravity) |
+| `pose_return_s` | all | Time to return to the usual pose |
+| `back_pain_flag` | self-report | Back pain (combines with posture change) |
 
-*Numbers in the table are typical characteristics of the sensor classes (team estimate), not LYRA measurements.*
+**Interpretation rules.** Two comparison levels: the **personal baseline** (pre-flight, updated in the mission) and the **environment mode** (Earth upright stance vs microgravity neutral body posture vs partial gravity). Flag only **sustained or repeated** changes, a growing deviation, or a change **combined with pain or fatigue**. If the person cannot reach the pose, that is stored as a measurement condition, not pathology. **The camera does not measure bone density, discs or muscle strength**; it sees external geometry and movement.
 
-## 4. Handles and gel
+## 6. Optional contact research module: vertical Doppler grips
 
-See `docs/drawings/03_handle_section.svg`.
+Drawing: `docs/drawings/03_doppler_cassette.svg`.
 
-- **Ultrasound Doppler** at the palmar arteries: blood flow velocity, pulse waveform shape, L/R asymmetry.
-- **PPG + SpO₂** under the finger; **palm temperature**; **load cell** (grip strength); **NFC**.
-- **Gel is required**: ultrasound does not pass through air.
-  - **Primary option: a cassette with a tape of solid hydrogel**: a fresh section is advanced before every session (like tape in a cartridge). **This is our design**: hydrogel pads for ultrasound and tape-advance mechanisms exist, but such a cassette does not. Material rationale: MIT, Wang et al., *Science* 377:517 (2022): a solid hydrogel under an elastomer provides ultrasound contact without liquid gel for 48 h or more.
-  - **Backup option: a liquid gel dispenser** in the same handle (reservoir + micropump; in microgravity the liquid is held by surface tension, but the risk of droplets is higher, hence backup only).
+- Ultrasound Doppler transducers are built into the **vertical side posts as vertical grips**. Doppler is a contact device even when its housing is in a post, so this is an **optional research channel**, not part of the contactless core. Its metrics are shown separately and **excluded from the overall status**.
+- **Solid hydrogel cassette (4 parts)** held on the transducer itself: **holder** fixed on the transducer body; **thin replaceable hydrogel pad**; **soft protective rim** limiting material displacement; **thin membrane** protecting the gel and keeping skin contact. The gel must fill the acoustic path; an air gap blocks ultrasound. A thin pad, not a thick block: a thick layer increases distance and deforms under pressure. **Thickness and press force are to be found experimentally on a ground mock-up.**
+- **Workflow:** 1 pad into the holder on the transducer face; 2 check for bubbles and damage; 3 palm on the marked zone; 4 cassette gently pressed to the skin (not a standalone sensor); 5 pulses through the hydrogel; 6 receiver registers the echo; 7 software checks contact quality and signal stability; 8 if poor, reposition the hand or repeat.
+- **Hackathon versions:** demo = mock cassette on the grip + on-screen signal path diagram; extended = real transducer only after a phantom or ground test bench.
+- **Honest limits:** hydrogel acoustic coupling is published (e.g. MIT, Wang et al., *Science* 2022), but not for this cassette, transducer or palm contact. Behaviour in long storage, heating, reuse and microgravity is unverified. **LYRA does not claim heart, venous or cardiovascular-risk assessment through the palm.** Clinical accuracy requires comparison with standard ultrasound and controlled trials.
 
-## 5. Session
+## 7. AI modules
 
-| Mode | Duration | Steps |
+Drawing: `docs/drawings/05_system_ai.svg`. AI is a set of separate modules, each testable on its own, not one model that "diagnoses".
+
+| # | Module | Input → output |
 |---|---|---|
-| Daily express scan | About 90 s | Step in and identification → 20 s 3D scan of face and body → 30 s at rest with hands on the handles (blood flow, pulse, SpO₂, temperature) → 2 short maximal squeezes → 15 s voice check-in (sleep, wellbeing, symptoms) → result |
-| Weekly full test | About 5 min | All of the above + an isometric handgrip test: 2 min holding 30% of maximum ("keep it in the green zone" gamification) + 1 min recovery → pulse and blood flow response |
-| Unscheduled | On request | At will or after Recheck/Deviation |
+| 1 | Camera / IR processing | Face detection and segmentation, IR point detection, rejection of points broken by motion or reflections, refinement over neighbouring frames → depth, point cloud, mesh |
+| 2 | RGB + IR fusion | Color features (RGB), geometry features (IR depth), temporal features → expression movement vs lighting change; one channel covers when the other degrades |
+| 3 | rPPG with quality | RGB (and near-IR) video → heart rate **plus** signal quality, usable duration, motion, light level, reject reason; poor quality → "Measurement not confirmed" |
+| 4 | Body / posture | 3-view keypoints → skeleton in one coordinate system → posture features vs baseline and environment mode |
+| 5 | Change classifier | All features + self-report → **Within baseline / Repeat measurement / Refer to specialist** with explanation |
 
-Instructions always include: voice prompts at every step, a screen with a short caption and animation, a **training mode** on first launch (nothing recorded), **"why it matters" cards** (2-3 sentences + the NASA risk), and voice commands "start", "repeat", "stop".
+**A human makes the medical decision.** The chain shown to judges: camera captures → algorithm builds geometry → models extract features → classifier rates the change → the medical specialist decides.
 
-## 6. Metrics ↔ HRP risks ↔ hazards
+## 8. Data and provenance
 
-The full machine-readable version is `data/nasa_reference.json` (metric keys are canonical).
+Every result is labelled with its **provenance**: **team recording**, **open dataset (CameraVitals)**, **NASA material**, or **simulation**. The live web demo is **simulation** throughout.
 
-| Metric (key) | HRP risk | Hazard (5 Hazards) | NASA expectation / model |
-|---|---|---|---|
-| Face volume `face_volume_ml`, puffiness around the eyes `periorbital_puffiness_mm` | Fluid shift, SANS (`fluid_shift_eyes`) | Gravity | Saturates over days (mechanism cited; magnitude estimated) |
-| Lower leg volume `leg_volume_ml` | `fluid_shift_eyes`, `bone_muscle` | Gravity | Fast drop to a plateau (Skylab: more than 2 L out of the legs by day 3, cited; -8% is our conversion) |
-| Height `height_cm` | `bone_muscle` | Gravity | Up to +3% (NASA, cited); 2% in the model |
-| Body volume `body_volume_l` | `bone_muscle` | Gravity | Estimated; indirect substitute for a scale |
-| Posture `head_forward_deg`, `shoulder_asym_deg` | `bone_muscle` (spine, Spinal Health) | Gravity | Personal baseline |
-| Grip strength `grip_left_kg`, `grip_right_kg` | `bone_muscle` | Gravity | Estimated -1%/month; bone -1 to 1.5%/month is cited context |
-| Blood flow `doppler_flow_*`, asymmetry `flow_asymmetry_pct` | `cardiovascular` (Venous Haemostasis, Thigh Cuff) | Gravity, Radiation | Personal baseline |
-| Pulse `hr_rppg`, `hr_palm`, HRV `hrv_rmssd_ms`, test `handgrip_*` | `cardiovascular`, `behavioral` | Gravity, Isolation | Personal baseline |
-| SpO₂ `spo2`, temperature `skin_temp`, symptoms `symptoms_flag` | `immune` | Hostile/Closed | Personal baseline |
-| Blinking, PERCLOS, yawning, sleep `sleep_score` | `sleep` | Isolation | Personal baseline |
-| Facial expression `facial_tension` ("likely signs of strain"), wellbeing | `behavioral` | Isolation, Distance | Personal baseline |
-| Dose `radiation_dose_msv` (imported from the station dosimeter) | `radiation_cancer` | Radiation | ISS about 0.2-0.5 mSv/day (NASA NTRS), 0.35 in the model |
+| Data | Provenance | Role |
+|---|---|---|
+| **NASA OSDR OSD-575** (Inspiration4 Comprehensive Metabolic Panel; 4 crew, 19 analytes with units, pre-flight L-92/L-44/L-3 and post-flight R+1 to R+194) | NASA material | **The one concrete NASA dataset**: shows the personal-baseline logic on real crew data (pre-flight baseline vs R+1, with lab reference ranges). Details in `docs/research/nasa_sources.md` §6.1 |
+| NASA Life Sciences Portal (LSDA) | NASA material | Human research in spaceflight and ground analogs since 1961: context, indicator choice |
+| NASA Open Data Portal | NASA material | Catalog of NASA open datasets |
+| NASA OSDR incl. Inspiration4 | NASA material | Visualizing spaceflight changes; **not** camera training data |
+| NASA neutral body posture and anthropometry (HIDH, NASA-STD-3001 Vol. 2, NTRS studies), HRP hazards and risks | NASA material | Environment-mode rules, risk cards, expected adaptation corridors |
+| CameraVitals (COHFACE): RGB video synced with cardiac and respiratory signals, 160 one-minute sequences, 40 participants | Open dataset | rPPG validation on Earth (not microgravity) |
+| Team recordings on the mirror mock-up | Team recording | Mirror demo: rest, talking, head turn, exercise, recovery, lighting, distances; split by person |
+| Simulated crew in the web app | Simulation | Live demo time series |
 
-**Status:** Normal: within the expected adaptation corridor and within the personal baseline → brief summary + day streak. Recheck: outside the corridor or a jump → a specific onboard measure + repeat tomorrow. Deviation: strong deviation or several signals → step-by-step "what to do now" instruction and priority in the queue to the doctor. Remeasure: the scan could not be completed reliably → repeat the measurement.
+**No single NASA dataset contains IR face points, RGB video, 3D posture and medical references together.** LYRA is therefore a prototype that requires validation, and we never claim it is trained on NASA data.
 
-## 7. Data flow to the doctor
+## 9. Demo flow (2 to 3 minutes)
 
-See `docs/drawings/04_system_diagram.svg`.
+1. Position check: feet, torso and palms on the mirror contours; quality check.
+2. Face: RGB, IR dots, depth map, point cloud, mesh.
+3. Three posture views (front, side, back) and the skeleton.
+4. Comparison with the previous measurement, personal baseline and environment mode.
+5. One of three statuses + explanation (indicator, reliability, action); report queued to Earth with the communication delay (ISS under 1 s, Moon about 1 to 2 s, Mars 3 to 20 min one way).
 
-Sensors → onboard computer (identification → 3D reconstruction and metrics → expected adaptation model → status and instruction → local storage) → screen/voice to the astronaut **and** a store-and-forward queue → flight surgeon on Earth. Delay: ISS seconds, Moon about 1-2 s, Mars up to 20 min one way; Deviation results go first. Data from the station dosimeter (on the ISS, for example CSA CANS, a neutron spectrometer; neutrons are about 30% of the dose on the ISS) are imported; LYRA **does not measure** radiation. The NASA analog of this flow is Tempus Pro (telemedicine); the export format follows the Standard Measures model (roadmap).
+## 10. Environments and scalability
 
-## 8. Environments and scalability
+| Environment | Gravity | Mode |
+|---|---|---|
+| ISS / Gateway | ~0 g | microgravity (neutral body posture reference) |
+| Moon | 0.166 g | partial gravity |
+| Mars base | 0.38 g | partial gravity, autonomous (long delay) |
+| Rover / module | 0 or partial | same mirror logic, context noted in the report |
+| Earth | 1 g | analogs (polar stations, bed rest), remote clinics, older adults |
 
-| Environment | Gravity | Delay (one way) | Configuration |
-|---|---|---|---|
-| ISS | ~0 g | Seconds | Full station |
-| Gateway / Moon | 0.166 g | About 1-2 s | Full station |
-| Mars (base) | 0.38 g | Up to 20 min | Full station, autonomous mode |
-| Spacecraft / rover | 0 / partial | Any | **Compact folding** (`05_compact_config.svg`) |
-| Earth | 1 g | n/a | Polar stations, submarines, remote hospitals, older adults |
+## 11. What LYRA does not do
 
-CSA: the effects of microgravity resemble accelerated aging and a sedentary lifestyle (bone, vessels, muscles, insulin resistance), so the same metrics are useful on Earth (osteoporosis, balance in older adults, cardiovascular disease, type 2 diabetes).
+- Does not diagnose; it reports "change detected" or "measurement not confirmed".
+- Does not measure bone density, intervertebral discs, muscle strength (camera), eye or intracranial pressure, or radiation (dosimeter values are imported).
+- The palm zones are not a sensor; the Doppler grips are an unverified research option.
+- rPPG accuracy depends on motion and light; CameraVitals is Earth data.
+- All demo data are simulated; there are no real crew camera data.
 
-## 9. Limitations and "what LYRA does not measure"
+## 12. Roadmap
 
-- **Not a diagnosis.** Screening and trends for the doctor.
-- **Does not measure bone density**: only functional markers (grip strength, posture, leg volume).
-- **Does not measure intraocular/intracranial pressure or vision**: facial puffiness is only an indirect marker of fluid shift (SANS requires OCT/ophthalmoscopy).
-- **Does not measure radiation**: dosimeter data are imported. No ECG, no blood/saliva tests or omics (that is Immune Biomarkers, Omics Archive).
-- **Does not determine mental state**: only "likely signs of fatigue/strain" + self-report.
-- Most corridors are **team estimates** (`basis: estimated`): NASA provides mechanisms and some individual numbers (bone, height, Skylab), but not trajectories for every metric. Calibration on real data (LSDA/OSDR, Standard Measures) is on the roadmap.
-- The hydrogel cassette and the whole station are a **concept**; the accuracy of 3D volume in microgravity (pose, floating hair/clothing) has not been verified; calibration drift after launch.
-- The demo runs on **simulated** astronauts; there are no real crew data.
-
-## 10. Roadmap
-
-1. Calibrate the corridors on open NASA data (LSDA, OSDR, Standard Measures).
-2. Analog environments: bed rest (NASA bedrest, "puffy-head, bird-legs"), HERA/polar stations.
-3. Handle prototype (hydrogel cassette) and a ToF + structured light test rig; testing on parabolic flights.
-4. Integration with onboard medical systems and the doctor's format; a multi-person crew.
+1. Mirror mock-up with RGB + structured IR camera; team recordings; per-person train/test split.
+2. rPPG validation on CameraVitals (COHFACE) and team recordings, with quality and reject reasons.
+3. Posture baselines in analog settings (bed rest, parabolic flight) against NASA neutral body posture data.
+4. Doppler research module: phantom and ground test bench, then comparison with standard ultrasound.
+5. Integration with the flight surgeon's report format and onboard medical systems.

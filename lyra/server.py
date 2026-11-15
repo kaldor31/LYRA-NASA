@@ -1,21 +1,22 @@
-"""LYRA — веб-приложение на симуляции (FastAPI + WebSocket).
+"""LYRA: web app running on simulated data (FastAPI + WebSocket).
 
-Запуск:  .venv/bin/python -m lyra.server            → http://127.0.0.1:8000
-Флаги:   --scenario day1|day40|mars180|anomaly  --time-scale 60  --port 8000  --fast (короткие фазы)
+Run:    .venv/bin/python -m lyra.server            -> http://127.0.0.1:8000
+Flags:  --scenario day1|day40|mars180|anomaly  --time-scale 60  --port 8000  --fast (short phases)
 
 REST (JSON):
-  GET  /api/meta                         сценарии, среды, экипаж, статус справочника
-  GET  /api/state                        текущий сценарий, сводка экипажа, очередь связи
-  POST /api/scenario/{id}                переключить сценарий (история пересчитывается)
-  GET  /api/reference                    справочник NASA как есть (риски, источники)
-  GET  /api/astronauts/{id}              профиль, последний результат, доза
-  GET  /api/astronauts/{id}/series/{key} «ты против ожидания NASA»: точки + коридор
-  POST /api/identify                     {astronaut_id} → 3D-лицо, уверенность
-  POST /api/identify/nfc                 {astronaut_id} → опознание NFC-картой
-  POST /api/sessions                     {astronaut_id, mode, training, survey, handgrip} → результат
-  POST /api/astronauts/{id}/dose         {dose_msv} → импорт дозиметра
-  GET  /api/downlink                     очередь передачи на Землю
-WebSocket /ws: {"type":"state"} при смене сценария/сеанса, {"type":"downlink"} при доставке пакетов.
+  GET  /api/meta                         scenarios, environments, crew, reference status, labels
+  GET  /api/state                        current scenario, crew summary, downlink queue
+  POST /api/scenario/{id}                switch scenario (history is regenerated)
+  GET  /api/reference                    NASA reference as is (risks, sources)
+  GET  /api/astronauts/{id}              profile, latest result, dose
+  GET  /api/astronauts/{id}/series/{key} "you vs. NASA expected adaptation": points + corridor
+  POST /api/identify                     {astronaut_id} -> 3D face ID, confidence
+  POST /api/identify/nfc                 {astronaut_id} -> NFC card identification
+  POST /api/sessions                     {astronaut_id, mode, training, survey, handgrip, include_research, skip_research} -> result
+  POST /api/astronauts/{id}/dose         {dose_msv} -> dosimeter import
+  GET  /api/downlink                     downlink queue to Earth
+  GET  /api/downlink/{packet_id}         medical report carried by a packet
+WebSocket /ws: {"type":"state"} on scenario/session change, {"type":"downlink"} when packets are delivered.
 """
 from __future__ import annotations
 
@@ -44,6 +45,7 @@ class SurveyIn(BaseModel):
     sleep_score: int | None = Field(None, ge=1, le=5)
     wellbeing_score: int | None = Field(None, ge=1, le=5)
     symptoms_flag: bool | None = None
+    back_pain_flag: bool | None = None  # optional symptom
 
 
 class HandgripIn(BaseModel):
@@ -56,6 +58,8 @@ class SessionIn(BaseModel):
     training: bool = False
     survey: SurveyIn | None = None
     handgrip: HandgripIn | None = None
+    include_research: bool = False  # research-module metrics count toward the overall result only if True
+    skip_research: bool = False  # crew skipped the optional research module: no research values are recorded
 
 
 class DoseIn(BaseModel):
@@ -63,7 +67,7 @@ class DoseIn(BaseModel):
 
 
 class Hub:
-    """Рассылка событий всем открытым панелям."""
+    """Broadcasts events to all open dashboards."""
 
     def __init__(self):
         self.clients: set[WebSocket] = set()
@@ -98,7 +102,7 @@ def create_app(scenario: str = "day40", time_scale: float = 60.0, fast: bool = F
     app.mount("/static", StaticFiles(directory=DASHBOARD), name="static")
 
     def nf(e: Exception):
-        return HTTPException(404, f"Не найдено: {e}")
+        return HTTPException(404, f"Not found: {e}")
 
     @app.get("/")
     async def index():
@@ -159,7 +163,8 @@ def create_app(scenario: str = "day40", time_scale: float = 60.0, fast: bool = F
         try:
             res = svc.run_session(body.astronaut_id, body.mode, body.training,
                                   body.survey.model_dump() if body.survey else None,
-                                  body.handgrip.model_dump() if body.handgrip else None)
+                                  body.handgrip.model_dump() if body.handgrip else None, body.include_research,
+                                  body.skip_research)
         except NotFound as e:
             raise nf(e)
         except ValueError as e:
@@ -181,6 +186,13 @@ def create_app(scenario: str = "day40", time_scale: float = 60.0, fast: bool = F
     async def downlink():
         return svc.queue.view()
 
+    @app.get("/api/downlink/{packet_id}")
+    async def downlink_report(packet_id: str):
+        try:
+            return svc.downlink_report(packet_id)
+        except NotFound as e:
+            raise nf(e)
+
     @app.websocket("/ws")
     async def ws(socket: WebSocket):
         await socket.accept()
@@ -196,13 +208,13 @@ def create_app(scenario: str = "day40", time_scale: float = 60.0, fast: bool = F
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="LYRA — 3D health scan (симуляция)")
+    p = argparse.ArgumentParser(description="LYRA: 3D health scan (simulated data)")
     p.add_argument("--scenario", default="day40", choices=list(SCENARIOS))
-    p.add_argument("--time-scale", type=float, default=60.0, help="ускорение задержки связи для демо (×)")
-    p.add_argument("--fast", action="store_true", help="короткие фазы сеанса (для отладки)")
+    p.add_argument("--time-scale", type=float, default=60.0, help="speed-up of the comm delay for the demo (x)")
+    p.add_argument("--fast", action="store_true", help="short session phases (for debugging)")
     p.add_argument("--host", default="127.0.0.1")
     p.add_argument("--port", type=int, default=8000)
-    p.add_argument("--sim", action="store_true", help="совместимость со старой командой (всегда симуляция)")
+    p.add_argument("--sim", action="store_true", help="compatibility with the old command (always simulated)")
     a = p.parse_args()
     import uvicorn
     uvicorn.run(create_app(a.scenario, a.time_scale, a.fast), host=a.host, port=a.port, log_level="info")

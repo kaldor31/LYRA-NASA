@@ -1,10 +1,10 @@
-"""Хранилище сеансов в памяти (по астронавтам). Для демо достаточно; интерфейс узкий — легко заменить на БД."""
+"""In-memory session store (per astronaut). Enough for the demo; the interface is narrow, easy to swap for a database."""
 from __future__ import annotations
 
 import statistics
 from dataclasses import dataclass, field
 
-PREFLIGHT_LAST_DAY = 0  # дни ≤ 0 — до полёта
+PREFLIGHT_LAST_DAY = 0  # days <= 0 are pre-flight (Earth)
 
 
 @dataclass
@@ -13,9 +13,12 @@ class Session:
     astronaut_id: str
     day: int
     mode: str                                   # daily | weekly
-    values: dict[str, tuple[float | None, float]]  # ключ → (значение, качество 0–1)
+    values: dict[str, tuple[float | None, float]]  # key -> (value, quality 0..1)
     simulated: bool = True
-    live: bool = False                          # сеанс, пройденный в демо (не история)
+    live: bool = False                          # session run in the demo (not history)
+    meta: dict[str, dict] = field(default_factory=dict)  # key -> {reject_reason, signal}
+    env_mode: str = "earth"                     # earth | microgravity | partial_gravity
+    provenance: str = "simulation"
 
 
 @dataclass
@@ -47,11 +50,13 @@ class Store:
                 out.append(v[0])
         return out
 
-    def history(self, aid: str, key: str, before_day: int) -> list[tuple[int, float]]:
-        """(день, значение) хороших измерений до дня `before_day`."""
+    def history(self, aid: str, key: str, before_day: int, since_day: int | None = None) -> list[tuple[int, float]]:
+        """(day, value) of good measurements before `before_day` (and from `since_day`, if given)."""
         out = []
         for s in self.list(aid):
             v = s.values.get(key)
+            if since_day is not None and s.day < since_day:
+                continue
             if s.day < before_day and v and v[0] is not None and v[1] >= 0.5:
                 out.append((s.day, v[0]))
         return out
@@ -65,11 +70,12 @@ class Store:
         for s in self.list(aid):
             v = s.values.get(key)
             if v and v[0] is not None:
-                out.append({"day": s.day, "value": round(v[0], 3), "quality": v[1], "mode": s.mode, "live": s.live})
+                out.append({"day": s.day, "value": round(v[0], 3), "quality": v[1], "mode": s.mode, "live": s.live,
+                            "confirmed": v[1] >= 0.5, "env_mode": s.env_mode, "provenance": s.provenance})
         return out
 
     def streak(self, aid: str, today: int) -> int:
-        """Серия: сколько дней полёта подряд (до сегодня включительно) есть хотя бы один сеанс."""
+        """Streak: consecutive mission days (up to and including today) with at least one session."""
         days = {s.day for s in self.list(aid)}
         d = today if today in days else today - 1
         n = 0

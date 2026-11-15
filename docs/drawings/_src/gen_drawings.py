@@ -1,19 +1,27 @@
 #!/usr/bin/env python3
-"""Generates the Russian LYRA concept drawing sheets (SVG).
+"""Generates the LYRA concept drawing sheets (SVG, English), v2 concept:
+touch mirror between three camera frames (front / side / back), optional
+contact research module (vertical Doppler grips with a solid hydrogel cassette),
+face pipeline and system / AI modules.
 
-Default output: docs/drawings/ru/ (resolved relative to this script).
+Default output: docs/drawings/ (resolved relative to this script).
 An optional argv[1] overrides the output directory.
-PNG copies of the English sheets live in docs/drawings/png/ (rendered separately).
+PNG exports: run render_png.py (same folder) after this script.
+Earlier sheets (v1: handle tape cassette, compact config, Russian set) are in
+docs/drawings/archive/v1/.
 """
 import math, sys, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.normpath(os.path.join(HERE, "..", "ru"))
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.normpath(os.path.join(HERE, ".."))
 os.makedirs(OUT, exist_ok=True)
 W, H = 1400, 990
+NSHEETS = 5
+
 
 def esc(s):
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
 
 class S:
     def __init__(self): self.p = []
@@ -21,9 +29,15 @@ class S:
     def line(self, x1, y1, x2, y2, cls="o", extra=""):
         self.add(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" class="{cls}" {extra}/>')
     def rect(self, x, y, w, h, cls="o", rx=0, extra=""):
+        if "fill=" in extra and cls == "o":
+            cls = "nc"  # let the fill attribute win over the .o class
         self.add(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{rx}" class="{cls}" {extra}/>')
     def circle(self, cx, cy, r, cls="o", extra=""):
+        if "fill=" in extra and cls == "o":
+            cls = "nc"
         self.add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r:.1f}" class="{cls}" {extra}/>')
+    def ellipse(self, cx, cy, rx, ry, cls="o", extra=""):
+        self.add(f'<ellipse cx="{cx:.1f}" cy="{cy:.1f}" rx="{rx:.1f}" ry="{ry:.1f}" class="{cls}" {extra}/>')
     def poly(self, pts, cls="o", closed=True, extra=""):
         d = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
         tag = "polygon" if closed else "polyline"
@@ -36,43 +50,80 @@ class S:
         for i, s in enumerate(lines):
             self.text(x, y + i * dy, s, cls, anchor)
     def dim(self, x1, y1, x2, y2, label, off=0, cls="dl"):
-        """dimension line between two points with arrows; label centered, offset perpendicular"""
         self.add(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" class="dim"/>')
         mx, my = (x1 + x2) / 2, (y1 + y2) / 2
-        if abs(x2 - x1) < 1:  # vertical
+        if abs(x2 - x1) < 1:
             self.add(f'<text x="{mx-6+off:.1f}" y="{my:.1f}" class="{cls}" text-anchor="middle" transform="rotate(-90 {mx-6+off:.1f} {my:.1f})">{esc(label)}</text>')
         else:
             self.text(mx, my - 6 + off, label, cls, "middle")
     def ext(self, x1, y1, x2, y2):
         self.line(x1, y1, x2, y2, "ex")
-    def leader(self, x1, y1, x2, y2, label, anchor="start", cls="t", lines=None):
+    def leader(self, x1, y1, x2, y2, anchor="start", lines=(), cls="s", dy=13):
         self.add(f'<circle cx="{x1:.1f}" cy="{y1:.1f}" r="2.2" fill="#222"/>')
         self.line(x1, y1, x2, y2, "ld")
         tx = x2 + (4 if anchor == "start" else -4 if anchor == "end" else 0)
-        if lines:
-            self.mtext(tx, y2 + 4, lines, cls, anchor, 14)
-        else:
-            self.text(tx, y2 + 4, label, cls, anchor)
+        self.mtext(tx, y2 + 4, list(lines), cls, anchor, dy)
     def arrow(self, x1, y1, x2, y2, cls="fl"):
         self.add(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" class="{cls}" marker-end="url(#fa)"/>')
+    def parrow(self, d, cls="fl"):
+        self.add(f'<path d="{d}" class="{cls}" marker-end="url(#fa)"/>')
+    def box(self, x, y, w, h, title, lines=(), cls="blk", tcls="b", lcls="s", dy=14, rx=4, center=True):
+        self.rect(x, y, w, h, cls, rx=rx)
+        if center:
+            self.text(x + w / 2, y + 18, title, tcls, "middle")
+            self.mtext(x + w / 2, y + 18 + dy + 2, list(lines), lcls, "middle", dy)
+        else:
+            self.text(x + 8, y + 18, title, tcls)
+            self.mtext(x + 8, y + 18 + dy + 2, list(lines), lcls, "start", dy)
     def out(self): return "\n".join(self.p)
+
+
+# provenance tags (sheet 5)
+TAGS = {
+    "TEAM": ("TEAM RECORDING", "#1f5fa8"),
+    "OPEN": ("OPEN DATASET", "#1a7a4a"),
+    "NASA": ("NASA MATERIAL", "#b35900"),
+    "SIM": ("SIMULATION", "#6a3d9a"),
+}
+
+
+def tag(s, x, y, key, anchor="start"):
+    label, col = TAGS[key]
+    w = len(label) * 6.4 + 12
+    if anchor == "end":
+        x -= w
+    s.add(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="15" rx="7" fill="{col}"/>')
+    s.add(f'<text x="{x + w/2:.1f}" y="{y + 11:.1f}" text-anchor="middle" class="tg">{esc(label)}</text>')
+    return w
+
 
 STYLE = """
 <defs>
   <marker id="da" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,1.5 L10,5 L0,8.5 z" fill="#222"/></marker>
   <marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#222"/></marker>
+  <marker id="fr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/></marker>
+  <marker id="fb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1f5fa8"/></marker>
   <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#555" stroke-width="1"/></pattern>
+  <pattern id="hatch2" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#777" stroke-width="0.8"/></pattern>
   <style>
     text{font-family:Arial,Helvetica,sans-serif}
     .t{font-size:13px;fill:#111}
     .s{font-size:11px;fill:#333}
+    .xs{font-size:10px;fill:#444}
     .b{font-size:13px;fill:#111;font-weight:bold}
+    .bs{font-size:11px;fill:#111;font-weight:bold}
     .h{font-size:20px;fill:#111;font-weight:bold}
     .vh{font-size:15px;fill:#111;font-weight:bold}
     .dl{font-size:12px;fill:#111}
+    .ai{font-size:12px;fill:#b00020;font-weight:bold}
+    .tg{font-size:9.5px;fill:#fff;font-weight:bold;letter-spacing:0.2px}
+    .rt{font-size:11px;fill:#c0392b}
+    .bt{font-size:11px;fill:#1f5fa8}
+    .gt{font-size:11px;fill:#1a7a4a}
     .o{stroke:#1a1a1a;stroke-width:1.6;fill:none}
     .of{stroke:#1a1a1a;stroke-width:1.6;fill:#f2f2f2}
     .ofd{stroke:#1a1a1a;stroke-width:1.6;fill:#d9d9d9}
+    .mir{stroke:#1a1a1a;stroke-width:1.8;fill:#e8eef4}
     .thick{stroke:#1a1a1a;stroke-width:3;fill:none}
     .post{stroke:#1a1a1a;stroke-width:1.4;fill:#bdbdbd}
     .thin{stroke:#333;stroke-width:1;fill:none}
@@ -83,612 +134,799 @@ STYLE = """
     .ld{stroke:#333;stroke-width:0.9;fill:none}
     .fl{stroke:#222;stroke-width:1.5;fill:none}
     .fld{stroke:#222;stroke-width:1.5;fill:none;stroke-dasharray:7 4}
-    .sl{fill:#c0392b;fill-opacity:0.13;stroke:#c0392b;stroke-width:1;stroke-dasharray:5 3}
-    .tof{fill:#1f5fa8;fill-opacity:0.10;stroke:#1f5fa8;stroke-width:1;stroke-dasharray:5 3}
+    .sl{fill:#c0392b;fill-opacity:0.12;stroke:#c0392b;stroke-width:1;stroke-dasharray:5 3}
+    .tof{fill:#1f5fa8;fill-opacity:0.09;stroke:#1f5fa8;stroke-width:1;stroke-dasharray:5 3}
     .hum{stroke:#777;stroke-width:1.2;fill:none;stroke-dasharray:3 3}
-    .gel{stroke:#1a7a4a;stroke-width:3;fill:none}
+    .cont{stroke:#1f5fa8;stroke-width:1.6;fill:none;stroke-dasharray:5 3}
+    .palm{stroke:#1f5fa8;stroke-width:1.6;fill:#1f5fa8;fill-opacity:0.10}
+    .gel{stroke:#1a7a4a;stroke-width:1.4;fill:#1a7a4a;fill-opacity:0.22}
+    .rim{stroke:#1a1a1a;stroke-width:1.2;fill:#9e9e9e}
+    .mem{stroke:#6a3d9a;stroke-width:2.2;fill:none}
+    .skin{stroke:#8a5a44;stroke-width:1.4;fill:#f3d9c9}
+    .ac{stroke:#c0392b;stroke-width:1.6;fill:none;marker-end:url(#fr)}
+    .acd{stroke:#1f5fa8;stroke-width:1.4;fill:none;stroke-dasharray:5 3;marker-end:url(#fb)}
     .frame{stroke:#111;stroke-width:2;fill:none}
     .blk{stroke:#1a1a1a;stroke-width:1.5;fill:#fafafa}
+    .blkg{stroke:#1a1a1a;stroke-width:1.5;fill:#eef3ee}
+    .blkb{stroke:#1a1a1a;stroke-width:1.5;fill:#eaf0f8}
+    .blkd{stroke:#555;stroke-width:1.4;fill:#fafafa;stroke-dasharray:6 4}
+    .note{stroke:#b35900;stroke-width:1.5;fill:#fff8ef}
     .grp{stroke:#555;stroke-width:1;fill:none;stroke-dasharray:6 4}
   </style>
 </defs>
 """
 
-def sheet(num, title, body, note_extra=None):
+
+def sheet(num, title, body):
     s = S()
     s.add(f'<rect x="0" y="0" width="{W}" height="{H}" fill="#fff"/>')
     s.rect(15, 15, W - 30, H - 30, "frame")
     s.rect(25, 25, W - 50, H - 50, "thin")
-    s.text(45, 60, f"Лист {num}. {title}", "h")
-    s.text(45, 82, "Концепция LYRA. Размеры в мм — ориентировочные (не рабочий чертёж).", "s")
-    # stamp
-    x0, y0, x1, y1 = 985, 845, W - 25, H - 25
+    s.text(45, 60, f"Sheet {num}. {title}", "h")
+    s.text(45, 82, "LYRA concept (v2: touch mirror between three camera frames). "
+                   "Concept, not a manufacturing drawing; dimensions approximate, in mm.", "s")
+    # title block
+    x0, y0, x1, y1 = 985, 838, W - 25, H - 25
     s.add(f'<rect x="{x0}" y="{y0}" width="{x1-x0}" height="{y1-y0}" fill="#fff" stroke="#111" stroke-width="1.6"/>')
-    for dy in (36, 66, 94):
+    for dy in (34, 60, 86, 107):
         s.line(x0, y0 + dy, x1, y0 + dy, "thin")
-    s.line(x0 + 110, y0, x0 + 110, y0 + 36, "thin")
-    s.line(x0 + 250, y0 + 66, x0 + 250, y1, "thin")
-    s.text(x0 + 55, y0 + 26, "LYRA", "h", "middle")
-    s.text(x0 + 120, y0 + 23, title, "b")
-    s.text(x0 + 10, y0 + 56, "Концепция, NASA Space Apps 2026", "t")
-    s.text(x0 + 10, y0 + 85, "Масштаб: б/м", "t")
-    s.text(x0 + 260, y0 + 85, f"Лист {num}/5", "b")
-    s.text(x0 + 10, y1 - 9, "Размеры в мм, ориентировочные", "s")
-    s.text(x0 + 260, y1 - 9, "Формат: альбом", "s")
+    s.line(x0 + 100, y0, x0 + 100, y0 + 34, "thin")
+    s.line(x0 + 250, y0 + 60, x0 + 250, y0 + 86, "thin")
+    s.text(x0 + 50, y0 + 25, "LYRA", "h", "middle")
+    s.text(x0 + 110, y0 + 22, title, "b")
+    s.text(x0 + 10, y0 + 52, "Concept, NASA Space Apps 2026", "t")
+    s.text(x1 - 10, y0 + 52, "AI (SI) assisted drawing", "ai", "end")
+    s.text(x0 + 10, y0 + 78, "Scale: NTS   Units: mm", "t")
+    s.text(x0 + 260, y0 + 78, f"Sheet {num}/{NSHEETS}", "b")
+    s.text(x0 + 10, y0 + 101, "Concept, not a manufacturing drawing; dimensions approximate", "s")
+    s.text(x0 + 10, y1 - 6, "Screening aid, not a diagnosis. No medical claims.", "s")
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}">\n'
-            f'<title>LYRA — лист {num}: {esc(title)}</title>\n{STYLE}\n{s.out()}\n{body}\n</svg>\n')
+            f'<title>LYRA sheet {num}: {esc(title)}</title>\n{STYLE}\n{s.out()}\n{body}\n</svg>\n')
 
-# ---------------------------------------------------------------- sheet 1
+
+# ------------------------------------------------------------------ geometry (mm)
+# x: lateral (crew right = +x), d: depth from mirror plane (crew stands at d ~ 600,
+# facing the mirror, i.e. toward -d), z: height above floor.
+MIR_X = 350          # mirror half width (approx. 700 wide)
+MIR_Z = (100, 1900)  # mirror bottom / top
+FF_X = 450           # front frame side posts at x = +/-450, d = -20
+SF_X = 850           # side frame plane x, posts at d = 250 / 950, mast at d = 600
+SF_D = (250, 950)
+BF_D = 1350          # back frame plane, posts at x = +/-450, mast at x = 0
+TOP = 2100
+AREA = (-400, 400, 350, 850)  # marked area x0, x1, d0, d1
+CREW_D = 600
+GRIP_Z = (950, 1250)
+
+
+# ------------------------------------------------------------------ sheet 1
 def sheet1():
     s = S()
-    # ---- plan view
-    s.text(60, 125, "Вид сверху (план), рабочее положение", "vh")
-    k = 0.25
-    cx, y0 = 330, 300  # center x, panel (depth 0) y
+    # ---------- plan
+    s.text(50, 120, "Top view (plan)", "vh")
+    k = 0.2
+    cx, y0 = 225, 215
     X = lambda mm: cx + mm * k
     Y = lambda d: y0 + d * k
-    # module wall
-    s.line(X(-760), Y(-30), X(760), Y(-30), "thick")
-    s.rect(X(-760), Y(-60), X(760) - X(-760), 30 * k, extra='fill="url(#hatch)" stroke="none"')
-    s.text(X(760), Y(-60) - 6, "стена модуля", "s", "end")
-    # zone
-    s.rect(X(-600), Y(0), 1200 * k, 1200 * k, "hid")
-    # panel
-    s.rect(X(-250), Y(0), 500 * k, 40 * k, "ofd")
-    # front posts (depth 100), rear post (depth 1150)
-    for px in (-550, 550):
-        s.rect(X(px) - 5, Y(100) - 5, 10, 10, "post")
-    s.rect(X(0) - 5, Y(1150) - 5, 10, 10, "post")
-    # handle brackets from posts to grips
-    for sg in (-1, 1):
-        s.line(X(sg * 545), Y(100), X(sg * 330), Y(260), "thick")
-        s.rect(X(sg * 330) - 6, Y(260) - 9, 12, 18, "ofd", rx=3)
-    # person (shoulders ellipse + head)
-    s.add(f'<ellipse cx="{X(0)}" cy="{Y(560)}" rx="{225*k}" ry="{120*k}" class="hum"/>')
-    s.circle(X(0), Y(520), 80 * k, "hum")
-    # foot restraints
+    # FOV wedges (light)
+    s.poly([(X(0), Y(10)), (X(-330), Y(820)), (X(330), Y(820))], "tof")
+    s.poly([(X(SF_X - 20), Y(CREW_D)), (X(-200), Y(250)), (X(-200), Y(950))], "tof")
+    s.poly([(X(0), Y(BF_D - 20)), (X(-330), Y(380)), (X(330), Y(380))], "tof")
+    # marked area + feet
+    s.rect(X(AREA[0]), Y(AREA[2]), (AREA[1] - AREA[0]) * k, (AREA[3] - AREA[2]) * k, "hid")
     for fx in (-110, 110):
-        s.rect(X(fx) - 12, Y(520) - 14, 24, 40, "thin", rx=3, extra='stroke-dasharray="2 2"')
-    # folded positions
-    s.rect(X(-430) - 5, Y(-25), 10, 10, "hid")
-    s.rect(X(430) - 5, Y(-25), 10, 10, "hid")
-    s.rect(X(330) - 5, Y(-25), 10, 10, "hid")
-    s.path(f"M{X(-550)},{Y(100)} A {130*k} {130*k} 0 0 1 {X(-430)},{Y(-20)}", "hid")
-    s.path(f"M{X(550)},{Y(100)} A {130*k} {130*k} 0 0 0 {X(430)},{Y(-20)}", "hid")
-    # dimensions
-    s.ext(X(-600), Y(1200), X(-600), Y(1290)); s.ext(X(600), Y(1200), X(600), Y(1290))
-    s.dim(X(-600), Y(1270), X(600), Y(1270), "1200")
-    s.ext(X(600), Y(0), X(700), Y(0)); s.ext(X(600), Y(1200), X(700), Y(1200))
-    s.dim(X(680), Y(0), X(680), Y(1200), "1200", off=-2)
-    s.ext(X(-250), Y(0), X(-250), Y(-215)); s.ext(X(250), Y(0), X(250), Y(-215))
-    s.dim(X(-250), Y(-200), X(250), Y(-200), "500")
-    s.ext(X(-600), Y(500), X(-760), Y(500))
-    s.ext(X(-600), Y(0), X(-760), Y(0))
-    s.dim(X(-740), Y(0), X(-740), Y(500), "≈500 до лица", off=-2)
-    # leaders
-    s.leader(X(-200), Y(20), 60, 205, "", "start", lines=["зеркальная панель", "≈500×900 с экраном"])
-    s.leader(X(-555), Y(105), 135, 460, "", "end", lines=["передняя", "стойка 40×40"])
-    s.leader(X(5), Y(1150), X(150), Y(1100), "задняя стойка 40×40", "start")
-    s.leader(X(330), Y(260), X(470), Y(380), "", "start", lines=["рукоять П", "(на кронштейне)"])
-    s.leader(X(110), Y(530), X(470), Y(720), "", "start", lines=["фиксаторы ног"])
-    s.leader(X(0), Y(600), X(-300), Y(860), "", "end", lines=["астронавт"])
-    s.leader(X(430), Y(-20), 540, 225, "", "start", lines=["сложено: стойки", "на петлях у стены"])
-    s.text(60, 760, "Рабочая зона 1200×1200 (пунктир). Обзор 360°: две передние стойки + задняя.", "t")
-    s.text(60, 778, "Стойки крепятся к полу и потолку модуля (на МКС — штатные рельсы), без ножек.", "t")
-    s.text(60, 796, "Пунктир у стены — сложенное положение (глубина ≈100).", "t")
+        s.rect(X(fx) - 10, Y(CREW_D) - 22, 20, 44, "thin", rx=8)
+    # crew (top: shoulders + head)
+    s.ellipse(X(0), Y(CREW_D + 20), 225 * k, 115 * k, "hum")
+    s.circle(X(0), Y(CREW_D - 10), 85 * k, "hum")
+    # front frame + mirror
+    s.line(X(-FF_X), Y(-20), X(FF_X), Y(-20), "thick")
+    for px in (-FF_X, FF_X):
+        s.rect(X(px) - 4, Y(-20) - 4, 8, 8, "post")
+    s.rect(X(-MIR_X), Y(-10), 2 * MIR_X * k, 30 * k, "mir")
+    # vertical grips (plan: circles on inner side of front posts)
+    for sg in (-1, 1):
+        s.line(X(sg * FF_X), Y(-20), X(sg * 400), Y(70), "thin")
+        s.circle(X(sg * 400), Y(70), 4.5, "ofd")
+    # side frame
+    s.line(X(SF_X), Y(SF_D[0]), X(SF_X), Y(SF_D[1]), "thick")
+    for d in (SF_D[0], CREW_D, SF_D[1]):
+        s.rect(X(SF_X) - 4, Y(d) - 4, 8, 8, "post")
+    # back frame
+    s.line(X(-FF_X), Y(BF_D), X(FF_X), Y(BF_D), "thick")
+    for px in (-FF_X, 0, FF_X):
+        s.rect(X(px) - 4, Y(BF_D) - 4, 8, 8, "post")
+    # dims
+    s.ext(X(-FF_X), Y(BF_D) + 6, X(-FF_X), Y(BF_D) + 48); s.ext(X(SF_X), Y(SF_D[1]) + 6, X(SF_X), Y(BF_D) + 48)
+    s.dim(X(-FF_X), Y(BF_D) + 40, X(SF_X), Y(BF_D) + 40, "approx. 1300")
+    s.ext(X(-FF_X) - 6, Y(-20), X(-FF_X) - 70, Y(-20)); s.ext(X(-FF_X) - 6, Y(BF_D), X(-FF_X) - 70, Y(BF_D))
+    s.dim(X(-FF_X) - 60, Y(-20), X(-FF_X) - 60, Y(BF_D), "approx. 1370", off=-2)
+    s.ext(X(-FF_X) - 6, Y(CREW_D), X(-FF_X) - 34, Y(CREW_D))
+    s.dim(X(-FF_X) - 26, Y(-20), X(-FF_X) - 26, Y(CREW_D), "approx. 600", off=-2)
+    s.ext(X(-MIR_X), Y(-12), X(-MIR_X), Y(-75)); s.ext(X(MIR_X), Y(-12), X(MIR_X), Y(-75))
+    s.dim(X(-MIR_X), Y(-65), X(MIR_X), Y(-65), "mirror approx. 700")
+    # leaders (plan)
+    s.leader(X(250), Y(5), X(540), Y(-90), "start", ["touch mirror"])
+    s.leader(X(FF_X), Y(-20), X(700), Y(30), "start", ["front frame"])
+    s.leader(X(400), Y(70), X(700), Y(100), "start", ["vertical Doppler grip", "(optional, research)"])
+    s.leader(X(SF_X), Y(SF_D[1]), X(920), Y(1050), "start", ["side frame"])
+    s.leader(X(FF_X), Y(BF_D), X(700), Y(1290), "start", ["back frame"])
+    s.leader(X(110), Y(CREW_D + 20), X(330), Y(1130), "start", ["foot restraints"])
+    # notes under plan
+    ny = 560
+    s.mtext(50, ny, [
+        "The crew member (dashed) steps into the marked area (dashed rectangle,",
+        "approx. 800 x 500) and faces the touch mirror.",
+        "Three frames give front, side and back views; blue wedges = camera fields of view.",
+        "Front frame: face, chest, arms. Side frame: profile, head/trunk tilt, spine.",
+        "Back frame: shoulders, scapulae, pelvis, back symmetry.",
+        "Frames fix to floor and ceiling (e.g. seat-track rails); no free-standing legs.",
+        "Cameras check pose and frame quality before any capture.",
+    ], "s", "start", 15)
+    s.text(50, ny + 120, "Optional contact research module: vertical grips on the front", "s")
+    s.text(50, ny + 135, "frame side posts (see sheets 2 and 3). Not part of the contactless core.", "s")
 
-    # ---- isometric view
-    s.text(700, 125, "Изометрия (вид сзади-справа)", "vh")
-    k2 = 0.2
-    ox, oy = 1080, 650
-    c30, s30 = math.cos(math.radians(30)), 0.5
+    # ---------- mirror face elevation
+    s.text(490, 120, "Touch mirror, face view", "vh")
+    km = 0.25
+    mx0, mfloor = 495, 720
+    MX = lambda x: mx0 + (x + MIR_X) * km
+    MZ = lambda z: mfloor - z * km
+    s.line(MX(-MIR_X) - 15, MZ(0), MX(MIR_X) + 15, MZ(0), "thick")
+    s.rect(MX(-MIR_X) - 15, MZ(0), 2 * MIR_X * km + 30, 8, extra='fill="url(#hatch)" stroke="none"')
+    s.rect(MX(-MIR_X), MZ(MIR_Z[1]), 2 * MIR_X * km, (MIR_Z[1] - MIR_Z[0]) * km, "mir")
+    # status strip
+    s.rect(MX(-260), MZ(1860), 520 * km, 70 * km, "thin")
+    s.text(MX(0), MZ(1860) + 14, "prompts / status", "xs", "middle")
+    # face module in the top bezel
+    s.rect(MX(-90), MZ(1960), 180 * km, 50 * km, "ofd")
+    # head guide
+    s.ellipse(MX(0), MZ(1640), 90 * km, 115 * km, "cont")
+    # torso contour
+    s.path(f"M{MX(-210)},{MZ(1460)} Q{MX(0)},{MZ(1520)} {MX(210)},{MZ(1460)} "
+           f"L{MX(170)},{MZ(1000)} L{MX(190)},{MZ(880)} L{MX(-190)},{MZ(880)} L{MX(-170)},{MZ(1000)} Z", "cont")
+    # palm zones
+    for sg in (-1, 1):
+        px, pz = sg * 275, 1150
+        s.ellipse(MX(px), MZ(pz), 55 * km, 85 * km, "palm")
+        for f in range(4):
+            fx = px + sg * (-30 + f * 20)
+            s.line(MX(fx), MZ(pz + 70), MX(fx), MZ(pz + 125), "cont")
+    # foot contours
+    for fx in (-110, 110):
+        s.path(f"M{MX(fx-45)},{MZ(150)} Q{MX(fx-50)},{MZ(400)} {MX(fx)},{MZ(420)} "
+               f"Q{MX(fx+50)},{MZ(400)} {MX(fx+45)},{MZ(150)} Z", "cont")
+    # NFC reader on the mirror frame (right edge)
+    s.rect(MX(MIR_X) - 64, MZ(800), 74, 24, "ofd", rx=3)
+    s.text(MX(MIR_X) - 27, MZ(800) + 16, "NFC reader", "bs", "middle")
+    s.ext(MX(-MIR_X), MZ(MIR_Z[0]) + 2, MX(-MIR_X), MZ(0) + 30); s.ext(MX(MIR_X), MZ(MIR_Z[0]) + 2, MX(MIR_X), MZ(0) + 30)
+    s.dim(MX(-MIR_X), MZ(0) + 26, MX(MIR_X), MZ(0) + 26, "approx. 700", off=16)
+    s.ext(MX(MIR_X) + 3, MZ(MIR_Z[1]), MX(MIR_X) + 22, MZ(MIR_Z[1]))
+    s.ext(MX(MIR_X) + 3, MZ(MIR_Z[0]), MX(MIR_X) + 22, MZ(MIR_Z[0]))
+    s.dim(MX(MIR_X) + 16, MZ(MIR_Z[1]), MX(MIR_X) + 16, MZ(MIR_Z[0]), "approx. 1800", off=16)
+    # labels below the mirror face view
+    ly = 790
+    s.mtext(490, ly, [
+        "Blue dashed: contours shown on the mirror",
+        "(head guide, torso, feet). Shaded ovals:",
+        "palm zones. They standardize the pose,",
+        "they are not a medical sensor.",
+        "Grey bar in top bezel: face module.",
+        "NFC: NFC reader on the mirror frame",
+        "(station, fallback ID when 3D face ID",
+        "is not confident; card kept at station).",
+    ], "s", "start", 14)
+
+    # ---------- isometric
+    s.text(720, 120, "Isometric view (from behind-left)", "vh")
+    k2 = 0.165
+    ox, oy = 925, 600
+    c30 = math.cos(math.radians(30))
     def P(x, d, z):
-        return (ox + (x - d) * c30 * k2, oy + (x + d) * s30 * k2 - z * k2)
-    def L(a, b, cls="o"):
-        s.line(*P(*a), *P(*b), cls)
-    # floor zone and ceiling
-    fz = [P(-600, 0, 0), P(600, 0, 0), P(600, 1200, 0), P(-600, 1200, 0)]
-    s.poly(fz, "hid")
-    cz = [P(-600, 0, 2000), P(600, 0, 2000), P(600, 1200, 2000), P(-600, 1200, 2000)]
-    s.poly(cz, "hid")
-    # wall plane hint
-    s.poly([P(-760, -30, 0), P(760, -30, 0), P(760, -30, 2000), P(-760, -30, 2000)], "thin", extra='stroke-dasharray="1 4"')
-    # person (simple dashed figure) at depth 500
-    hx, hd = 0, 520
-    s.line(*P(hx, hd, 80), *P(hx, hd, 1450), "hum")
-    s.line(*P(-200, hd, 1430), *P(200, hd, 1430), "hum")
-    s.line(*P(-200, hd, 1430), *P(-280, hd - 200, 1100), "hum")
-    s.line(*P(200, hd, 1430), *P(280, hd - 200, 1100), "hum")
-    s.line(*P(-100, hd, 950), *P(-110, hd, 80), "hum")
-    s.line(*P(100, hd, 950), *P(110, hd, 80), "hum")
-    hcx, hcy = P(0, hd, 1630)
-    s.circle(hcx, hcy, 100 * k2, "hum")
-    # foot restraints
-    for fx in (-110, 110):
-        s.poly([P(fx - 60, hd - 90, 0), P(fx + 60, hd - 90, 0), P(fx + 60, hd + 90, 0), P(fx - 60, hd + 90, 0)], "thin")
-        s.line(*P(fx - 60, hd, 0), *P(fx - 60, hd, 60), "thin")
-        s.line(*P(fx + 60, hd, 0), *P(fx + 60, hd, 60), "thin")
-        s.line(*P(fx - 60, hd, 60), *P(fx + 60, hd, 60), "thin")
-    # panel (behind person, depth 0)
-    pp = [P(-250, 0, 900), P(250, 0, 900), P(250, 0, 1800), P(-250, 0, 1800)]
-    s.poly(pp, "ofd", extra='fill-opacity="0.85"')
-    s.poly([P(-220, 0, 940), P(220, 0, 940), P(220, 0, 1700), P(-220, 0, 1700)], "thin")
-    # posts
-    posts = [(-550, 100), (550, 100), (0, 1150)]
-    for (x, d) in posts:
-        a, b = P(x, d, 0), P(x, d, 2000)
-        s.add(f'<line x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" y2="{b[1]:.1f}" stroke="#1a1a1a" stroke-width="5"/>')
-        for z in (450, 1250, 1650):
-            m = P(x, d, z)
-            s.rect(m[0] - 6, m[1] - 9, 12, 18, "of")
-    # handles
+        return (ox + (x + d) * c30 * k2, oy + (d - x) * 0.5 * k2 - z * k2)
+    def L(a, b, cls="o", extra=""):
+        s.line(*P(*a), *P(*b), cls, extra)
+    def post(x, d, z0=0, z1=TOP, w=5):
+        a, b = P(x, d, z0), P(x, d, z1)
+        s.add(f'<line x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" y2="{b[1]:.1f}" stroke="#1a1a1a" stroke-width="{w}"/>')
+    def cam(x, d, z):
+        m = P(x, d, z)
+        s.rect(m[0] - 5, m[1] - 6, 10, 12, "of")
+    # floor outline
+    s.poly([P(-FF_X - 50, -60, 0), P(SF_X + 50, -60, 0), P(SF_X + 50, BF_D + 50, 0), P(-FF_X - 50, BF_D + 50, 0)], "thin", extra='stroke-dasharray="1 4"')
+    s.poly([P(AREA[0], AREA[2], 0), P(AREA[1], AREA[2], 0), P(AREA[1], AREA[3], 0), P(AREA[0], AREA[3], 0)], "hid")
+    # front frame
+    post(-FF_X, -20); post(FF_X, -20)
+    L((-FF_X, -20, TOP), (FF_X, -20, TOP), "thick")
+    s.poly([P(-MIR_X, 0, MIR_Z[0]), P(MIR_X, 0, MIR_Z[0]), P(MIR_X, 0, MIR_Z[1]), P(-MIR_X, 0, MIR_Z[1])], "mir")
+    s.poly([P(-90, 0, 1910), P(90, 0, 1910), P(90, 0, 1960), P(-90, 0, 1960)], "ofd")
+    for z in (1450, 500):
+        cam(FF_X, -20, z); cam(-FF_X, -20, z)
+    # grips (vertical)
     for sg in (-1, 1):
-        L((sg * 550, 100, 1100), (sg * 330, 260, 1100), "thick")
-        a, b = P(sg * 330, 230, 1100), P(sg * 330, 290, 1100)
-        s.add(f'<line x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" y2="{b[1]:.1f}" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round"/>')
-    # labels
-    def lab(pt3, tx, ty, text, anchor="start", lines=None):
+        a, b = P(sg * 400, 70, GRIP_Z[0]), P(sg * 400, 70, GRIP_Z[1])
+        s.add(f'<line x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" y2="{b[1]:.1f}" stroke="#555" stroke-width="7" stroke-linecap="round"/>')
+        L((sg * FF_X, -20, GRIP_Z[0] + 20), (sg * 400, 70, GRIP_Z[0] + 20), "thin")
+        L((sg * FF_X, -20, GRIP_Z[1] - 20), (sg * 400, 70, GRIP_Z[1] - 20), "thin")
+    # crew (dashed figure)
+    hd = CREW_D
+    L((0, hd, 900), (0, hd, 1450), "hum")
+    L((-200, hd, 1430), (200, hd, 1430), "hum")
+    L((-200, hd, 1430), (-260, hd - 150, 1080), "hum")
+    L((200, hd, 1430), (260, hd - 150, 1080), "hum")
+    L((-100, hd, 950), (-110, hd, 60), "hum")
+    L((100, hd, 950), (110, hd, 60), "hum")
+    L((-110, hd, 950), (110, hd, 950), "hum")
+    hcx, hcy = P(0, hd, 1620)
+    s.circle(hcx, hcy, 95 * k2, "hum")
+    for fx in (-110, 110):
+        s.poly([P(fx - 50, hd - 110, 0), P(fx + 50, hd - 110, 0), P(fx + 50, hd + 110, 0), P(fx - 50, hd + 110, 0)], "thin")
+    # side frame
+    post(SF_X, SF_D[0]); post(SF_X, SF_D[1]); post(SF_X, CREW_D, w=3)
+    L((SF_X, SF_D[0], TOP), (SF_X, SF_D[1], TOP), "thick")
+    L((SF_X, SF_D[0], 0), (SF_X, SF_D[1], 0), "thick")
+    for z in (1650, 1200, 500):
+        cam(SF_X, CREW_D, z)
+    # back frame
+    post(-FF_X, BF_D); post(FF_X, BF_D); post(0, BF_D, w=3)
+    L((-FF_X, BF_D, TOP), (FF_X, BF_D, TOP), "thick")
+    L((-FF_X, BF_D, 0), (FF_X, BF_D, 0), "thick")
+    for z in (1650, 1200, 500):
+        cam(0, BF_D, z)
+    # labels (iso)
+    def lab(pt3, tx, ty, lines, anchor="start"):
         x, y = P(*pt3)
-        s.leader(x, y, tx, ty, text, anchor, lines=lines)
-    lab((550, 100, 1650), 1225, 200, "", "start", lines=["модуль «голова»", "ИК-точки + ИК-камера", "+ RGB"])
-    lab((550, 100, 1250), 1225, 330, "", "start", lines=["модуль «корпус»", "ToF + RGB"])
-    lab((550, 100, 450), 1225, 600, "", "start", lines=["модуль «ноги»", "ToF"])
-    lab((330, 260, 1100), 1225, 450, "", "start", lines=["рукоять П", "(уровень локтя)"])
-    lab((-250, 0, 1800), 780, 175, "", "end", lines=["зеркальная", "панель"])
-    lab((0, 1150, 1900), 760, 300, "", "end", lines=["задняя", "стойка"])
-    lab((-110, 610, 30), 840, 790, "", "end", lines=["фиксаторы ног"])
-    lab((-600, 1200, 0), 760, 720, "", "end", lines=["рабочая зона", "1200×1200"])
-    # height dim at rear post
-    a, b = P(0, 1150, 0), P(0, 1150, 2000)
-    s.ext(a[0] - 8, a[1], a[0] - 70, a[1]); s.ext(b[0] - 8, b[1], b[0] - 70, b[1])
-    s.dim(a[0] - 60, a[1], b[0] - 60, b[1], "пол–потолок ≈2000", off=-2)
-    return sheet(1, "Общий вид станции", s.out())
+        s.leader(x, y, tx, ty, anchor, lines)
+    LX, RX = 836, 1262
+    lab((-MIR_X, 0, 1500), LX, 330, ["touch mirror"], "end")
+    lab((-90, 0, 1935), LX, 200, ["face module", "(RGB + IR camera", "+ IR projector)"], "end")
+    lab((-FF_X, -20, 1450), LX, 270, ["front frame", "body camera"], "end")
+    lab((-400, 70, 1100), LX, 440, ["vertical Doppler", "grip (optional,", "research)"], "end")
+    lab((AREA[0], AREA[2], 0), LX, 650, ["marked area"], "end")
+    lab((-110, hd - 60, 0), LX, 720, ["foot restraints"], "end")
+    lab((SF_X, CREW_D, 1650), RX, 230, ["side frame", "camera mast"], "start")
+    lab((0, BF_D, 1200), RX, 470, ["back frame", "camera mast"], "start")
+    lab((0, hd, 1300), RX, 560, ["crew member"], "start")
+    s.text(720, 815, "Frame height approx. 2100 (floor to ceiling); camera modules at head, torso and leg height.", "s")
+    return sheet(1, "General view", s.out())
 
-# ---------------------------------------------------------------- sheet 2
+
+# ------------------------------------------------------------------ sheet 2
 def sheet2():
     s = S()
-    k = 0.31
+    k = 0.28
     floor = 790
     Z = lambda z: floor - z * k
-    # ---------- front view
+
+    def slab(xa, xb):
+        s.line(xa, Z(0), xb, Z(0), "thick")
+        s.line(xa, Z(TOP), xb, Z(TOP), "thick")
+        s.rect(xa, Z(0), xb - xa, 8, extra='fill="url(#hatch)" stroke="none"')
+        s.rect(xa, Z(TOP) - 8, xb - xa, 8, extra='fill="url(#hatch)" stroke="none"')
+
+    # ---------------- front elevation (looking at the mirror face from behind the crew)
     cx = 330
     X = lambda x: cx + x * k
-    s.text(60, 125, "Вид спереди (от панели к астронавту)", "vh")
-    s.line(X(-700), Z(0), X(700), Z(0), "thick")
-    s.line(X(-700), Z(2000), X(700), Z(2000), "thick")
-    s.rect(X(-700), Z(0), 1400 * k, 10, extra='fill="url(#hatch)" stroke="none"')
-    s.rect(X(-700), Z(2000) - 10, 1400 * k, 10, extra='fill="url(#hatch)" stroke="none"')
-    s.text(X(-700), Z(0) + 26, "пол", "s"); s.text(X(-700), Z(2000) - 16, "потолок", "s")
-    # rear post (hidden)
-    s.line(X(0), Z(0), X(0), Z(2000), "hid")
-    # posts
-    for px in (-550, 550):
-        s.rect(X(px) - 20 * k, Z(2000), 40 * k, 2000 * k, "post")
-        for z, nm in ((1650, "Г"), (1250, "К"), (450, "Н")):
-            s.rect(X(px) - 12, Z(z) - 14, 24, 28, "of")
-            s.text(X(px), Z(z) + 4, nm, "s", "middle")
-    # person
-    s.circle(X(0), Z(1630), 100 * k, "hum")
+    s.text(50, 120, "Front elevation (looking at the mirror face)", "vh")
+    slab(X(-950), X(950))
+    s.text(X(-950), Z(0) + 22, "floor", "s"); s.text(X(-950), Z(TOP) - 14, "ceiling", "s")
+    # side frame FOV (horizontal cones toward crew, from mast at x = 850)
+    s.poly([(X(SF_X), Z(1650)), (X(-120), Z(1880)), (X(-120), Z(1350))], "tof")
+    s.poly([(X(SF_X), Z(500)), (X(-150), Z(1050)), (X(-150), Z(0))], "tof")
+    # face cone (front module toward face, mostly into the page; shown short)
+    # mirror + front frame
+    for px in (-FF_X, FF_X):
+        s.rect(X(px) - 20 * k, Z(TOP), 40 * k, TOP * k, "post")
+    s.rect(X(-MIR_X), Z(MIR_Z[1]), 2 * MIR_X * k, (MIR_Z[1] - MIR_Z[0]) * k, "mir")
+    s.rect(X(-90), Z(1960), 180 * k, 50 * k, "ofd")
+    for z, nm in ((1450, "T"), (500, "L")):
+        for px in (-FF_X, FF_X):
+            s.rect(X(px) - 9, Z(z) - 12, 18, 24, "of")
+            s.text(X(px), Z(z) + 4, nm, "xs", "middle")
+    # illumination strips
+    for px in (-FF_X, FF_X):
+        s.rect(X(px) + (6 if px < 0 else -10), Z(1900), 4, 400 * k, "ofd")
+    # vertical grips
+    for sg in (-1, 1):
+        gx = X(sg * 400)
+        s.line(X(sg * FF_X), Z(GRIP_Z[0] + 20), gx, Z(GRIP_Z[0] + 20), "thin")
+        s.line(X(sg * FF_X), Z(GRIP_Z[1] - 20), gx, Z(GRIP_Z[1] - 20), "thin")
+        s.rect(gx - 6, Z(GRIP_Z[1]), 12, (GRIP_Z[1] - GRIP_Z[0]) * k, "ofd", rx=5)
+    # side frame mast (seen end-on)
+    s.rect(X(SF_X) - 20 * k, Z(TOP), 40 * k, TOP * k, "post")
+    for z, nm in ((1650, "H"), (1200, "T"), (500, "L")):
+        s.rect(X(SF_X) - 10, Z(z) - 12, 20, 24, "of")
+        s.text(X(SF_X), Z(z) + 4, nm, "xs", "middle")
+    # crew (dashed, in front of mirror)
+    s.circle(X(0), Z(1630), 95 * k, "hum")
     s.path(f"M{X(-200)},{Z(1440)} L{X(200)},{Z(1440)} L{X(150)},{Z(950)} L{X(-150)},{Z(950)} Z", "hum")
     s.path(f"M{X(-110)},{Z(950)} L{X(-120)},{Z(60)} M{X(110)},{Z(950)} L{X(120)},{Z(60)}", "hum")
-    s.path(f"M{X(-200)},{Z(1440)} L{X(-300)},{Z(1110)} M{X(200)},{Z(1440)} L{X(300)},{Z(1110)}", "hum")
-    # foot restraints
+    s.path(f"M{X(-200)},{Z(1440)} L{X(-330)},{Z(1150)} M{X(200)},{Z(1440)} L{X(330)},{Z(1150)}", "hum")
     for fx in (-120, 120):
-        s.rect(X(fx) - 14, Z(80), 28, 80 * k, "thin")
-    # handles + brackets
-    for sg in (-1, 1):
-        s.line(X(sg * 550), Z(1100), X(sg * 330), Z(1100), "thick")
-        s.rect(X(sg * 330) - 8, Z(1100) - 14, 16, 28, "ofd", rx=4)
-    # panel (transparent outline, astronaut visible behind? front view looks from behind panel: draw panel outline dashed)
-    s.rect(X(-250), Z(1800), 500 * k, 900 * k, "o", extra='stroke-dasharray="10 3"')
-    s.rect(X(-60), Z(1790), 120 * k, 50 * k, "ofd")
+        s.rect(X(fx) - 12, Z(70), 24, 70 * k, "thin")
     # dims front
-    s.ext(X(-250), Z(900), X(-250), Z(800)); s.ext(X(250), Z(900), X(250), Z(800))
-    s.dim(X(-250), Z(830), X(250), Z(830), "500")
-    s.ext(X(-550), Z(300), X(-550), Z(200)); s.ext(X(550), Z(300), X(550), Z(200))
-    s.dim(X(-550), Z(230), X(550), Z(230), "≈1100 (между стойками)")
-    s.ext(X(250), Z(900), X(450), Z(900)); s.ext(X(250), Z(1800), X(450), Z(1800))
-    s.dim(X(420), Z(900), X(420), Z(1800), "900", off=-2)
-    # labels front
-    s.leader(X(0), Z(1765), X(-250), Z(2000) + 45, "", "end", lines=[])
-    s.text(X(-250) - 4, Z(2000) + 40, "проектор точек + ИК-камера + RGB (лицо)", "s", "start")
-    s.leader(X(250), Z(1350), X(580), Z(1500), "", "start", lines=["панель", "(пунктир)"])
-    s.leader(X(-330), Z(1100), X(-650), Z(1250), "", "end", lines=["рукоять Л"])
-    s.text(X(-640), Z(1650) + 4, "Г — голова", "s", "end")
-    s.text(X(-640), Z(1650) + 20, "К — корпус", "s", "end")
-    s.text(X(-640), Z(1650) + 36, "Н — ноги", "s", "end")
-    s.leader(X(120), Z(40), X(200), Z(140), "", "start", lines=["фиксаторы ног"])
+    s.ext(X(-FF_X), Z(0) + 10, X(-FF_X), Z(0) + 38); s.ext(X(FF_X), Z(0) + 10, X(FF_X), Z(0) + 38)
+    s.dim(X(-FF_X), Z(0) + 32, X(FF_X), Z(0) + 32, "approx. 900 between side posts")
+    s.ext(X(-FF_X) - 8, Z(GRIP_Z[0]), X(-FF_X) - 60, Z(GRIP_Z[0])); s.ext(X(-FF_X) - 8, Z(0), X(-FF_X) - 60, Z(0))
+    s.dim(X(-FF_X) - 50, Z(GRIP_Z[0]), X(-FF_X) - 50, Z(0), "approx. 950", off=-2)
+    # labels front (left margin)
+    s.leader(X(-90), Z(1940), 150, 222, "end", ["face module:", "RGB + IR camera", "+ IR projector"])
+    s.leader(X(-FF_X) - 5, Z(1750), 150, 278, "end", ["illumination"])
+    s.leader(X(-FF_X), Z(1450), 150, 330, "end", ["body camera", "(RGB keypoints;", "ToF alternative)"])
+    s.leader(X(-400), Z(1150), 150, 445, "end", ["VERTICAL grip", "(Doppler)"])
+    s.text(48, 488, "Optional research", "bs"); s.text(48, 501, "module (contact)", "bs")
+    s.leader(X(-MIR_X) + 4, Z(700), 150, 560, "end", ["touch mirror"])
+    s.leader(X(-120), Z(30), 150, 760, "end", ["foot restraints"])
+    s.leader(X(SF_X) + 6, Z(1100), X(SF_X) + 20, Z(1000), "start", ["side frame", "mast"])
+    s.text(X(SF_X) + 30, Z(1650) + 4, "", "s")
 
-    # ---------- side view
+    # ---------------- side elevation (from +x, mirror on the left)
     x0 = 790
     D = lambda d: x0 + d * k
-    s.text(700, 125, "Вид сбоку: поля зрения датчиков", "vh")
-    s.line(D(-120), Z(0), D(1300), Z(0), "thick")
-    s.line(D(-120), Z(2000), D(1300), Z(2000), "thick")
-    s.rect(D(-120), Z(0), 1420 * k, 10, extra='fill="url(#hatch)" stroke="none"')
-    s.rect(D(-120), Z(2000) - 10, 1420 * k, 10, extra='fill="url(#hatch)" stroke="none"')
-    # FOV cones first (under objects)
-    s.poly([(D(40), Z(1765)), (D(520), Z(1800)), (D(520), Z(1460))], "sl")
-    s.poly([(D(120), Z(1250)), (D(620), Z(1750)), (D(620), Z(850))], "tof")
-    s.poly([(D(120), Z(450)), (D(620), Z(950)), (D(620), Z(0))], "tof")
-    s.poly([(D(1130), Z(1250)), (D(450), Z(1800)), (D(450), Z(800))], "tof")
-
-    # panel
-    s.rect(D(0), Z(1800), 40 * k, 900 * k, "ofd")
-    s.rect(D(40), Z(1790), 20 * k, 50 * k, "of")
-    # front post (projected) & rear post
-    for d in (100, 1150):
-        s.rect(D(d) - 20 * k, Z(2000), 40 * k, 2000 * k, "post")
-        for z in (1650, 1250, 450):
-            s.rect(D(d) - 9, Z(z) - 14, 18, 28, "of")
-    # person facing panel (left)
-    s.circle(D(530), Z(1630), 100 * k, "hum")
-    s.path(f"M{D(500)},{Z(1450)} L{D(520)},{Z(950)} M{D(560)},{Z(1450)} L{D(570)},{Z(950)}", "hum")
-    s.path(f"M{D(520)},{Z(950)} L{D(510)},{Z(60)} M{D(570)},{Z(950)} L{D(560)},{Z(60)}", "hum")
-    s.path(f"M{D(520)},{Z(1430)} L{D(480)},{Z(1130)} L{D(300)},{Z(1100)}", "hum")
-    s.rect(D(470), Z(80), 120 * k, 80 * k, "thin")
-    # handle in side view
-    s.line(D(100), Z(1100), D(300), Z(1100), "thick")
-    s.rect(D(280), Z(1100) - 10, 18, 20, "ofd", rx=4)
-    # dims side: depths under floor
-    for d in (0, 500, 1150):
-        s.ext(D(d), Z(0) + 12, D(d), Z(0) + 40)
-    s.dim(D(0), Z(0) + 32, D(500), Z(0) + 32, "≈500 до лица")
-    s.dim(D(500), Z(0) + 32, D(1150), Z(0) + 32, "≈650")
-    # heights: overall dim + level ticks
-    hx = D(1290)
-    s.ext(D(1170), Z(0), hx + 8, Z(0)); s.ext(D(1170), Z(2000), hx + 8, Z(2000))
-    s.dim(hx, Z(0), hx, Z(2000), "пол–потолок ≈2000", off=-2)
-    for z, nm in ((1650, "голова 1650"), (1250, "корпус 1250"), (1100, "рукояти 1100"), (450, "ноги 450")):
-        s.line(D(1160), Z(z), hx + 10, Z(z), "ex", extra='stroke-dasharray="2 3"')
-        s.text(hx + 14, Z(z) + 4, nm, "s")
-    s.text(hx + 14, Z(0) - 6, "высоты", "s"); s.text(hx + 14, Z(0) + 8, "от пола", "s")
-    # cone labels
-    s.leader(D(300), Z(1760), D(200), Z(1930), "", "start", lines=[])
-    s.text(D(200) + 4, Z(1930) - 2, "structured light: лицо, ≈0,5 м", "s")
-    s.leader(D(560), Z(1300), D(660), Z(1060), "", "start", lines=["ToF спереди"])
-    s.leader(D(560), Z(250), D(660), Z(150), "", "start", lines=["ToF ноги"])
-    s.leader(D(820), Z(1450), D(900), Z(1720), "", "start", lines=["ToF сзади"])
-
+    s.text(735, 120, "Side elevation: camera fields of view", "vh")
+    slab(D(-150), D(1500))
+    # FOV cones (under objects)
+    s.poly([(D(20), Z(1935)), (D(CREW_D - 60), Z(1820)), (D(CREW_D - 60), Z(1480))], "sl")
+    s.poly([(D(-10), Z(1450)), (D(CREW_D - 60), Z(1950)), (D(CREW_D - 60), Z(850))], "tof")
+    s.poly([(D(-10), Z(500)), (D(CREW_D - 60), Z(1050)), (D(CREW_D - 60), Z(0))], "tof")
+    for z, za, zb in ((1650, 1900, 1350), (1200, 1650, 750), (500, 1000, 0)):
+        s.poly([(D(BF_D - 20), Z(z)), (D(CREW_D + 70), Z(za)), (D(CREW_D + 70), Z(zb))], "tof")
+    # front frame post (projected) + mirror
+    s.rect(D(-20) - 20 * k, Z(TOP), 40 * k, TOP * k, "post")
+    s.rect(D(0), Z(MIR_Z[1]), 30 * k, (MIR_Z[1] - MIR_Z[0]) * k, "mir")
+    s.rect(D(0), Z(1960), 45 * k, 50 * k, "ofd")
+    for z in (1450, 500):
+        s.rect(D(-20) - 9, Z(z) - 12, 18, 24, "of")
+    # grip (vertical, near the post, palm side toward crew)
+    s.line(D(-20), Z(GRIP_Z[0] + 20), D(70), Z(GRIP_Z[0] + 20), "thin")
+    s.line(D(-20), Z(GRIP_Z[1] - 20), D(70), Z(GRIP_Z[1] - 20), "thin")
+    s.rect(D(70) - 6, Z(GRIP_Z[1]), 12, (GRIP_Z[1] - GRIP_Z[0]) * k, "ofd", rx=5)
+    s.line(D(70), Z(GRIP_Z[1]) - 14, D(70), Z(GRIP_Z[0]) + 14, "ctr")
+    # side frame (nearest to viewer: outline dashed)
+    for d in SF_D:
+        s.line(D(d), Z(0), D(d), Z(TOP), "hid")
+    # back frame mast
+    s.rect(D(BF_D) - 20 * k, Z(TOP), 40 * k, TOP * k, "post")
+    for z, nm in ((1650, "H"), (1200, "T"), (500, "L")):
+        s.rect(D(BF_D) - 10, Z(z) - 12, 20, 24, "of")
+        s.text(D(BF_D), Z(z) + 4, nm, "xs", "middle")
+    # crew facing mirror (left)
+    s.circle(D(CREW_D), Z(1630), 95 * k, "hum")
+    s.path(f"M{D(CREW_D-40)},{Z(1450)} L{D(CREW_D-20)},{Z(950)} M{D(CREW_D+50)},{Z(1450)} L{D(CREW_D+50)},{Z(950)}", "hum")
+    s.path(f"M{D(CREW_D-20)},{Z(950)} L{D(CREW_D-30)},{Z(60)} M{D(CREW_D+50)},{Z(950)} L{D(CREW_D+30)},{Z(60)}", "hum")
+    s.path(f"M{D(CREW_D-20)},{Z(1430)} L{D(CREW_D-60)},{Z(1130)} L{D(110)},{Z(1100)}", "hum")
+    s.rect(D(CREW_D - 70), Z(70), 140 * k, 70 * k, "thin")
+    # dims side
+    s.ext(D(0), Z(0) + 10, D(0), Z(0) + 38); s.ext(D(CREW_D), Z(0) + 10, D(CREW_D), Z(0) + 38)
+    s.ext(D(BF_D), Z(0) + 10, D(BF_D), Z(0) + 38)
+    s.dim(D(0), Z(0) + 32, D(CREW_D), Z(0) + 32, "approx. 600")
+    s.dim(D(CREW_D), Z(0) + 32, D(BF_D), Z(0) + 32, "approx. 750")
+    s.ext(D(BF_D) + 8, Z(TOP), D(BF_D) + 50, Z(TOP))
+    s.dim(D(BF_D) + 40, Z(TOP), D(BF_D) + 40, Z(0), "approx. 2100", off=16)
+    # labels side (right margin)
+    s.leader(D(300), Z(1800), 1240, 160, "start", ["face: RGB + IR", "camera, IR pattern"])
+    s.leader(D(BF_D), Z(1650), 1240, 225, "start", ["back frame H"])
+    s.leader(D(BF_D) + 10, Z(1200), 1240, 345, "start", ["back frame T", "(scapulae, spine)"])
+    s.leader(D(BF_D) + 10, Z(500), 1240, 600, "start", ["back frame L", "(pelvis, legs)"])
+    s.leader(D(70) + 6, Z(1050), D(70) + 58, 560, "start", ["vertical grip,", "axis vertical", "(dash-dot)"])
     # legend
-    lx, ly = 60, 838
-    s.text(lx, ly, "Условные обозначения и пояснения", "b")
-    s.rect(lx, ly + 10, 30, 14, "sl"); s.text(lx + 40, ly + 22, "поле structured light (проектор ИК-точек + ИК-камера): лицо, ≈0,5 м — разрешает изменения в несколько мм (отёк лица)", "s")
-    s.rect(lx, ly + 32, 30, 14, "tof"); s.text(lx + 40, ly + 44, "поле ToF: тело; ToF держит точность почти постоянной на 1–2 м; ToF на разных частотах модуляции", "s")
-    s.rect(lx, ly + 54, 30, 14, "of"); s.text(lx + 40, ly + 66, "модуль на стойке (Г/К/Н); проекторы точек включаются по очереди; RGB-камеры — пульс по видео (rPPG)", "s")
-    s.text(lx, ly + 90, "Высоты даны для роста ≈1,75 м; модули и рукояти регулируются по рейке стойки ±150.", "s")
-    return sheet(2, "Вид спереди и сбоку, поля зрения", s.out())
+    ly = 870
+    s.poly([(50, ly - 10), (78, ly - 2), (50, ly + 6)], "sl")
+    s.text(86, ly, "Face channel: IR projector pattern + IR camera + RGB camera (head height, front frame)", "s")
+    s.poly([(50, ly + 10), (78, ly + 18), (50, ly + 26)], "tof")
+    s.text(86, ly + 20, "Body cameras: RGB keypoints from 3 synced views; ToF is an alternative for whole-body depth", "s")
+    s.text(86, ly + 34, "(engineering choice to verify on a prototype). Side view: side frame posts dashed (nearest to viewer).", "s")
+    s.text(50, ly + 56, "H / T / L = camera module at head / torso / leg height. Grips: optional research module (contact), "
+                        "not part of the contactless core.", "s")
+    s.text(50, ly + 72, "Front view: shoulder and pelvis symmetry. Side view: head and trunk tilt. Back view: scapulae and spine symmetry.", "s")
+    return sheet(2, "Front and side views", s.out())
 
-# ---------------------------------------------------------------- sheet 3
+
+# ------------------------------------------------------------------ sheet 3
 def sheet3():
     s = S()
-    k = 3.6
-    x0, yc = 170, 370
-    X = lambda mm: x0 + mm * k
-    Y = lambda r: yc - r * k   # r>0 = palm side (top)
-    R = 22.5
-    s.text(60, 125, "Продольный разрез рукояти (правая; левая — зеркально)", "vh")
-    s.text(60, 145, "сторона ладони — сверху, пальцы обхватывают снизу", "s")
-    # palm outline
-    # shell
-    s.rect(X(0), Y(R), 160 * k, 2 * R * k, "of", rx=46)
-    s.rect(X(3), Y(R - 3), 154 * k, 2 * (R - 3) * k, "o", rx=38, extra='fill="#fff"')
-    s.line(X(6), Y(-2), X(154), Y(-2), "thin", extra='stroke-dasharray="2 2"')
-    s.line(X(-8), Y(0), X(168), Y(0), "ctr")
-    # NFC end cap
-    s.rect(X(3), Y(15), 7 * k, 30 * k, "ofd")
-    for i in range(4):
-        s.line(X(4.5 + i * 1.5), Y(13), X(4.5 + i * 1.5), Y(-13), "thin")
-    # doppler window & transducer
-    s.rect(X(48), Y(R), 54 * k, 3 * k, "ofd", extra='fill="#cfe3f5"')
-    s.rect(X(55), Y(19), 40 * k, 13 * k, "ofd")
-    for i in range(9):
-        s.line(X(58 + i * 4), Y(19), X(58 + i * 4), Y(15), "thin")
-    # gel cassette
-    s.circle(X(26), Y(10), 8 * k, "o"); s.circle(X(26), Y(10), 3 * k, "ofd")
-    s.circle(X(128), Y(10), 8 * k, "o"); s.circle(X(128), Y(10), 3 * k, "ofd")
-    s.path(f"M{X(26)},{Y(18)} L{X(40)},{Y(23.5)} L{X(110)},{Y(23.5)} L{X(128)},{Y(18)}", "gel")
-    s.add(f'<circle cx="{X(26)}" cy="{Y(10)}" r="{6*k}" fill="none" stroke="#1a7a4a" stroke-width="5" stroke-opacity="0.5"/>')
-    s.add(f'<circle cx="{X(128)}" cy="{Y(10)}" r="{4.5*k}" fill="none" stroke="#1a7a4a" stroke-width="4" stroke-opacity="0.35"/>')
-    s.rect(X(14), Y(21), 128 * k, 18 * k, "grp", rx=6)
-    s.arrow(X(62), Y(28), X(86), Y(28))
-    s.text(X(88) + 4, Y(28) + 4, "протяжка", "s")
-    # motor
-    s.rect(X(122), Y(0) - 2, 14 * k, 9 * k, "ofd", rx=3)
-    s.text(X(129), Y(0) + 20, "M", "b", "middle")
-    # liquid gel reservoir, pump, channel
-    s.rect(X(12), Y(-4), 26 * k, 14 * k, "of", rx=3, extra='fill="#e3f1e8"')
-    s.rect(X(39), Y(-6), 7 * k, 7 * k, "ofd")
-    s.path(f"M{X(46)},{Y(-9)} L{X(47)},{Y(-9)} L{X(47)},{Y(20)} L{X(48)},{Y(22.5)}", "thin", extra='stroke="#1a7a4a" stroke-width="1.6"')
-    # load-cell beam
-    s.rect(X(55), Y(-4), 50 * k, 4 * k, "ofd", extra='fill="url(#hatch)"')
-    s.rect(X(55) - 4, Y(-2) - 6, 6, 18, "ofd"); s.rect(X(105) - 2, Y(-2) - 6, 6, 18, "ofd")
-    # PPG window bottom
-    s.rect(X(68), Y(-19.5), 20 * k, 3 * k, "ofd", extra='fill="#f6d5d5"')
-    s.rect(X(70), Y(-14), 16 * k, 5 * k, "ofd")
-    # temp sensor
-    s.rect(X(110), Y(R), 6 * k, 4 * k, "ofd", extra='fill="#f5e3c8"')
-    # board
-    s.rect(X(110), Y(-10), 34 * k, 4 * k, "ofd", extra='fill="#d6e6d0"')
-    # bracket
-    s.rect(X(160), Y(12), 30 * k, 24 * k, "post")
-    s.line(X(190), Y(0), X(215), Y(0), "thick")
-    s.text(X(203), Y(0) - 10, "к стойке", "s", "middle")
-    s.path(f"M{X(144)},{Y(-8)} C{X(160)},{Y(-8)} {X(170)},{Y(-8)} {X(175)},{Y(-12)}", "thin")
-    # section mark
-    s.line(X(78), Y(R) - 22, X(78), Y(-R) + 26, "ctr")
-    s.text(X(78) + 9, Y(R) - 10, "А", "b"); s.text(X(78) + 9, Y(-R) + 22, "А", "b")
-    # ---- top labels
-    s.leader(X(45), Y(23.5), 366, 176, "", "start", lines=["лента твёрдого гидрогеля поверх окна"])
-    s.leader(X(75), Y(22), 452, 211, "", "start", lines=["окно допплера (УЗ → ладонные артерии)"])
-    s.leader(X(14) + 4, Y(21) + 3, 160, 206, "", "end", lines=[])
-    s.text(45, 180, "кассета ленты гидрогеля (сменная) —", "t")
-    s.text(45, 196, "концепция LYRA (наша разработка)", "t")
-    s.leader(X(22), Y(17), 170, 241, "", "end", lines=["подающая катушка"])
-    s.leader(X(113), Y(R), 596, 246, "", "start", lines=["датчик температуры ладони"])
-    s.leader(X(128), Y(18), 756, 296, "", "start", lines=["приёмная катушка", "(использованная лента)"])
-    # ---- bottom labels
-    s.leader(X(7), Y(-10), 164, 491, "", "end", lines=["NFC-считыватель", "(торец)"])
-    s.leader(X(25), Y(-8), X(25), 530, "", "start", lines=["резервный дозатор жидкого геля:", "резервуар + микронасос + канал к окну"])
-    s.leader(X(78), Y(-19.5), X(78), 501, "", "start", lines=["PPG + SpO₂", "(под пальцами)"])
-    s.leader(X(104), Y(-2), 660, 520, "", "start", lines=["тензобалка: сила хвата", "(нижняя полуоболочка подвижна)"])
-    s.leader(X(133), Y(0) + 8, 790, 455, "", "start", lines=["микромотор протяжки"])
-    s.leader(X(115), Y(-8), 760, 490, "", "start", lines=["плата: МК, АЦП, драйвер УЗ"])
-    s.leader(X(175), Y(-12), 880, 396, "", "start", lines=["кабель в стойку"])
-    # dims
-    s.ext(X(0), Y(-R) + 4, X(0), Y(-R) + 42); s.ext(X(160), Y(-R) + 4, X(160), Y(-R) + 42)
-    s.dim(X(0), Y(-R) + 34, X(160), Y(-R) + 34, "", )
-    s.text(X(12), Y(-R) + 30, "160", "dl")
-    s.ext(X(0) + 30, Y(R), X(-26), Y(R)); s.ext(X(0) + 30, Y(-R), X(-26), Y(-R))
-    s.dim(X(-18), Y(R), X(-18), Y(-R), "Ø45", off=-2)
+    s.text(50, 120, "Section A-A through the vertical grip (scale enlarged, schematic)", "vh")
+    # --- post and grip body
+    s.rect(70, 150, 40, 640, extra='fill="url(#hatch)" stroke="#1a1a1a" stroke-width="1.4"')
+    s.text(90, 808, "side post", "s", "middle")
+    s.text(90, 822, "(front frame)", "s", "middle")
+    # brackets
+    s.rect(110, 200, 70, 22, "post"); s.rect(110, 718, 70, 22, "post")
+    # grip shell (vertical)
+    gx0, gx1, gy0, gy1 = 180, 300, 170, 770
+    s.rect(gx0, gy0, gx1 - gx0, gy1 - gy0, "of", rx=40)
+    s.line((gx0 + gx1) / 2, gy0 - 25, (gx0 + gx1) / 2, gy1 + 25, "ctr")
+    s.text((gx0 + gx1) / 2, gy0 - 30, "grip axis (vertical)", "s", "middle")
+    # transducer
+    tx0, tx1, ty0, ty1 = 232, 300, 360, 580
+    s.rect(tx0, ty0, tx1 - tx0, ty1 - ty0, "ofd")
+    s.rect(tx0 + 10, ty0 + 20, 30, ty1 - ty0 - 40, extra='fill="url(#hatch2)" stroke="#1a1a1a" stroke-width="1"')
+    s.line(tx1, ty0 + 10, tx1, ty1 - 10, "thick")  # active face
+    # cable
+    s.path(f"M{tx0+40},{ty1} L{tx0+40},{gy1-25}", "thin")
+    # (1) holder: C-clip fixed on transducer body
+    hx = tx1
+    s.path(f"M{tx0+30},{ty0-12} L{hx+14},{ty0-12} L{hx+14},{ty0+12} L{hx+4},{ty0+12} "
+           f"L{hx+4},{ty1-12} L{hx+14},{ty1-12} L{hx+14},{ty1+12} L{tx0+30},{ty1+12}", "o",
+           extra='fill="#c8c8c8" fill-opacity="0.6"')
+    # (2) thin hydrogel pad
+    px0, px1 = hx + 4, hx + 30
+    s.rect(px0, ty0 + 14, px1 - px0, ty1 - ty0 - 28, "gel")
+    # (3) soft rim
+    s.rect(hx + 14, ty0 - 4, 20, 16, "rim", rx=4)
+    s.rect(hx + 14, ty1 - 12, 20, 16, "rim", rx=4)
+    # (4) membrane
+    s.path(f"M{px1+3},{ty0-6} L{px1+3},{ty1+6}", "mem")
+    # skin / palm
+    sx = px1 + 5
+    s.path(f"M{sx},{ty0-60} L{sx},{ty1+60} Q{sx+60},{ty1+150} {sx+150},{ty1+120} "
+           f"L{sx+170},{ty0-90} Q{sx+80},{ty0-140} {sx},{ty0-60} Z", "skin")
+    s.text(sx + 95, ty0 + 200, "palm (hand wraps", "s", "middle")
+    s.text(sx + 95, ty0 + 214, "the grip)", "s", "middle")
+    # acoustic path
+    for yy in (430, 470, 510):
+        s.line(tx1 + 2, yy, sx + 70, yy, "ac")
+    for yy in (450, 490):
+        s.line(sx + 66, yy, tx1 + 4, yy, "acd")
+    s.text(sx + 95, 618, "pulses out (red)", "rt", "middle")
+    s.text(sx + 95, 632, "echo back (blue)", "bt", "middle")
+    # no air gap callout
+    s.rect(330, 665, 175, 40, "note", rx=4)
+    s.text(417, 682, "NO AIR GAP in the", "bs", "middle")
+    s.text(417, 697, "acoustic path", "bs", "middle")
+    s.line(345, 665, px1 - 6, ty1 - 30, "ld")
+    # numbered leaders 1-4
+    def num(x, y, n):
+        s.circle(x, y, 9, "blk")
+        s.text(x, y + 4, str(n), "bs", "middle")
+    s.leader(tx0 + 40, ty0 - 12, 330, 205, "start", [])
+    num(345, 205, 1)
+    s.leader(px0 + 12, ty0 + 40, 480, 290, "start", []); num(495, 290, 2)
+    s.leader(hx + 30, ty0 - 2, 420, 245, "start", []); num(435, 245, 3)
+    s.leader(px1 + 3, ty0 + 20, 540, 330, "start", []); num(555, 330, 4)
+    s.leader(tx0 + 20, ty1 - 10, 318, 738, "start", ["transducer (face toward the palm)"])
+    s.leader(tx1 - 1, ty1 - 30, 318, 762, "start", ["active face (vertical, toward the palm)"])
+    s.mtext(510, 160, ["1 holder, fixed on transducer body",
+                       "2 thin replaceable hydrogel pad",
+                       "   (thickness TBD by ground test)",
+                       "3 soft protective rim (limits gel",
+                       "   displacement)",
+                       "4 thin membrane (contamination",
+                       "   barrier, keeps skin contact)"], "s", "start", 14)
+    s.text(50, 862, "Solid hydrogel cassette = parts 1 to 4. Pad thickness and press force: to be determined experimentally on a ground mock-up.", "s")
+    s.text(50, 878, "Earlier tape-cassette / liquid-gel handle idea: archived (docs/drawings/archive/v1).", "s")
 
-    # ---------- section A-A
-    cx, cy, r = 1140, 330, R * 3.2
-    s.text(1000, 125, "Разрез А–А", "vh")
-    s.circle(cx, cy, r, "of")
-    s.circle(cx, cy, r - 3 * 3.2, "o", extra='fill="#fff"')
-    s.line(cx - r - 10, cy + 2 * 3.2, cx + r + 10, cy + 2 * 3.2, "thin", extra='stroke-dasharray="2 2"')
-    s.path(f"M{cx-40},{cy-r+2} A {r} {r} 0 0 1 {cx+40},{cy-r+2}", "o", extra='stroke="#5b8fc7" stroke-width="6"')
-    s.path(f"M{cx-46},{cy-r-4} A {r+6} {r+6} 0 0 1 {cx+46},{cy-r-4}", "gel")
-    s.rect(cx - 36, cy - r + 12, 72, 38, "ofd")
-    s.rect(cx - 62, cy + 2, 124, 13, "ofd", extra='fill="url(#hatch)"')
-    s.rect(cx - 28, cy + r - 26, 56, 16, "ofd")
-    s.path(f"M{cx-30},{cy+r-2} A {r} {r} 0 0 0 {cx+30},{cy+r-2}", "o", extra='stroke="#c97b7b" stroke-width="6"')
-    s.path(f"M{cx+r+14},{cy-30} C{cx+r+30},{cy+40} {cx+40},{cy+r+30} {cx-20},{cy+r+18}", "hum")
-    s.leader(cx + 40, cy - r - 4, 1230, 190, "", "start", lines=["лента гидрогеля"])
-    s.leader(cx + 10, cy - r + 30, 1230, 225, "", "start", lines=["УЗ-датчик"])
-    s.leader(cx + 50, cy + 8, 1230, 330, "", "start", lines=["тензобалка"])
-    s.leader(cx + r + 22, cy + 30, 1250, 380, "", "start", lines=["пальцы"])
-    s.leader(cx + 20, cy + r - 18, 1230, 430, "", "start", lines=["PPG/SpO₂"])
-    s.leader(cx - r - 3, cy + 6, 1060, 420, "", "end", lines=["разъём", "полуоболочек"])
+    # --- right column: workflow, versions, note
+    rx = 790
+    s.rect(rx, 140, 580, 330, "blk", rx=4)
+    s.text(rx + 12, 162, "Workflow (8 steps)", "b")
+    steps = [
+        "Insert the hydrogel pad into the holder on the transducer face.",
+        "Check the pad for bubbles or damage.",
+        "Place the palm on the marked zone of the grip.",
+        "The cassette is gently pressed to the skin (it is not a standalone sensor).",
+        "The transducer sends pulses through the hydrogel.",
+        "The receiver registers the echo.",
+        "Software checks contact quality and signal stability.",
+        "If quality is poor: ask to reposition the hand or repeat.",
+    ]
+    for i, st in enumerate(steps):
+        yy = 192 + i * 34
+        s.circle(rx + 24, yy - 4, 10, "blk")
+        s.text(rx + 24, yy, str(i + 1), "bs", "middle")
+        s.text(rx + 44, yy, st, "t")
+    # versions
+    s.rect(rx, 490, 283, 170, "blkb", rx=4)
+    s.text(rx + 12, 512, "DEMO version (hackathon)", "b")
+    s.mtext(rx + 12, 534, ["Mock cassette on the grip.",
+                           "On-screen diagram of the",
+                           "signal path (no real",
+                           "ultrasound measurement)."], "t", "start", 18)
+    s.rect(rx + 297, 490, 283, 170, "blkg", rx=4)
+    s.text(rx + 309, 512, "EXTENDED version", "b")
+    s.mtext(rx + 309, 534, ["Real transducer only after a",
+                            "phantom / ground test-bench",
+                            "check of coupling and signal",
+                            "stability."], "t", "start", 18)
+    # honest note
+    s.rect(rx, 678, 580, 140, "note", rx=4)
+    s.text(rx + 12, 700, "Honest scope", "b")
+    s.mtext(rx + 12, 722, [
+        "Research module, not part of the contactless core.",
+        "The acoustic coupling principle is published; efficiency for this",
+        "transducer and palm contact must be verified on a phantom /",
+        "ground test bench.",
+        "Does not assess heart, veins or cardiovascular risk.",
+    ], "t", "start", 18)
+    return sheet(3, "Doppler grip and hydrogel cassette", s.out())
 
-    # ---------- tape cycle and notes
-    bx, by = 60, 640
-    s.text(bx, by, "Цикл ленты гидрогеля (основной вариант)", "b")
-    steps = ["1. Перед сеансом мотор протягивает ≈20 мм свежей ленты к окну",
-             "2. Ладонь ложится на ленту — акустический контакт без жидкости",
-             "3. Сеанс 30 с: допплер, PPG/SpO₂, температура; затем 2 сжатия (хват)",
-             "4. Использованный участок уходит на приёмную катушку (закрытая кассета)",
-             "5. Счётчик ленты → напоминание о замене кассеты"]
-    s.mtext(bx, by + 22, steps, "t", dy=19)
-    s.text(bx, by + 130, "Запасной вариант: дозатор жидкого геля в той же рукояти (капля на окно).", "t")
-    nx = 640
-    s.text(nx, by, "Честные пометки", "b")
-    notes = ["• Гидрогелевые прокладки для УЗИ и механизмы протяжки ленты существуют;",
-             "   сама кассета для рукояти — концепция LYRA (наша разработка), прототипа нет.",
-             "• Ультразвук не проходит через воздух — контактная среда обязательна.",
-             "• На тело ничего не надевается, электродов нет (ЭКГ не используется);",
-             "   HRV — по PPG/допплеру. Скрининг, не диагноз.",
-             "• Частота УЗ ≈8–12 МГц (поверхностные сосуды) — наша оценка.",
-             "• NFC-карта лежит у станции: нужна, только если 3D-опознание лица не уверено."]
-    s.mtext(nx, by + 22, notes, "t", dy=19)
-    return sheet(3, "Рукоять в разрезе", s.out())
 
-# ---------------------------------------------------------------- sheet 4
+# ------------------------------------------------------------------ sheet 4
 def sheet4():
     s = S()
-    s.text(60, 125, "Поток данных: датчики → бортовой компьютер → экипаж и лётный врач на Земле", "vh")
-    def blk(x, y, w, h, title, lines=(), cls="blk"):
-        s.rect(x, y, w, h, cls, rx=6)
-        s.text(x + 10, y + 20, title, "b")
-        s.mtext(x + 10, y + 38, list(lines), "s", dy=15)
-    # sensors group
-    s.rect(45, 140, 330, 560, "grp", rx=8)
-    s.text(55, 160, "ДАТЧИКИ СТАНЦИИ", "b")
-    blk(60, 172, 300, 82, "Structured light ×3 (лицо)", ["проектор ИК-точек + ИК-камера:", "панель + модули «голова» на стойках", "работают по очереди"])
-    blk(60, 264, 300, 82, "ToF-камеры ×7 (тело)", ["модули «корпус»/«ноги» на 3 стойках,", "«голова» на задней стойке;", "каждая — своя частота модуляции"])
-    blk(60, 356, 300, 52, "RGB-камеры ×3", ["пульс по видео (rPPG), цвет кожи, мимика"])
-    blk(60, 418, 300, 98, "Рукояти Л / П", ["УЗ-допплер (кровоток, пульсовая волна)", "PPG + SpO₂, температура ладони", "тензобалка (хват), протяжка гидрогеля", "NFC-считыватель"])
-    blk(60, 526, 300, 52, "Микрофон + динамик", ["голосовые команды и опрос 15 с"])
-    blk(60, 588, 300, 52, "Синхронизатор (FPGA/МК)", ["слоты проекторов, частоты ToF"])
-    s.text(60, 668, "Электродов и носимых датчиков нет.", "s")
-    s.text(60, 684, "Голос не используется для опознания.", "s")
-    # external dosimeter
-    blk(60, 720, 300, 62, "Дозиметр станции (внешний)", ["LYRA радиацию не измеряет —", "импортирует накопленную дозу"], cls="grp")
-    # computer
-    s.rect(440, 140, 420, 560, "grp", rx=8)
-    s.text(450, 160, "БОРТОВОЙ КОМПЬЮТЕР LYRA", "b")
-    blk(455, 172, 390, 66, "Опознание", ["3D-лицо (эталон медленно обновляется);", "если не уверено → NFC-карта"])
-    blk(455, 248, 390, 66, "3D-реконструкция и метрики", ["объём лица/голеней/тела, рост, осанка;", "пульс, HRV, SpO₂, хват, кровоток"])
-    blk(455, 324, 390, 82, "Модель «ожидаемой адаптации»", ["коридоры NASA/CSA из nasa_reference.json", "(кость 1–1,5 %/мес, сдвиг жидкости, ...)", "+ личная норма астронавта"])
-    blk(455, 416, 390, 82, "Статус и инструкции", ["зелёный / жёлтый / красный: «меняешься ли", "быстрее, чем ожидает NASA»;", "карточки риска HRP, шаги «что сделать»"])
-    blk(455, 508, 390, 52, "Локальное хранилище", ["история сеансов, шифрование"])
-    blk(455, 570, 390, 66, "Очередь передачи (store-and-forward)", ["пакеты сеансов, приоритет красных,", "повтор при потере связи"])
-    s.text(455, 662, "Работает автономно: решения на борту не ждут Землю.", "s")
-    # outputs
-    blk(930, 172, 420, 82, "Экран за зеркальной панелью", ["короткая надпись + анимация шага,", "графики «ты против ожидания NASA»,", "серия дней (геймификация)"])
-    blk(930, 268, 420, 66, "Голос", ["подсказки на каждом шаге; команды", "«начать», «повторить», «стоп»"])
-    blk(930, 360, 420, 66, "Канал связи модуля", ["штатная связь станции/корабля"])
-    blk(930, 452, 420, 98, "Лётный врач на Земле", ["получает все данные автоматически;", "задержка в одну сторону: МКС — секунды,", "Луна ≈1,3 с, Марс — до 20 мин", "(NASA, Distance from Earth)"])
-    # arrows
-    s.arrow(360, 205, 452, 205)
-    s.arrow(360, 225, 452, 270)
-    s.arrow(360, 305, 452, 280)
-    s.arrow(360, 382, 452, 290)
-    s.arrow(360, 467, 452, 300)
-    s.arrow(360, 552, 452, 457)
-    s.add('<line x1="360" y1="614" x2="395" y2="614" class="fl"/>')
-    s.add('<line x1="395" y1="614" x2="395" y2="180" class="fl"/>')
-    s.arrow(395, 180, 362, 180)
-    s.text(380, 172, "синхр.", "s", "middle")
-    s.add(f'<line x1="360" y1="751" x2="410" y2="751" class="fld"/>')
-    s.add(f'<line x1="410" y1="751" x2="410" y2="365" class="fld"/>')
-    s.arrow(410, 365, 452, 365, "fld")
-    s.text(372, 772, "импорт дозы", "s")
-    s.arrow(650, 238, 650, 245); s.arrow(650, 314, 650, 321); s.arrow(650, 406, 650, 413)
-    s.arrow(650, 498, 650, 505); s.arrow(650, 560, 650, 567)
-    s.arrow(845, 440, 927, 213)
-    s.arrow(845, 457, 927, 301)
-    s.arrow(845, 603, 900, 603)
-    s.add('<line x1="900" y1="603" x2="900" y2="393" class="fl"/>')
-    s.arrow(900, 393, 927, 393)
-    s.arrow(1140, 426, 1140, 449)
-    s.text(1150, 442, "очередь, задержка", "s")
-    s.arrow(927, 530, 870, 640, "fld")
-    s.text(880, 664, "рекомендации врача", "s")
-    s.text(880, 678, "(с задержкой)", "s")
+    s.text(50, 120, "IR / depth channel (face)", "vh")
+    bw, bh, gap, y0 = 168, 222, 22, 136
+    xs = [50 + i * (bw + gap) for i in range(7)]
+    titles = [("IR projector", ["invisible dot /", "stripe pattern"]),
+              ("IR camera", ["pattern deformed", "by the face"]),
+              ("Correspondence", ["projector pattern", "vs image"]),
+              ("Triangulation", ["calibrated", "camera + projector"]),
+              ("Depth map", ["distance per", "pixel"]),
+              ("Point cloud", ["3D points"]),
+              ("Mesh", ["surface reconstruction:", "neighbours joined", "into triangles"])]
+    for i, (t, ls) in enumerate(titles):
+        x = xs[i]
+        s.rect(x, y0, bw, bh, "blk", rx=4)
+        s.text(x + bw / 2, y0 + 150, t, "b", "middle")
+        s.mtext(x + bw / 2, y0 + 168, ls, "s", "middle", 14)
+        if i < 6:
+            s.arrow(x + bw + 2, y0 + 65, x + bw + gap - 2, y0 + 65)
+    ic = lambda i: (xs[i] + bw / 2, y0 + 62)
+    # 0 projector
+    cx, cy = ic(0)
+    s.rect(cx - 50, cy - 16, 36, 32, "ofd", rx=3)
+    s.circle(cx - 14, cy, 6, "of")
+    for a in (-0.5, -0.25, 0, 0.25, 0.5):
+        s.line(cx - 8, cy, cx + 60, cy + 68 * math.tan(a), "thin", extra='stroke="#c0392b" stroke-dasharray="2 2"')
+    for j in range(5):
+        for q in range(3):
+            s.circle(cx + 50 + q * 6, cy - 34 + j * 17, 1.4, "o", extra='fill="#c0392b" stroke="none"')
+    # 1 IR camera: dots on a face outline, deformed
+    cx, cy = ic(1)
+    s.ellipse(cx, cy, 42, 54, "thin")
+    for j in range(-4, 5):
+        for q in range(-3, 4):
+            px = cx + q * 11 + (3 * math.sin(j * 0.7) if abs(q) < 3 else 0)
+            py = cy + j * 11 + 4 * math.exp(-(q * q) / 3) * (1 if j > 0 else -1) * 0.5
+            if ((px - cx) / 42) ** 2 + ((py - cy) / 54) ** 2 < 1:
+                s.circle(px, py, 1.6, "o", extra='fill="#c0392b" stroke="none"')
+    # 2 correspondence
+    cx, cy = ic(2)
+    s.rect(cx - 70, cy - 40, 55, 80, "thin"); s.rect(cx + 15, cy - 40, 55, 80, "thin")
+    s.text(cx - 42, cy + 54, "pattern", "xs", "middle"); s.text(cx + 42, cy + 54, "image", "xs", "middle")
+    for (a, b) in ((-20, -24), (0, 4), (20, 22)):
+        s.circle(cx - 42, cy + a, 2.5, "o", extra='fill="#c0392b" stroke="none"')
+        s.circle(cx + 46, cy + b, 2.5, "o", extra='fill="#c0392b" stroke="none"')
+        s.line(cx - 39, cy + a, cx + 43, cy + b, "thin", extra='stroke-dasharray="3 2"')
+    # 3 triangulation
+    cx, cy = ic(3)
+    p1, p2, pt = (cx - 60, cy + 40), (cx + 60, cy + 40), (cx + 5, cy - 40)
+    s.rect(p1[0] - 8, p1[1] - 6, 16, 12, "ofd"); s.rect(p2[0] - 8, p2[1] - 6, 16, 12, "ofd")
+    s.line(*p1, *pt, "thin"); s.line(*p2, *pt, "thin"); s.line(p1[0], p1[1], p2[0], p2[1], "hid")
+    s.circle(*pt, 3.5, "o", extra='fill="#111"')
+    s.text(cx, cy + 58, "baseline", "xs", "middle")
+    s.text(p1[0], p1[1] + 18, "proj.", "xs", "middle"); s.text(p2[0], p2[1] + 18, "cam.", "xs", "middle")
+    # 4 depth map (grey levels)
+    cx, cy = ic(4)
+    for j in range(8):
+        for q in range(8):
+            dd = math.hypot((q - 3.5) / 3.5, (j - 3.5) / 4.2)
+            g = int(70 + min(dd, 1.0) * 170)
+            s.add(f'<rect x="{cx-48+q*12:.1f}" y="{cy-48+j*12:.1f}" width="12" height="12" fill="rgb({g},{g},{g})"/>')
+    s.rect(cx - 48, cy - 48, 96, 96, "thin")
+    s.text(cx, cy + 62, "dark = near", "xs", "middle")
+    # 5 point cloud
+    cx, cy = ic(5)
+    import random
+    rnd = random.Random(7)
+    for _ in range(140):
+        a = rnd.uniform(0, 2 * math.pi); r = math.sqrt(rnd.uniform(0, 1))
+        px, py = cx + 40 * r * math.cos(a), cy + 52 * r * math.sin(a)
+        s.circle(px, py, 1.3, "o", extra='fill="#1f5fa8" stroke="none"')
+    # 6 mesh
+    cx, cy = ic(6)
+    pts = {}
+    for j in range(-3, 4):
+        for q in range(-3, 4):
+            px, py = cx + q * 13 + (j % 2) * 6, cy + j * 15
+            if ((px - cx) / 46) ** 2 + ((py - cy) / 56) ** 2 < 1:
+                pts[(j, q)] = (px, py)
+    for (j, q), p in pts.items():
+        for nb in ((j, q + 1), (j + 1, q), (j + 1, q + (1 if j % 2 else -1))):
+            if nb in pts:
+                s.line(*p, *pts[nb], "thin", extra='stroke="#1f5fa8"')
+    # library tags under boxes
+    ly = y0 + bh + 26
+    s.rect(xs[1], ly - 16, xs[4] + bw - xs[1], 26, "blkb", rx=4)
+    s.text((xs[1] + xs[4] + bw) / 2, ly + 2, "OpenCV: calibration, pattern decoding, depth", "bs", "middle")
+    s.rect(xs[5], ly - 16, xs[6] + bw - xs[5], 26, "blkg", rx=4)
+    s.text((xs[5] + xs[6] + bw) / 2, ly + 2, "Open3D or PCL: point cloud, mesh", "bs", "middle")
+    s.rect(xs[0], ly - 16, bw, 42, "note", rx=4)
+    s.text(xs[0] + bw / 2, ly + 1, "Projector does not", "bs", "middle")
+    s.text(xs[0] + bw / 2, ly + 16, "build the mesh", "bs", "middle")
 
-    # ---------- timing diagram
-    tx0, ty0 = 60, 815
-    s.text(tx0, ty0, "Тайминг 3D-скана (фрагмент, 0–100 мс)", "b")
-    s.text(tx0 + 300, ty0, "проекторы точек — по очереди (узоры не накладываются); ToF — непрерывно, каждая на своей частоте модуляции", "s")
-    rows = ["Проектор 1", "Проектор 2", "Проектор 3", "ToF 1 (f1)", "ToF 2 (f2)", "ToF 3…7 (f3…f7)"]
-    lx, gx0, gx1 = tx0, tx0 + 110, 950
-    gw = gx1 - gx0
-    rh = 17
-    for i, r in enumerate(rows):
-        yb = ty0 + 22 + i * rh
-        s.text(lx, yb, r, "s")
-        s.line(gx0, yb, gx1, yb, "thin", extra='stroke="#bbb"')
-        if i < 3:
-            for slot in range(6):
-                if slot % 3 == i:
-                    xa = gx0 + slot * gw / 6 + 3
-                    s.path(f"M{xa:.1f},{yb} L{xa:.1f},{yb-11} L{xa+gw/6-8:.1f},{yb-11} L{xa+gw/6-8:.1f},{yb}", "o")
-        else:
-            step = 6 if i == 3 else (8 if i == 4 else 5)
-            pts = []
-            xx = gx0
-            hi = False
-            while xx < gx1:
-                pts.append(f"{xx:.1f},{yb - (11 if hi else 0)}")
-                hi = not hi
-                pts.append(f"{xx:.1f},{yb - (11 if hi else 0)}")
-                xx += step
-            s.add(f'<polyline points="{" ".join(pts)}" class="thin" stroke-opacity="0.8"/>')
-    yb = ty0 + 22 + (len(rows) - 1) * rh + 8
-    s.line(gx0, yb, gx1, yb, "thin")
-    for tt in range(0, 101, 25):
-        xx = gx0 + gw * tt / 100
-        s.line(xx, yb - 3, xx, yb + 3, "thin")
-        s.text(xx, yb + 15, f"{tt} мс" if tt == 100 else f"{tt}", "s", "middle")
-    return sheet(4, "Структурная схема системы", s.out())
+    # ---- RGB channel
+    ry = 470
+    s.text(50, ry - 12, "RGB channel (separate camera)", "vh")
+    s.rect(50, ry, 168, 110, "blk", rx=4)
+    s.rect(50 + 50, ry + 22, 48, 32, "ofd", rx=3); s.circle(50 + 74, ry + 38, 10, "of")
+    s.text(134, ry + 80, "RGB camera", "b", "middle")
+    s.text(134, ry + 96, "colour video", "s", "middle")
+    feats = [("Expression", "face regions over time"), ("Skin colour", "colour features"),
+             ("Head pose", "position and tilt"), ("rPPG pulse", "with quality flags")]
+    fx0 = 250
+    for i, (t, d) in enumerate(feats):
+        yy = ry - 4 + i * 30
+        s.rect(fx0, yy, 200, 26, "blkb", rx=4)
+        s.text(fx0 + 10, yy + 17, t, "bs")
+        s.text(fx0 + 92, yy + 17, d, "xs")
+        s.line(218, ry + 55, fx0, yy + 13, "thin")
+    # ---- fusion block
+    fxb, fyb = 520, 470
+    s.rect(fxb, fyb, 300, 150, "blk", rx=6)
+    s.text(fxb + 150, fyb + 22, "Fusion: RGB + IR + depth", "b", "middle")
+    s.mtext(fxb + 14, fyb + 46, ["mesh aligned to the RGB image",
+                                 "(shared calibration, synced frames)",
+                                 "colour features + depth geometry",
+                                 "features + temporal features",
+                                 "output: per-region features, quality"], "s", "start", 16)
+    s.arrow(450, ry + 50, fxb - 2, fyb + 60)
+    # mesh -> fusion (route down from mesh box)
+    mx = xs[6] + bw / 2
+    s.parrow(f"M{xs[6] + 30},{y0 + bh + 48} L{xs[6] + 30},{y0 + bh + 70} L{fxb + 230},{y0 + bh + 70} L{fxb + 230},{fyb - 2}")
+    s.text(fxb + 240, y0 + bh + 64, "mesh + depth", "s")
+    s.arrow(fxb + 150, fyb + 150, fxb + 150, fyb + 195)
+    s.rect(fxb, fyb + 197, 300, 40, "blkd", rx=4)
+    s.text(fxb + 150, fyb + 215, "to AI modules 1 to 3 (sheet 5)", "bs", "middle")
+    s.text(fxb + 150, fyb + 230, "screening, not a diagnosis", "xs", "middle")
 
-# ---------------------------------------------------------------- sheet 5
+    # ---- key regions panel
+    kx, ky = 880, 450
+    s.text(kx, ky + 8, "Mesh: key regions tracked", "vh")
+    fcx, fcy = kx + 120, ky + 175
+    s.ellipse(fcx, fcy, 85, 120, "o")
+    reg = dict(
+        brows=[(fcx - 50, fcy - 52, fcx - 18, fcy - 58), (fcx + 18, fcy - 58, fcx + 50, fcy - 52)],
+    )
+    for (a, b, c, d) in reg["brows"]:
+        s.line(a, b, c, d, "thick", extra='stroke="#1f5fa8"')
+    for sg in (-1, 1):
+        s.ellipse(fcx + sg * 34, fcy - 30, 15, 7, "palm")
+        s.ellipse(fcx + sg * 50, fcy + 20, 18, 22, "cont")
+    s.path(f"M{fcx},{fcy-25} L{fcx-12},{fcy+22} L{fcx+12},{fcy+22} Z", "palm")
+    s.ellipse(fcx, fcy + 55, 26, 10, "palm")
+    s.ellipse(fcx, fcy + 100, 22, 12, "cont")
+    labs = [("brows", (fcx + 50, fcy - 52), -70), ("eyes", (fcx + 49, fcy - 30), -40),
+            ("nose", (fcx + 12, fcy + 15), -10), ("cheeks", (fcx + 68, fcy + 20), 20),
+            ("lips", (fcx + 26, fcy + 55), 55), ("chin", (fcx + 22, fcy + 100), 95)]
+    for name, (px, py), ty in labs:
+        s.leader(px, py, kx + 260, fcy + ty, "start", [name])
+    s.mtext(kx, ky + 320, ["A few key regions are enough;",
+                           "no need for a 30,000-polygon model."], "s", "start", 14)
+    s.text(50, 680, "IR channel works with the room light dimmed; RGB gives colour and rPPG.", "s")
+    s.text(50, 696, "Every block is checkable on its own (inputs, outputs, quality).", "s")
+    return sheet(4, "Face pipeline (IR, depth, mesh, RGB)", s.out())
+
+
+# ------------------------------------------------------------------ sheet 5
 def sheet5():
     s = S()
-    k = 0.42
-    s.text(60, 125, "А. Сложено (транспортное положение)", "vh")
-    # stowed box front & side
-    bx, by = 90, 180
-    s.rect(bx, by, 600 * k, 400 * k, "of", rx=6)
-    s.rect(bx + 30 * k, by + 30 * k, 300 * k, 340 * k, "ofd")
-    s.text(bx + 180 * k, by + 200 * k, "панель", "s", "middle")
-    s.rect(bx + 380 * k, by + 40 * k, 180 * k, 60 * k, "o", rx=8)
-    s.rect(bx + 380 * k, by + 300 * k, 180 * k, 60 * k, "o", rx=8)
-    s.text(bx + 470 * k, by + 82 * k, "рукоять Л", "s", "middle")
-    s.text(bx + 470 * k, by + 342 * k, "рукоять П", "s", "middle")
-    s.line(bx + 380 * k, by + 200 * k, bx + 560 * k, by + 200 * k, "hid")
-    s.text(bx + 470 * k, by + 190 * k, "штанги сложены", "s", "middle")
-    # side
-    sx = bx + 600 * k + 60
-    s.rect(sx, by, 120 * k, 400 * k, "of", rx=4)
-    s.rect(sx - 10, by, 10, 400 * k, extra='fill="url(#hatch)" stroke="none"')
-    s.text(sx - 14, by - 8, "стена / рельс сиденья", "s")
-    # dims
-    s.ext(bx, by + 400 * k, bx, by + 400 * k + 40); s.ext(bx + 600 * k, by + 400 * k, bx + 600 * k, by + 400 * k + 40)
-    s.dim(bx, by + 400 * k + 30, bx + 600 * k, by + 400 * k + 30, "600")
-    s.ext(bx, by, bx - 40, by); s.ext(bx, by + 400 * k, bx - 40, by + 400 * k)
-    s.dim(bx - 30, by, bx - 30, by + 400 * k, "400", off=-2)
-    s.ext(sx, by + 400 * k, sx, by + 400 * k + 40); s.ext(sx + 120 * k, by + 400 * k, sx + 120 * k, by + 400 * k + 40)
-    s.dim(sx, by + 400 * k + 30, sx + 120 * k, by + 400 * k + 30, "120")
-    s.text(90, 440, "Ящик ≈600×400×120, масса ≈6–8 кг (оценка).", "t")
-    s.text(90, 458, "Крепится к стене кабины или к рельсу сиденья.", "t")
+    s.text(50, 120, "Data flow: sensors, quality gate, AI modules, comparison, status, report", "vh")
+    # onboard compute group
+    s.rect(300, 140, 790, 520, "grp", rx=8)
+    s.text(310, 156, "Onboard compute (station / module)", "s")
 
-    # ---------- deployed side view in capsule
-    s.text(720, 125, "Б. Развёрнуто в кабине корабля / ровера (вид сбоку)", "vh")
-    k2 = 0.27
-    fx0, fy = 800, 700
-    D = lambda d: fx0 + d * k2
-    Z = lambda z: fy - z * k2
-    s.path(f"M{D(0)},{Z(0)} L{D(0)},{Z(1500)} Q{D(0)},{Z(1750)} {D(300)},{Z(1750)} L{D(1600)},{Z(1750)}", "thick")
-    s.line(D(0), Z(0), D(1600), Z(0), "thick")
-    s.rect(D(0), Z(0), 1600 * k2, 8, extra='fill="url(#hatch)" stroke="none"')
-    # FOV first
-    s.poly([(D(720), Z(1720)), (D(780), Z(0)), (D(1250), Z(500))], "tof")
-    s.poly([(D(585), Z(1300)), (D(1060), Z(1360)), (D(1060), Z(1020))], "sl")
-    # wall box + panel arm
-    s.rect(D(0), Z(1500), 120 * k2, 400 * k2, "of")
-    s.line(D(120), Z(1250), D(550), Z(1250), "thick")
-    s.rect(D(550), Z(1450), 30 * k2, 450 * k2, "ofd")
-    # handle arm (telescopic) below panel
-    s.line(D(120), Z(1150), D(500), Z(950), "thick")
-    s.line(D(500), Z(950), D(780), Z(950), "thick")
-    s.rect(D(770), Z(950) - 10, 22, 20, "ofd", rx=4)
-    # ceiling clip ToF
-    s.rect(D(690), Z(1750), 60 * k2, 50 * k2, "of")
-    # seat
-    s.path(f"M{D(900)},{Z(0)} L{D(900)},{Z(430)} L{D(1220)},{Z(430)} L{D(1300)},{Z(1200)}", "o")
-    # seated astronaut
-    s.circle(D(1080), Z(1190), 100 * k2, "hum")
-    s.path(f"M{D(1110)},{Z(1080)} L{D(1150)},{Z(500)} L{D(820)},{Z(500)} L{D(800)},{Z(60)}", "hum")
-    s.path(f"M{D(1100)},{Z(1030)} L{D(960)},{Z(870)} L{D(790)},{Z(950)}", "hum")
-    # labels
-    s.leader(D(720), Z(1735), 1040, 190, "", "start", lines=["ToF на клипсе (поручень)"])
-    s.leader(D(565), Z(1450), 900, 180, "", "end", lines=["панель 300×450", "на поворотном кронштейне"])
-    s.leader(D(780), Z(950), 808, 596, "", "start", lines=["рукояти на", "телескопических штангах"])
-    s.leader(D(900), Z(1250), D(1150), Z(1500), "", "start", lines=["structured light: лицо"])
-    s.leader(D(1250), Z(700), D(1350), Z(850), "", "start", lines=["кресло / поручень"])
-    s.leader(D(60), Z(1400), 790, 340, "", "end", lines=["ящик", "на стене"])
-    # dims
-    s.ext(D(550), Z(0) + 10, D(550), Z(0) + 45); s.ext(D(1080), Z(0) + 10, D(1080), Z(0) + 45)
-    s.dim(D(550), Z(0) + 36, D(1080), Z(0) + 36, "≈500 до лица")
-    s.ext(D(0), Z(0) + 10, D(0), Z(0) + 75); s.ext(D(1600), Z(0) + 10, D(1600), Z(0) + 75)
-    s.dim(D(0), Z(0) + 66, D(1600), Z(0) + 66, "зона ≈1600 (сидя в кресле или у поручня)")
+    # --- sensors column
+    sx, sw = 45, 225
+    s.text(sx, 152, "Sensors", "b")
+    s.box(sx, 165, sw, 95, "Front frame", ["RGB camera + IR camera", "+ IR projector (face),", "body camera, illumination"], center=False)
+    tag(s, sx + 8, 240, "TEAM")
+    s.box(sx, 272, sw, 64, "Side frame", ["body camera (profile, spine)"], center=False)
+    tag(s, sx + 8, 316, "TEAM")
+    s.box(sx, 348, sw, 64, "Back frame", ["body camera (scapulae, pelvis)"], center=False)
+    tag(s, sx + 8, 392, "TEAM")
+    s.box(sx, 424, sw, 78, "Touch mirror", ["foot / torso / palm contours,", "touch input, display"], center=False)
+    s.rect(sx + 6, 478, sw - 12, 19, "blkd", rx=3)
+    s.text(sx + 12, 491, "NFC reader (station, fallback ID)", "s")
+    s.rect(sx, 520, sw, 82, "blkd", rx=4)
+    s.text(sx + 8, 538, "Doppler grips (optional)", "b")
+    s.mtext(sx + 8, 556, ["research module, contact;", "demo: mock cassette +", "signal path diagram"], "s", "start", 14)
+    s.box(sx, 618, sw, 50, "Simulated crew data", ["demo app input"], center=False)
+    tag(s, sx + sw - 8, 624, "SIM", "end")
 
-    # ---------- comparison table
-    tx, ty = 60, 520
-    s.text(tx, ty, "В. Станция vs компактная конфигурация", "b")
-    cols = [tx, tx + 170, tx + 400]
-    rows = [("", "Станция (база)", "Компакт (корабль/ровер)"),
-            ("Каркас", "3 стойки пол–потолок", "ящик на стене + штанги"),
-            ("Панель", "≈500×900", "≈300×450"),
-            ("Лицо", "3 проектора точек", "1 проектор точек"),
-            ("Тело", "ToF ×7, обзор 360°", "ToF ×1–2, перед. полусфера"),
-            ("Рукояти", "Л/П, полный набор", "Л/П, полный набор"),
-            ("Сеанс", "90 с / 5 мин", "90 с; недельный — по месту"),
-            ("Развёртывание", "стационарно", "≈1 мин, без инструмента"),
-            ("Что теряем", "—", "объём ног сзади, осанка 360°")]
-    for i, r in enumerate(rows):
-        yy = ty + 26 + i * 24
-        for j, c in enumerate(r):
-            s.text(cols[j] + 6, yy, c, "b" if (i == 0 or j == 0) else "t")
-        s.line(tx, yy + 7, tx + 630, yy + 7, "thin", extra='stroke="#999"')
-    s.rect(tx, ty + 8, 630, len(rows) * 24 + 2, "thin")
-    s.line(cols[1], ty + 8, cols[1], ty + 10 + len(rows) * 24, "thin")
-    s.line(cols[2], ty + 8, cols[2], ty + 10 + len(rows) * 24, "thin")
-    s.text(tx, ty + 26 + len(rows) * 24 + 12, "Программа и модель «ожидаемой адаптации» одинаковы; компакт ставит пометку «неполный скан».", "s")
-    s.text(tx, ty + 26 + len(rows) * 24 + 28, "Применение на Земле: полярные станции, подлодки, удалённые больницы, дома престарелых.", "s")
-    return sheet(5, "Компактная складная конфигурация", s.out())
+    # --- quality gate
+    qx, qw = 320, 160
+    s.rect(qx, 260, qw, 230, "blk", rx=4)
+    s.text(qx + qw / 2, 282, "Quality gate", "b", "middle")
+    s.mtext(qx + 10, 306, ["pose inside contours", "all 3 views in frame", "light level", "motion", "sync between views",
+                           "Doppler: contact quality", "fail: prompt to adjust", "and repeat capture"], "s", "start", 16)
+    for yy in (212, 304, 380, 463):
+        s.arrow(sx + sw + 2, yy, qx - 2, min(max(yy, 270), 480))
+    s.parrow(f"M{sx + sw + 2},{560} L{qx - 30},{560} L{qx - 30},{470} L{qx - 2},{470}", "fld")
+    s.parrow(f"M{sx + sw + 2},{643} L{qx - 16},{643} L{qx - 16},{480} L{qx - 2},{480}", "fl")
+
+    # --- AI modules
+    ax, aw = 510, 290
+    mods = [("1 Camera / IR processing", "face detection, segmentation, IR dots, outliers, temporal refine", None),
+            ("2 RGB + IR fusion", "colour, depth geometry and temporal features", None),
+            ("3 rPPG with quality outputs", "signal quality, usable duration, motion, light, reject reason", "OPEN"),
+            ("4 Body / posture (3 views)", "skeleton keypoints merged in one coordinate system", "NASA"),
+            ("5 Change classifier", "compares features with the personal baseline", None)]
+    for i, (t, d, tg) in enumerate(mods):
+        yy = 170 + i * 92
+        s.rect(ax, yy, aw, 80, "blkb" if i < 4 else "blkg", rx=4)
+        s.text(ax + 10, yy + 20, t, "b")
+        words = d.split(" "); l1, l2 = "", ""
+        for w_ in words:
+            if len(l1) + len(w_) < 44 and not l2: l1 += (" " if l1 else "") + w_
+            else: l2 += (" " if l2 else "") + w_
+        s.text(ax + 10, yy + 40, l1, "s"); s.text(ax + 10, yy + 55, l2, "s")
+        if tg:
+            tag(s, ax + aw - 8, yy + 60, tg, "end")
+    s.text(ax + 10, 166 + 5 * 92 + 6, "", "s")
+    s.mtext(ax, 638, ["3: shows 'measurement not confirmed'", "instead of a fake value."], "xs", "start", 12)
+    for yy in (210, 302, 394, 486):
+        s.arrow(qx + qw + 2, min(max(yy, 270), 480), ax - 2, yy)
+    # internal arrows modules -> classifier
+    s.parrow(f"M{ax + aw + 2},{210} L{ax + aw + 14},{210} L{ax + aw + 14},{578} L{ax + aw + 2},{578}")
+    for yy in (302, 394, 486):
+        s.line(ax + aw, yy, ax + aw + 14, yy, "fl")
+
+    # --- comparison
+    cx_, cw = 840, 230
+    s.rect(cx_, 380, cw, 230, "blk", rx=4)
+    s.text(cx_ + cw / 2, 402, "Comparison", "b", "middle")
+    s.mtext(cx_ + 10, 426, ["personal baseline (own", "earlier sessions)", "environment mode:",
+                            "Earth / microgravity /", "rover / module"], "s", "start", 15)
+    tag(s, cx_ + 10, 508, "NASA")
+    s.mtext(cx_ + 10, 540, ["posture norms: NASA-STD-3001,", "HIDH; spaceflight change", "context: OSDR (Inspiration4)"], "xs", "start", 13)
+    s.arrow(ax + aw + 14, 578, cx_ - 2, 578)
+    s.parrow(f"M{cx_ + cw / 2},{378} L{cx_ + cw / 2},{350}")
+    # statuses
+    stx, stw = 1110, 260
+    s.text(stx, 152, "Status (with explanation)", "b")
+    sts = [("Within baseline", "#1a7a4a", ["no relevant change"]),
+           ("Repeat measurement", "#b35900", ["low quality or unclear", "change: capture again"]),
+           ("Refer to specialist", "#c0392b", ["change confirmed: medical", "team reviews"])]
+    for i, (t, col, ls) in enumerate(sts):
+        yy = 165 + i * 82
+        s.add(f'<rect x="{stx}" y="{yy}" width="{stw}" height="70" rx="4" fill="#fff" stroke="{col}" stroke-width="2.2"/>')
+        s.add(f'<text x="{stx + 10}" y="{yy + 20}" class="b" fill="{col}" style="fill:{col}">{esc(t)}</text>')
+        s.mtext(stx + 10, yy + 38, ls, "s", "start", 14)
+    s.parrow(f"M{cx_ + cw / 2},{350} L{cx_ + cw / 2},{282} L{stx - 16},{282}")
+    s.line(stx - 14, 200, stx - 14, 668, "fl")
+    for yy in (200, 282, 364):
+        s.arrow(stx - 14, yy, stx - 2, yy)
+    s.text(cx_ + cw / 2 + 6, 274, "result + reliability", "xs")
+    s.mtext(stx, 420, ["Report states: which indicator", "changed, how reliable, what", "action. Screening, not a diagnosis."], "s", "start", 14)
+
+    # outputs
+    oy = 690
+    s.box(320, oy, 260, 70, "Mirror display / voice", ["status, prompts, 'repeat' requests"], center=False)
+    s.box(620, oy, 300, 70, "Store-and-forward report queue", ["onboard, survives link outages"], center=False)
+    s.box(960, oy, 410, 70, "Medical team on Earth (comm delay)", ["a human makes the medical decision"], center=False)
+    s.parrow(f"M{1240},{462} L{1240},{680} L{790},{680} L{790},{oy - 2}")
+    s.text(1246, 600, "report", "s")
+    s.parrow(f"M{qx + 80},{490} L{qx + 80},{oy - 2}", "fld")
+    s.text(qx + 86, 600, "prompts", "s")
+    s.arrow(580 + 2, oy + 35, 620 - 2, oy + 35)
+    s.arrow(920 + 2, oy + 35, 960 - 2, oy + 35)
+    s.parrow(f"M{stx - 14},{668} L{450},{668} L{450},{oy - 2}")
+    s.text(456, 684, "status to crew", "xs")
+
+    # provenance legend
+    ly = 790
+    s.text(50, ly, "Data provenance", "b")
+    rows = [("TEAM", "own mirror-demo recordings (camera views, pose, quality tests)"),
+            ("OPEN", "CameraVitals: RGB video synced with cardiac and respiratory signals (rPPG validation)"),
+            ("NASA", "Life Sciences Data Archive / Life Sciences Portal, NASA Open Data Portal, OSDR incl. Inspiration4,"),
+            ("SIM", "the demo app runs on simulated crew data")]
+    for i, (k_, d) in enumerate(rows):
+        yy = ly + 12 + i * 33
+        tag(s, 50, yy, k_)
+        s.text(180, yy + 11, d, "s")
+    s.text(180, ly + 12 + 2 * 33 + 24, "NASA-STD-3001 / Human Integration Design Handbook (neutral body posture, anthropometry)", "s")
+    return sheet(5, "System and AI modules", s.out())
+
 
 files = {
     "01_general_view.svg": sheet1(),
-    "02_front_side_fov.svg": sheet2(),
-    "03_handle_section.svg": sheet3(),
-    "04_system_diagram.svg": sheet4(),
-    "05_compact_config.svg": sheet5(),
+    "02_front_side_views.svg": sheet2(),
+    "03_doppler_cassette.svg": sheet3(),
+    "04_face_pipeline.svg": sheet4(),
+    "05_system_ai.svg": sheet5(),
 }
 for n, c in files.items():
     with open(os.path.join(OUT, n), "w", encoding="utf-8") as f:
         f.write(c)
-print("ok", list(files))
+    print("wrote", n)
