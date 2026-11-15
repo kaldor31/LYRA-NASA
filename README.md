@@ -3,10 +3,11 @@
 **Step in. Scan. Know.** A web app running on simulated data, built for the NASA Space Apps Challenge 2026
 ("Create Health Monitoring Software for Astronauts on Space Missions"). Team: Alina Dmitriyeva, Daniil Shabalin.
 
-The LYRA station is three slim posts around the astronaut and a mirror panel with a screen behind it. The core scan
-is **contactless**: RGB cameras, structured IR light (a dot projector, like Face ID, for millimeter-level facial
-swelling) and depth (ToF) cameras that build a skeletal keypoint model of the body from three synced views
-(front, side, back). The palms rest on marked zones of the touch mirror only to standardize the pose. Nothing is
+The LYRA station (drawings v3) is a full-height touch mirror on its own stand plus three free-standing camera
+pillars around the astronaut: two in front at ±60° and one behind, each with RGB + IR depth modules at head, torso
+and leg height, bases bolted to the floor. The core scan is **contactless**: the face module in the mirror bezel
+uses structured IR light (a dot projector, like Face ID, for millimeter-level facial swelling) plus an RGB camera,
+and the three pillars build a skeletal keypoint model of the body from three synced views. The palms rest on marked zones of the touch mirror only to standardize the pose. Nothing is
 worn on the body.
 
 An optional **contact research module** (vertical grips on the mirror stand legs with Doppler ultrasound and a hydrogel
@@ -127,14 +128,39 @@ WebSocket.
 
 ## Drawings
 
-English drawings are the primary set in [`docs/drawings/`](docs/drawings/) (PNG exports in `docs/drawings/png/`).
+English drawings (v3: touch mirror + three camera pillars) are the primary set in [`docs/drawings/`](docs/drawings/):
+SVG sources, PNG in `docs/drawings/png/`, PDF per sheet in `docs/drawings/pdf/` and all five sheets in one file,
+[`docs/drawings/LYRA_drawings.pdf`](docs/drawings/LYRA_drawings.pdf). Rebuild:
+
+```bash
+python3 docs/drawings/_src/gen_drawings.py && python3 docs/drawings/_src/render_png.py && python3 docs/drawings/_src/render_pdf.py
+```
 Older drawings are kept in `docs/drawings/archive/`. Dimensions are approximate.
 
 ## Feasibility check (not the center of the demo)
 
 `lyra/feasibility/vision`: MediaPipe (facial swelling, blinking, PERCLOS, posture) and video pulse (rPPG);
 `lyra/feasibility/palm`: ESP32 prototype of the research-module grip. Dependencies:
-`pip install -r lyra/feasibility/requirements.txt`. Not yet tested on real hardware.
+`pip install -r lyra/feasibility/requirements.txt`.
+
+**Live camera demo (real person, no simulation).** An iPhone works as the camera through macOS Continuity Camera
+(same Apple ID, Wi-Fi and Bluetooth on, iPhone near the Mac, e.g. on a stand in landscape):
+
+```bash
+.venv/bin/pip install -r lyra/feasibility/requirements.txt
+.venv/bin/python -m lyra.feasibility.vision.live          # picks the highest-resolution camera, usually the iPhone
+.venv/bin/python -m lyra.feasibility.vision.live --camera 1   # or choose the index explicitly
+```
+Open http://127.0.0.1:8780. The page shows the mirrored video with face landmarks, the quality gate (face visible,
+facing the mirror, light level, holding still), live camera pulse with a quality score, blink rate, face width /
+IPD ratio, shoulder tilt and the 478 face landmarks in 3D. "Baseline scan" (15 s) stores your personal baseline in
+memory; "Compare scan" returns Within baseline / Repeat measurement / Refer to specialist / Measurement not
+confirmed with the reason. Frames are processed locally and never stored. Depth here is estimated from RGB by
+MediaPipe; the real IR depth channel (iPhone TrueDepth, the same dot projector + IR camera idea as the mirror face
+module) needs a small iOS app and is a next step. `--host 0.0.0.0` makes the page reachable from a phone on the
+same Wi-Fi, which also exposes the camera stream to that network: use it only on a trusted network.
+If MediaPipe cannot download its pose model on first run, fetch it once:
+`curl -o .venv/lib/python3.12/site-packages/mediapipe/modules/pose_landmark/pose_landmark_lite.tflite https://storage.googleapis.com/mediapipe-assets/pose_landmark_lite.tflite`.
 
 ## Use of AI
 

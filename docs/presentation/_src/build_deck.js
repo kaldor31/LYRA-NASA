@@ -221,7 +221,7 @@ s.addImage({ path: img(3), x: 7.3, y: 1.5, w: 5.45, h: 3.85, objectName: 'Dopple
 SI(s, 7.3, 5.42, 5.45);
 T(s, [
   { text: 'Optional research module: ', options: { bold: true, color: C.accent1 } },
-  { text: 'ultrasound Doppler in vertical grips on the side posts, coupled by a 4-part solid hydrogel cassette (holder, thin replaceable pad, soft rim, membrane). Demo: a mock cassette and a signal path diagram. A real transducer only after a phantom or ground test. Not part of the contactless core; no heart or vein claims through the palm.', options: { breakLine: true } },
+  { text: 'ultrasound Doppler in vertical grips on the mirror stand legs, coupled by a 4-part solid hydrogel cassette (holder, thin replaceable pad, soft rim, membrane). Demo: a mock cassette and a signal path diagram. A real transducer only after a phantom or ground test. Not part of the contactless core; no heart or vein claims through the palm.', options: { breakLine: true } },
   { text: 'LYRA does not: ', options: { bold: true, color: C.accent1 } },
   { text: 'diagnose, or measure bone density, discs, muscle strength or radiation. The medical team decides.', options: { breakLine: true } },
   { text: 'Next: ', options: { bold: true, color: C.accent1 } },

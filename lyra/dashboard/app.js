@@ -118,7 +118,7 @@ const UNIT = { "\u043C\u043B": "mL", "\u043C\u043C": "mm", "\u043A\u0433": "kg",
   "%/\u043C\u0435\u0441": "%/month", "\u043C\u0417\u0432/\u0441\u0443\u0442 (\u041C\u041A\u0421)": "mSv/day (ISS)" };
 const unitEn = (u) => UNIT[u] ?? clean(u);
 const mName = (key, fb) => METRIC[key] || clean(en(fb, key));
-const GROUPS = [["face", "Face", "IR structured light and RGB camera"], ["body", "Body and posture", "Skeletal keypoints from front, side and back views"],
+const GROUPS = [["face", "Face", "IR structured light and RGB camera"], ["body", "Body and posture", "Skeletal keypoints from three camera pillars (two front, one back)"],
   ["hands", "Vertical grips", "Load cell, PPG and SpO\u2082"], ["self", "Self-report", "Three-question survey"]];
 const LIGHT = { "\u{1F7E2}": "green", "\u{1F7E1}": "yellow", "\u{1F534}": "red" };
 
@@ -803,17 +803,19 @@ function postureRef(res) {
 }
 
 async function stepTurn(f) {
-  const views = [["front", "Face the mirror"], ["side", "Turn your right side to the mirror"], ["back", "Turn your back to the mirror"]];
-  f.frame("turn", views[0][1], `Three synced views give the skeletal keypoint model: head, shoulders, elbows, pelvis, knees, feet. Posture is compared with ${postureRef()}.`,
-    `<ol class="views3" aria-label="Body views">${views.map(([v]) => `<li data-v="${v}">${icon("CircleDashed")}<span>${v[0].toUpperCase() + v.slice(1)}</span></li>`).join("")}</ol>
+  // v3 station: two front pillars and one back pillar capture at the same time; the crew member does not turn.
+  // The 3D model turns to show what each pillar contributes.
+  const say = "Stand still, facing the mirror. Three camera pillars capture you at once.";
+  const views = [["front", "Front pillar L"], ["side", "Front pillar R"], ["back", "Back pillar"]];
+  f.frame("turn", say, `Three synced pillar views (two front, one back) give the skeletal keypoint model: head, shoulders, elbows, pelvis, knees, feet. Posture is compared with ${postureRef()}.`,
+    `<ol class="views3" aria-label="Pillar views">${views.map(([v, name]) => `<li data-v="${v}">${icon("CircleDashed")}<span>${name}</span></li>`).join("")}</ol>
      ${checksHTML(["light", "motion", "pose"])}
      <div class="readouts"><div><b id="kp">0 of 10</b><span>Keypoints found</span></div><div><b id="bodypts">0</b><span>Body points</span></div></div>`,
-    f.training ? "Now three body views. Face the mirror, then turn your right side, then your back, when I ask." : views[0][1]);
+    f.training ? "Now the body scan. Stand still and face the mirror; the three pillars capture you at once, no need to turn." : say);
   S.body.setSkeleton(true); $("#btn-skel")?.setAttribute("aria-pressed", "true");
   await runChecks(f, ["light", "motion", "pose"], 1200);
   let total = 0;
-  for (const [k, [v, say]] of views.entries()) {
-    if (k) { $(".prompt").textContent = say; f.prompt = say; mirror(say); Voice.say(say); }
+  for (const [v] of views) {
     setView(v);
     const li = $(`[data-v="${v}"]`); li.classList.add("now");
     await f.timed(f.dur.view, (p) => { $("#kp").textContent = `${Math.round(p * 10)} of 10`; $("#bodypts").textContent = fmt(total + p * 71000, 0); });

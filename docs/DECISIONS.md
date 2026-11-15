@@ -1,6 +1,6 @@
 # LYRA: recorded decisions (source of truth)
 
-> v2, 2026-11-15. The team's concept paper `docs/research/LYRA_concept_paper_ru.pdf` (Russian, 22 pages) is authoritative: where this file and the paper differ, the paper wins. One explicit team instruction on top of the paper: **the Doppler transducers are oriented vertically** (vertical grips on the mirror stand legs).
+> v2, 2026-11-15; station layout updated to v3 the same day (touch mirror + three camera pillars, see section 2). The team's concept paper `docs/research/LYRA_concept_paper_ru.pdf` (Russian, 22 pages) is authoritative: where this file and the paper differ, the paper wins. One explicit team instruction on top of the paper: **the Doppler transducers are oriented vertically** (vertical grips on the mirror stand legs).
 > v1 decisions (2026-11-14 survey) are superseded where they conflict; the main changes are listed in section 12.
 > The hackathon is under way (deadline Sun 15 Nov 23:59 local): we work fast, and the priority is what the judges see.
 
@@ -104,3 +104,8 @@ The `*_ru` keys are kept for API compatibility; their values are English text. O
 - Statuses Normal / Recheck / Deviation / Remeasure → **Within baseline / Repeat measurement / Refer to specialist / Measurement not confirmed**.
 - "LYRA, not an acronym" and "Step in. Grip. Know." → the paper's two expansions and **"Step in. Scan. Know."**
 - Added: AI modules with quality outputs, 3-plane posture with environment mode, data provenance, one concrete NASA dataset.
+
+## 13. What changed in v3 (station layout, 2026-11-15)
+- Three floor-to-ceiling camera frames (front, side, back) → **three free-standing camera pillars** (two in front at ±60°, one behind, R ≈ 750 mm, ≈ 2000 mm high) with RGB + IR depth modules at head, torso and leg height, plus a **full-height touch mirror on its own stand**. Reference look: a commercial multi-pillar 3D body scanner.
+- Face module (RGB + IR camera + IR projector) moved to the mirror top bezel; Doppler grips moved to the mirror stand legs.
+- Pillar and stand bases are **bolted to the floor** (seat tracks): a weighted base holds nothing in microgravity. No ceiling attachment.

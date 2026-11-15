@@ -70,7 +70,7 @@ Source: https://www.spaceappschallenge.org/resources/project-submission-guide/ Â
 | Decisions | `docs/DECISIONS.md` |
 | Concept | `docs/CONCEPT.md` |
 | NASA/CSA sources | `docs/research/nasa_sources.md`, `data/nasa_reference.json` |
-| Drawings (5 sheets) | `docs/drawings/01_general_view`, `02_front_side_views`, `03_doppler_cassette`, `04_face_pipeline`, `05_system_ai` (.svg); PNG in `docs/drawings/png/`; rebuild: `python3 docs/drawings/_src/gen_drawings.py && python3 docs/drawings/_src/render_png.py`; v1 sheets and the Russian set in `docs/drawings/archive/v1/` |
+| Drawings (5 sheets) | `docs/drawings/01_general_view`, `02_front_side_views`, `03_doppler_cassette`, `04_face_pipeline`, `05_system_ai` (.svg); v3 layout (touch mirror + 3 camera pillars); PNG in `docs/drawings/png/`, PDF per sheet in `docs/drawings/pdf/`, all sheets in `docs/drawings/LYRA_drawings.pdf`; rebuild: `python3 docs/drawings/_src/gen_drawings.py && python3 docs/drawings/_src/render_png.py && python3 docs/drawings/_src/render_pdf.py`; v1 sheets and the Russian set in `docs/drawings/archive/v1/` |
 | Presentation, video, form | `docs/presentation/` (deck: `node docs/presentation/_src/build_deck.js`, one-time `npm install` in `_src`) |
 | Concept paper (Russian, source of truth) | `docs/research/LYRA_concept_paper_ru.pdf` |
 | Software | `lyra/`, `tests/`, `README.md` (Agent A) |

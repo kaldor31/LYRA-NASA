@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LYRA Live Camera</title>
+<style>
+:root{--bg:#0D1114;--panel:#141A1F;--line:#24303A;--text:#E7ECF0;--muted:#8C9AA6;--blue:#8FB2E8;
+  --green:#4CC38A;--yellow:#E8B04C;--red:#F06A6A;--violet:#B79CF2}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 "IBM Plex Sans",system-ui,-apple-system,sans-serif}
+header{display:flex;align-items:baseline;gap:16px;padding:14px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header b{letter-spacing:.3em;font-size:20px}
+header span{color:var(--muted)}
+.tag{margin-left:auto;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:16px;padding:16px 20px}
+@media (max-width:900px){main{grid-template-columns:1fr;padding:12px 16px}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.video{position:relative;padding:0;overflow:hidden;background:#000;aspect-ratio:16/9}
+.video img{width:100%;height:100%;object-fit:contain;display:block}
+.video .msg{position:absolute;inset:auto 0 0 0;padding:10px 14px;background:linear-gradient(transparent,#000c);font-size:18px}
+.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;width:0;background:var(--blue);transition:width .2s}
+h2{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;color:var(--muted)}
+.chip.ok{border-color:#2d6b4d;color:var(--green)}
+.chip.bad{border-color:#6b3434;color:var(--red)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.m{border-top:1px solid var(--line);padding-top:8px}
+.m b{font-size:24px;font-variant-numeric:tabular-nums}
+.m small{display:block;color:var(--muted);font-size:12px}
+canvas{width:100%;display:block}
+#wave{height:56px}
+#mesh{height:260px;background:#0a0e11;border-radius:8px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+button{font:inherit;color:var(--text);background:#1d252c;border:1px solid var(--line);border-radius:8px;padding:10px 14px;cursor:pointer}
+button.primary{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:600}
+button:disabled{opacity:.45;cursor:default}
+.result{border-left:4px solid var(--line);padding-left:12px;margin-top:12px}
+.result .st{font-size:22px;font-weight:600}
+.green{color:var(--green)} .yellow{color:var(--yellow)} .red{color:var(--red)} .retry{color:var(--violet)} .baseline,.no_baseline{color:var(--blue)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+td{padding:4px 0;border-top:1px solid var(--line)} td:nth-child(n+2){text-align:right;font-variant-numeric:tabular-nums}
+.foot{color:var(--muted);font-size:12px;padding:0 20px 20px}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+</style>
+</head>
+<body>
+<header><b>LYRA</b><span>Live camera feasibility demo: real face, real pulse, no simulation</span>
+  <span class="tag" id="cam">camera: connecting…</span></header>
+<main>
+  <div class="col">
+    <div class="card video"><img id="video" src="/video" alt="Live camera with face landmarks">
+      <div class="msg" id="prompt">Look at the camera</div></div>
+    <div class="card">
+      <h2>Scan</h2>
+      <div class="btns">
+        <button class="primary" id="b-base">1. Baseline scan (15 s)</button>
+        <button id="b-scan" disabled>2. Compare scan (15 s)</button>
+        <button id="b-reset">Reset baseline</button>
+      </div>
+      <div class="bar"><i id="prog"></i></div>
+      <div id="result"></div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card"><h2>Quality gate</h2><div class="chips" id="gate"></div></div>
+    <div class="card"><h2>Live readings</h2>
+      <div class="grid">
+        <div class="m"><b id="hr">–</b><small>Camera pulse (rPPG), bpm · <span id="hrq">quality –</span></small></div>
+        <div class="m"><b id="ratio">–</b><small>Face width / IPD (swelling proxy)</small></div>
+        <div class="m"><b id="blink">–</b><small>Blinks per minute</small></div>
+        <div class="m"><b id="tilt">–</b><small>Shoulder tilt, deg</small></div>
+      </div>
+      <canvas id="wave"></canvas>
+    </div>
+    <div class="card"><h2>3D face landmarks (478 points)</h2><canvas id="mesh"></canvas>
+      <small style="color:var(--muted);font-size:12px">Depth here is estimated from the RGB image by MediaPipe. In the LYRA station it comes from the IR dot projector and IR camera of the mirror face module.</small></div>
+  </div>
+</main>
+<p class="foot">Screening demo, not a diagnosis. Frames are processed on this computer and never stored; the baseline lives in memory only. Thresholds are demo values (team estimate).</p>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from "three";
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 1) => v == null ? "–" : Number(v).toFixed(d);
+
+// ---- 3D mesh
+const cv = $("mesh"), renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true });
+const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(35, 1, 0.01, 10);
+cam.position.set(0, 0, 1.6);
+const N = 468, geo = new THREE.BufferGeometry(), posArr = new Float32Array(N * 3), colArr = new Float32Array(N * 3);
+geo.setAttribute("position", new THREE.BufferAttribute(posArr, 3)); geo.setAttribute("color", new THREE.BufferAttribute(colArr, 3));
+const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.012, vertexColors: true }));
+scene.add(pts);
+function resize() { const w = cv.clientWidth, h = cv.clientHeight; renderer.setSize(w, h, false); renderer.setPixelRatio(devicePixelRatio); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(cv); resize();
+function setMesh(m) {
+  if (!m) return;
+  let zmin = 1e9, zmax = -1e9; for (const p of m) { zmin = Math.min(zmin, p[2]); zmax = Math.max(zmax, p[2]); }
+  m.forEach((p, i) => {
+    posArr[i * 3] = p[0] * 1.6; posArr[i * 3 + 1] = -p[1] * 1.6; posArr[i * 3 + 2] = -p[2] * 1.6;
+    const k = (p[2] - zmin) / ((zmax - zmin) || 1);  // near = warm, far = cool
+    colArr[i * 3] = 0.95 - 0.4 * k; colArr[i * 3 + 1] = 0.55 + 0.15 * k; colArr[i * 3 + 2] = 0.45 + 0.5 * k;
+  });
+  // center
+  let cx = 0, cy = 0; for (let i = 0; i < N; i++) { cx += posArr[i * 3]; cy += posArr[i * 3 + 1]; }
+  pts.position.set(-cx / N, -cy / N, 0);
+  geo.attributes.position.needsUpdate = true; geo.attributes.color.needsUpdate = true;
+}
+const piv = new THREE.Group(); scene.remove(pts); piv.add(pts); scene.add(piv);
+(function anim(t) { piv.rotation.y = Math.sin(t / 1800) * 0.9; renderer.render(scene, cam); requestAnimationFrame(anim); })(0);
+
+// ---- wave
+function drawWave(w) {
+  const c = $("wave"), g = c.getContext("2d"), W = (c.width = c.clientWidth * devicePixelRatio), H = (c.height = 56 * devicePixelRatio);
+  g.clearRect(0, 0, W, H); if (!w || !w.length) return;
+  g.strokeStyle = "#8FB2E8"; g.lineWidth = 1.5 * devicePixelRatio; g.beginPath();
+  w.forEach((v, i) => g.lineTo(i / (w.length - 1) * W, H / 2 - v * H * 0.42)); g.stroke();
+}
+
+// ---- state polling
+const GATE = [["face", "Face visible"], ["frontal", "Facing the mirror"], ["light", "Light level"], ["still", "Holding still"]];
+const LABEL = { green: "Within baseline", yellow: "Repeat measurement", red: "Refer to specialist", retry: "Measurement not confirmed",
+  baseline: "Baseline saved", no_baseline: "No baseline yet" };
+let lastResultTime = null, scanning = false;
+async function tick() {
+  try {
+    const r = await (await fetch("/api/live")).json(), s = r.state;
+    $("cam").textContent = s.status === "ok" ? `camera live · ${fmt(s.fps, 0)} fps · ${s.w}×${s.h}` : (s.error || s.status);
+    const g = s.gate || {};
+    $("gate").innerHTML = GATE.map(([k, l]) => `<span class="chip ${g[k] ? "ok" : "bad"}">${g[k] ? "✓" : "✕"} ${l}</span>`).join("");
+    $("hr").textContent = s.hr && s.hr_q >= 0.35 ? fmt(s.hr, 0) : "–";
+    $("hrq").textContent = s.hr == null ? "collecting 10 s…" : s.hr_q >= 0.35 ? `quality ${fmt(s.hr_q, 2)}` : `not confirmed (quality ${fmt(s.hr_q, 2)})`;
+    $("ratio").textContent = fmt(s.puffiness, 3);
+    $("blink").textContent = fmt(s.blinks_min, 0);
+    $("tilt").textContent = fmt(s.shoulder_tilt, 1);
+    drawWave(s.wave); setMesh(r.mesh);
+    scanning = !!s.scan;
+    $("prog").style.width = s.scan ? `${s.scan.progress * 100}%` : "0";
+    $("prompt").textContent = s.scan ? `Scanning… hold still, look at the camera (${Math.round(s.scan.progress * 15)} of 15 s)`
+      : !s.face ? "Look at the camera" : !g.frontal ? "Face the camera straight on" : !g.light ? "Adjust the light" : !g.still ? "Hold still" : "Ready to scan";
+    $("b-base").disabled = scanning; $("b-scan").disabled = scanning || !r.has_baseline; $("b-reset").disabled = scanning;
+    const L = r.last_scan;
+    if (L && L.time !== lastResultTime) { lastResultTime = L.time; showResult(L); }
+    if (!L) { $("result").innerHTML = ""; lastResultTime = null; }
+  } catch (e) { $("cam").textContent = "server not reachable"; }
+  setTimeout(tick, 120);
+}
+function showResult(L) {
+  const m = L.metrics, row = (k, l) => `<tr><td>${l}</td><td>${m[k].value == null ? `<span class="retry">${m[k].note}</span>` : fmt(m[k].value, k === "face_ratio" ? 4 : 1) + " " + m[k].unit}</td><td>q ${fmt(m[k].quality, 2)}</td></tr>`;
+  $("result").innerHTML = `<div class="result" style="border-left-color:${{green:"#4CC38A",yellow:"#E8B04C",red:"#F06A6A",retry:"#B79CF2"}[L.status] || "#8FB2E8"}">
+    <div class="st ${L.status}">${LABEL[L.status] || L.status}</div>
+    <div>${L.why}</div>
+    <table>${row("face_ratio", "Face width / IPD")}${row("hr_rppg", "Camera pulse")}${row("blink_rate", "Blink rate")}${row("shoulder_tilt", "Shoulder tilt")}
+    <tr><td>Light / motion</td><td>${fmt(L.quality.light, 0)} / ${fmt(L.quality.motion, 3)}</td><td>${L.frames} frames</td></tr></table>
+    <small style="color:var(--muted)">${L.kind} scan at ${L.time} · provenance: team recording (live, not stored)</small></div>`;
+}
+$("b-base").onclick = () => fetch("/api/scan/baseline", { method: "POST" });
+$("b-scan").onclick = () => fetch("/api/scan/scan", { method: "POST" });
+$("b-reset").onclick = () => fetch("/api/baseline/reset", { method: "POST" });
+tick();
+</script>
+</body>
+</html>

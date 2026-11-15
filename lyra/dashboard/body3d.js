@@ -1,4 +1,5 @@
-// LYRA: 3D point cloud of the astronaut body (ToF for the body, structured light for the face).
+// LYRA: 3D point cloud of the astronaut body (IR depth modules on 3 camera pillars for the body,
+// structured light from the mirror face module for the face).
 // API: createBody(container) -> { setParams, setView, scan, setLabels, setSkeleton, resize, dispose }
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -232,12 +233,20 @@ export function createBody(container) {
   const ring = []; for (let i = 0; i < 64; i++) { const a = (i / 64) * Math.PI * 2, b = ((i + 1) / 64) * Math.PI * 2;
     ring.push([Math.cos(a) * 0.45, 0.001, Math.sin(a) * 0.45], [Math.cos(b) * 0.45, 0.001, Math.sin(b) * 0.45]); }
   seg(ring, 0.25);
-  const posts = [[-0.55, 0.45], [0.55, 0.45], [0, -0.6]], ticks = [];
+  // v3 station: two front pillars at +/-60 deg and one back pillar, R ~0.75 m around the crew member,
+  // each with RGB + IR depth modules at head / torso / leg height; full-height touch mirror in front.
+  const posts = [[-0.65, 0.375], [0.65, 0.375], [0, -0.75]], ticks = [];
   posts.forEach(([x, z]) => { ticks.push([x, 0, z], [x, 2.0, z]);
-    for (const h of [0.5, 1.0, 1.5, 1.95]) ticks.push([x - 0.025, h, z], [x + 0.025, h, z]); }); // ToF sensors
+    for (const h of [0.5, 1.15, 1.65]) ticks.push([x - 0.03, h, z], [x + 0.03, h, z]);  // camera modules
+    const a0 = Math.atan2(z, x);                                                      // tripod base, bolted
+    for (let i = 0; i < 3; i++) { const a = a0 + i * 2 * Math.PI / 3; ticks.push([x, 0, z], [x + 0.2 * Math.cos(a), 0, z + 0.2 * Math.sin(a)]); } });
   seg(ticks, 0.4);
-  // Grips on the front posts at elbow height
-  for (const sx of [-1, 1]) seg([[sx * 0.55, 1.04, 0.45], [sx * 0.305, 1.035, 0.29], [sx * 0.305, 0.97, 0.28], [sx * 0.305, 1.1, 0.28]], 0.55);
+  // Touch mirror on its own stand (0.7 x 1.8 m, face module in the top bezel)
+  seg([[-0.35, 0.1, 0.6], [0.35, 0.1, 0.6], [0.35, 0.1, 0.6], [0.35, 1.9, 0.6], [0.35, 1.9, 0.6], [-0.35, 1.9, 0.6],
+       [-0.35, 1.9, 0.6], [-0.35, 0.1, 0.6], [-0.39, 0, 0.62], [-0.39, 2.0, 0.62], [0.39, 0, 0.62], [0.39, 2.0, 0.62],
+       [-0.09, 1.93, 0.6], [0.09, 1.93, 0.6]], 0.45);
+  // Optional Doppler grips on the mirror stand legs at elbow height
+  for (const sx of [-1, 1]) seg([[sx * 0.39, 1.0, 0.62], [sx * 0.40, 1.0, 0.53], [sx * 0.40, 0.95, 0.53], [sx * 0.40, 1.25, 0.53]], 0.55);
 
   // --- Scan plane ---
   const scanGroup = new THREE.Group(); scanGroup.visible = false; scene.add(scanGroup);
