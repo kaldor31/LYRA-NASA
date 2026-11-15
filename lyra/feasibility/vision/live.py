@@ -139,10 +139,12 @@ CHEEKBONE_L, CHEEKBONE_R = 123, 352
 DEPTH_KEYS = (face.NOSE_TIP, CHEEKBONE_L, CHEEKBONE_R, face.ROI_CHEEK_L, face.ROI_CHEEK_R)
 
 
-def lift_to_3d(xy_norm: np.ndarray, depth: np.ndarray, K: np.ndarray, flipped: bool = True) -> np.ndarray:
+def lift_to_3d(xy_norm: np.ndarray, depth: np.ndarray, K: np.ndarray, flipped: bool = True, z_rel: np.ndarray | None = None):
     """Normalized landmark positions (N, 2) in the (mirrored) frame -> camera-space points (N, 3) in metres
     using the measured depth map (median of a 5x5 patch). Points without valid depth are NaN.
-    The intrinsics are rescaled to the depth map size (principal point assumed near the image centre)."""
+    The intrinsics are rescaled to the depth map size (principal point assumed near the image centre).
+    With z_rel (MediaPipe's relative landmark depth) also returns a gap-free copy for display: landmarks without
+    measured depth get z from a linear fit of measured z against z_rel (the face shape, in metric units)."""
     dh, dw = depth.shape[:2]
     scale = dw / (2 * K[0, 2]) if K[0, 2] > 0 else 1.0
     fx, fy, cx, cy = K[0, 0] * scale, K[1, 1] * scale, K[0, 2] * scale, K[1, 2] * scale
@@ -157,7 +159,16 @@ def lift_to_3d(xy_norm: np.ndarray, depth: np.ndarray, K: np.ndarray, flipped: b
     z[(z < 0.1) | (z > 1.5) | ~np.isfinite(z)] = np.nan
     ref = np.nanmedian(z[list(DEPTH_KEYS)]) if np.isfinite(z[list(DEPTH_KEYS)]).any() else np.nan
     z[np.abs(z - ref) > 0.08] = np.nan  # background or hair behind the face
-    return np.stack([(u - cx) * z / fx, (v - cy) * z / fy, z], axis=1)
+    uf, vf = xy_norm[:, 0] * dw, xy_norm[:, 1] * dh  # sub-pixel positions for X, Y
+    P = np.stack([(uf - cx) * z / fx, (vf - cy) * z / fy, z], axis=1)
+    if z_rel is None:
+        return P
+    ok = np.isfinite(z)
+    if ok.sum() < 30:
+        return P, None
+    a, b = np.linalg.lstsq(np.stack([z_rel[ok], np.ones(ok.sum())], axis=1), z[ok], rcond=None)[0]
+    zf = np.where(ok, z, a * z_rel + b)
+    return P, np.stack([(uf - cx) * zf / fx, (vf - cy) * zf / fy, zf], axis=1)
 
 
 def face_3d_metrics(P: np.ndarray) -> dict | None:
@@ -310,14 +321,17 @@ class Live:
             mesh = [[round(q.x - 0.5, 4), round(q.y - 0.5, 4), round(q.z, 4)] for q in lm[:468]]
             m3 = None
             if depth is not None and K is not None:
-                P = lift_to_3d(np.array([(q.x, q.y) for q in lm]), depth, K)
+                P, Pf = lift_to_3d(np.array([(q.x, q.y) for q in lm]), depth, K, z_rel=np.array([q.z for q in lm]))
                 m3 = face_3d_metrics(P)
                 if m3:
                     st.update({k: (round(v, 1) if v is not None else None) for k, v in m3.items()})
-                    c3 = np.nanmean(P[:468], axis=0)
-                    mesh = [[round(float(x - c3[0]), 4), round(float(y - c3[1]), 4), round(float(z - c3[2]), 4)]
-                            if np.isfinite(z) else [None, None, None] for x, y, z in P[:468]]
-                st["mesh_measured"] = m3 is not None
+                if m3 and Pf is not None:
+                    M = Pf[:468] - Pf[:468].mean(axis=0)
+                    # temporal smoothing for display only (metrics use the raw values)
+                    prev = getattr(self, "_mesh_ema", None)
+                    self._mesh_ema = M if prev is None else 0.65 * prev + 0.35 * M
+                    mesh = np.round(self._mesh_ema, 4).tolist()
+                st["mesh_measured"] = bool(m3 and Pf is not None)
             self._draw(cv2, bgr, p, m)
             if self.scan is not None:
                 self.scan["face"].append(dict(m, t=now))
@@ -331,6 +345,7 @@ class Live:
         else:
             mesh = None
             self.nose.clear()
+            self._mesh_ema = None
         if self._last_pose:
             st.update(shoulder_tilt=round(self._last_pose["tilt"], 2), head=round(self._last_pose["head"], 3))
             (lx, ly), (rx, ry) = self._last_pose["shoulders"]

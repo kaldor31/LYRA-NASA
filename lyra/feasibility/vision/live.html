@@ -102,7 +102,7 @@ const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(35, 1, 0.01, 
 cam.position.set(0, 0, 1.6);
 const N = 468, geo = new THREE.BufferGeometry(), posArr = new Float32Array(N * 3), colArr = new Float32Array(N * 3);
 geo.setAttribute("position", new THREE.BufferAttribute(posArr, 3)); geo.setAttribute("color", new THREE.BufferAttribute(colArr, 3));
-const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.012, vertexColors: true }));
+const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.014, vertexColors: true }));
 scene.add(pts);
 function resize() { const w = cv.clientWidth, h = cv.clientHeight; renderer.setSize(w, h, false); renderer.setPixelRatio(devicePixelRatio); cam.aspect = w / h; cam.updateProjectionMatrix(); }
 new ResizeObserver(resize).observe(cv); resize();
@@ -122,7 +122,7 @@ function setMesh(m, measured) {
   geo.attributes.position.needsUpdate = true; geo.attributes.color.needsUpdate = true;
 }
 const piv = new THREE.Group(); scene.remove(pts); piv.add(pts); scene.add(piv);
-(function anim(t) { piv.rotation.y = Math.sin(t / 1800) * 0.9; renderer.render(scene, cam); requestAnimationFrame(anim); })(0);
+(function anim(t) { piv.rotation.y = Math.sin(t / 2200) * 0.45; renderer.render(scene, cam); requestAnimationFrame(anim); })(0);
 
 // ---- wave
 function drawWave(w) {

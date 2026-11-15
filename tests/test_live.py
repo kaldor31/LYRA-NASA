@@ -130,3 +130,14 @@ def test_depth_holes_on_eyes_and_nan_safe_json():
     assert m is not None and m["ipd_mm"] is None and m["face_width_mm"] > 0
     out = live.clean({"a": float("nan"), "b": [np.float32(1.5), np.int64(2), np.bool_(True)]})
     assert out == {"a": None, "b": [1.5, 2, True]}
+
+
+def test_display_mesh_fills_depth_holes():
+    d, K = fake_depth()
+    pts = fake_face(1.0)
+    xy = np.array([(q.x, q.y) for q in pts])
+    z_rel = np.array([q.z for q in pts])
+    d[: int(0.44 * 640), :] = 0.0  # no depth on the upper part of the face
+    P, Pf = live.lift_to_3d(xy, d, K, z_rel=z_rel)
+    assert np.isnan(P[:, 2]).any() and Pf is not None and np.isfinite(Pf).all()
+    assert np.allclose(Pf[np.isfinite(P[:, 2])], P[np.isfinite(P[:, 2])])  # measured points unchanged
