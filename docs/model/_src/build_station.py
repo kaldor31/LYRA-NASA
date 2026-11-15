@@ -47,14 +47,19 @@ FONT_PATHS = (
 
 M = {}          # materials
 SCR = None      # scratch collection (evaluated, then emptied)
+S1 = None       # V1 scene (its view layer evaluates the scratch objects)
 FONT = None
 
 
 # ------------------------------------------------------------------ housekeeping
 def clear_file():
-    s1 = bpy.context.scene
+    # Show an empty temp scene first: removing the scene a window displays crashes Blender.
+    tmp = bpy.data.scenes.new("_tmp_build")
+    wins = [w for w in bpy.context.window_manager.windows] if bpy.context.window_manager else []
+    for w in wins:
+        w.scene = tmp
     for sc in list(bpy.data.scenes):
-        if sc != s1:
+        if sc != tmp:
             bpy.data.scenes.remove(sc)
     for ob in list(bpy.data.objects):
         bpy.data.objects.remove(ob)
@@ -67,8 +72,11 @@ def clear_file():
     for ng in list(bpy.data.node_groups):
         if ng.bl_idname == "CompositorNodeTree":
             bpy.data.node_groups.remove(ng)
-    s1.name = "V1_Empty"
+    s1 = bpy.data.scenes.new("V1_Empty")
     s2 = bpy.data.scenes.new("V2_Human")
+    for w in wins:
+        w.scene = s1
+    bpy.data.scenes.remove(tmp)
     return s1, s2
 
 
@@ -178,14 +186,14 @@ def scan_grid_material(name):
                 nt.links.new(v, n.inputs[i])
         return n.outputs[0]
 
-    rings = op("LESS_THAN", op("FRACT", op("MULTIPLY", sep.outputs["Z"], 75.0)), 0.13)
+    rings = op("LESS_THAN", op("FRACT", op("MULTIPLY", sep.outputs["Z"], 38.0)), 0.07)
     yy = op("SUBTRACT", sep.outputs["Y"], CREW_Y)
     ang = op("ARCTAN2", sep.outputs["X"], yy)
-    mer = op("LESS_THAN", op("FRACT", op("MULTIPLY", ang, 96.0 / (2 * math.pi))), 0.11)
+    mer = op("LESS_THAN", op("FRACT", op("MULTIPLY", ang, 56.0 / (2 * math.pi))), 0.06)
     fac = op("MAXIMUM", rings, mer)
     em = nt.nodes.new("ShaderNodeEmission")
     em.inputs["Color"].default_value = (*CYAN, 1)
-    em.inputs["Strength"].default_value = 6.0
+    em.inputs["Strength"].default_value = 4.0
     tr = nt.nodes.new("ShaderNodeBsdfTransparent")
     mix = nt.nodes.new("ShaderNodeMixShader")
     nt.links.new(fac, mix.inputs[0])
@@ -278,8 +286,9 @@ def cyl(name, r, depth, loc, coll, mat, rot=(0, 0, 0), seg=40, parent=None, r2=N
 
 def to_mesh(ob, name=None):
     """Evaluate a curve / text / metaball object into a plain mesh object."""
-    dg = bpy.context.evaluated_depsgraph_get()
-    me = bpy.data.meshes.new_from_object(ob.evaluated_get(dg))
+    vl = S1.view_layers[0]                 # the scratch collection lives in V1_Empty
+    vl.update()
+    me = bpy.data.meshes.new_from_object(ob.evaluated_get(vl.depsgraph))
     name = name or ob.name
     new = bpy.data.objects.new(name + "_m", me)
     new.matrix_basis = ob.matrix_basis.copy()
@@ -758,23 +767,24 @@ def build_human(c):
     mb.resolution = 0.02
     mb.render_resolution = 0.01
     y = CREW_Y
-    ellipsoid(mb, (0, y + 0.03, 1.665), 0.10, 0.80, 0.92, 1.05)                # head
-    capsule(mb, (0, y + 0.01, 1.52), (0, y + 0.02, 1.59), 0.05)               # neck
-    ellipsoid(mb, (0, y, 1.29), 0.16, 1.05, 0.62, 1.45)                        # chest
-    ellipsoid(mb, (0, y, 1.02), 0.15, 1.0, 0.70, 0.80)                         # pelvis
-    capsule(mb, (-0.17, y + 0.01, 1.45), (0.17, y + 0.01, 1.45), 0.06)        # shoulders
+    ellipsoid(mb, (0, y + 0.03, 1.665), 0.115, 0.82, 0.92, 1.05)                # head
+    capsule(mb, (0, y + 0.01, 1.52), (0, y + 0.02, 1.59), 0.065)               # neck
+    ellipsoid(mb, (0, y, 1.29), 0.215, 1.05, 0.62, 1.15)                        # chest
+    ellipsoid(mb, (0, y, 1.02), 0.20, 1.0, 0.70, 0.75)                         # pelvis
+    ellipsoid(mb, (0, y, 1.15), 0.17, 0.95, 0.62, 0.9)                         # abdomen
+    capsule(mb, (-0.17, y + 0.01, 1.45), (0.17, y + 0.01, 1.45), 0.08)        # shoulders
     for s in (-1, 1):
         sh, el, wr = (s * 0.19, y + 0.02, 1.43), (s * 0.215, y + 0.24, 1.26), (s * 0.22, y + 0.415, 1.06)
-        capsule(mb, sh, el, 0.052)
-        capsule(mb, el, wr, 0.044)
+        capsule(mb, sh, el, 0.068)
+        capsule(mb, el, wr, 0.057)
         ellipsoid(mb, (s * 0.22, 0.548, 1.10), 0.05, 1.0, 0.36, 1.15)           # palm on the contour
         capsule(mb, (s * 0.218, 0.552, 1.14), (s * 0.218, 0.556, 1.185), 0.028)  # fingers (glove)
         capsule(mb, (s * 0.19, 0.546, 1.09), (s * 0.165, 0.548, 1.125), 0.016)   # thumb
         capsule(mb, wr, (s * 0.22, 0.53, 1.07), 0.04)
         hip, kn, an = (s * 0.10, y, 0.95), (s * 0.11, y + 0.01, 0.52), (s * 0.115, y, 0.10)
-        capsule(mb, hip, kn, 0.075)
-        capsule(mb, kn, an, 0.058)
-        capsule(mb, (s * 0.115, y - 0.03, 0.05), (s * 0.12, y + 0.17, 0.045), 0.048)  # boot
+        capsule(mb, hip, kn, 0.098)
+        capsule(mb, kn, an, 0.074)
+        capsule(mb, (s * 0.115, y - 0.03, 0.05), (s * 0.12, y + 0.17, 0.05), 0.062)  # boot
     ob = bpy.data.objects.new("Crew", mb)
     SCR.objects.link(ob)
     ob = to_mesh(ob, "Crew_Body")
@@ -918,9 +928,67 @@ def setup_glare(sc):
 
 
 # ------------------------------------------------------------------ main
+RENDERS = {"V1_Empty": ("Cam_Hero", "Cam_Front", "Cam_MirrorUI"),
+           "V2_Human": ("Cam_Hero", "Cam_Front", "Cam_MirrorUI")}
+
+
+def render_all(out_dir, percent=100, samples=96):
+    os.makedirs(out_dir, exist_ok=True)
+    for sc_name, cams in RENDERS.items():
+        sc = bpy.data.scenes[sc_name]
+        sc.render.resolution_percentage = percent
+        sc.eevee.taa_render_samples = samples
+        for cam in cams:
+            sc.camera = bpy.data.objects[cam]
+            sc.render.filepath = os.path.join(out_dir, f"{sc_name}_{cam}.png")
+            with bpy.context.temp_override(scene=sc, view_layer=sc.view_layers[0]):
+                bpy.ops.render.render(write_still=True, scene=sc.name)
+            print("rendered", sc.render.filepath)
+        sc.camera = bpy.data.objects["Cam_Hero"]
+        sc.render.resolution_percentage, sc.eevee.taa_render_samples = 100, 96
+
+
+def export_glb(out_dir):
+    """One GLB per version (modifiers applied). The scan-grid shader cannot be expressed
+    in glTF, so the grid shell is left out; procedural carbon exports as flat dark."""
+    os.makedirs(out_dir, exist_ok=True)
+    grid = bpy.data.objects.get("Crew_ScanGrid")
+    if grid:
+        grid.hide_render = True
+    for sc_name in RENDERS:
+        sc = bpy.data.scenes[sc_name]
+        path = os.path.join(out_dir, f"LYRA_{sc_name}.glb")
+        with bpy.context.temp_override(scene=sc, view_layer=sc.view_layers[0]):
+            bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", use_active_scene=True,
+                                      use_renderable=True, export_apply=True, export_lights=False,
+                                      export_cameras=False, export_yup=True)
+        print("glb", path, round(os.path.getsize(path) / 1e6, 2), "MB")
+    if grid:
+        grid.hide_render = False
+
+
+def cli():
+    """blender -b --factory-startup --python build_station.py -- [--save F.blend] [--render DIR]
+    [--glb DIR] [--preview]"""
+    import sys
+    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    build()
+    if "--render" in argv:
+        pv = "--preview" in argv
+        render_all(argv[argv.index("--render") + 1], percent=40 if pv else 100, samples=16 if pv else 96)
+    if "--glb" in argv:
+        export_glb(argv[argv.index("--glb") + 1])
+    if "--save" in argv:
+        path = os.path.abspath(argv[argv.index("--save") + 1])
+        bpy.context.window_manager  # noqa
+        bpy.ops.wm.save_as_mainfile(filepath=path, compress=True)
+        print("saved", path)
+
+
 def build():
-    global SCR, FONT
+    global SCR, FONT, S1
     s1, s2 = clear_file()
+    S1 = s1
     SCR = new_coll("_scratch", [s1])
     FONT = None
     for p in FONT_PATHS:
@@ -956,4 +1024,7 @@ def build():
 
 
 if __name__ == "__main__":
-    build()
+    if bpy.app.background:
+        cli()
+    else:
+        build()
