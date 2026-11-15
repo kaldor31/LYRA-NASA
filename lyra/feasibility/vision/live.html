@@ -18,6 +18,8 @@ main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:16
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
 .video{position:relative;padding:0;overflow:hidden;background:#000;aspect-ratio:16/9}
 .video img{width:100%;height:100%;object-fit:contain;display:block}
+.video .pause{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;background:#000b;font-size:18px}
+.video.paused .pause{display:flex}
 .video .msg{position:absolute;inset:auto 0 0 0;padding:10px 14px;background:linear-gradient(transparent,#000c);font-size:18px}
 .bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:8px}
 .bar i{display:block;height:100%;width:0;background:var(--blue);transition:width .2s}
@@ -52,7 +54,8 @@ td{padding:4px 0;border-top:1px solid var(--line)} td:nth-child(n+2){text-align:
 <main>
   <div class="col">
     <div class="card video"><img id="video" alt="Live camera with face landmarks">
-      <div class="msg" id="prompt">Look at the camera</div></div>
+      <div class="msg" id="prompt">Look at the camera</div>
+      <div class="pause" id="pause">Waiting for the camera…</div></div>
     <div class="card">
       <h2>Scan</h2>
       <div class="btns">
@@ -140,6 +143,9 @@ async function tick() {
     const src = s.source === "truedepth" ? "iPhone TrueDepth (IR depth)" : s.source === "lidar" ? "LiDAR depth" : "RGB camera";
     $("cam").textContent = s.status === "waiting" ? "waiting for the camera: " + (s.error || "") : s.status === "ok" ? `${src} · ${fmt(s.fps, 0)} fps · ${s.w}×${s.h}${s.error ? " · " + s.error : ""}` : (s.error || s.status);
     $("d3").hidden = !s.depth;
+    const paused = s.status !== "ok";
+    document.querySelector(".video").classList.toggle("paused", paused);
+    if (paused) $("pause").textContent = "Paused: " + (s.error || "waiting for the camera");
     $("fw").textContent = fmt(s.face_width_mm, 1); $("nd").textContent = fmt(s.nose_depth_mm, 1);
     $("ipdmm").textContent = fmt(s.ipd_mm, 1); $("dist").textContent = fmt(s.distance_cm, 0);
     $("meshnote").textContent = s.mesh_measured

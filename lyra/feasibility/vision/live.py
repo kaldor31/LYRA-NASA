@@ -182,57 +182,65 @@ class Live:
         self.thread = threading.Thread(target=self._run, daemon=True)
 
     # ------------------------------------------------------------------ camera loop
+    def _open_source(self, timeout: float = 4.0):
+        """Open the frame source without letting a hung USB connect block the loop forever.
+        Returns the source or None (state then says what to do)."""
+        box = {}
+
+        def worker():
+            try:
+                box["src"] = Record3DSource() if self.source_kind == "record3d" else OpenCVSource(self.camera)
+            except Exception as e:
+                box["err"] = str(e)
+        th = threading.Thread(target=worker, daemon=True)
+        th.start()
+        th.join(timeout)
+        if "src" in box:
+            return box["src"]
+        with self.lock:
+            self.state = {"status": "waiting", "error": box.get("err") or "the phone did not answer: in Record3D tap the "
+                          "red button so it shows 'Started, Waiting for Connection'"}
+        return None
+
+    def _waiting(self, msg: str):
+        with self.lock:
+            self.state = {"status": "waiting", "error": msg}
+
     def _run(self):
         import cv2
         import mediapipe as mp
-        src = None
-        while src is None and not self.stop.is_set():  # keep retrying: the phone may start streaming later
-            try:
-                src = Record3DSource() if self.source_kind == "record3d" else OpenCVSource(self.camera)
-            except Exception as e:
-                with self.lock:
-                    self.state = {"status": "waiting", "error": str(e)}
-                time.sleep(2)
-        if src is None:
-            return
-        self.depth_source = src.name
         fm = mp.solutions.face_mesh.FaceMesh(max_num_faces=1, refine_landmarks=True,
                                              min_detection_confidence=0.5, min_tracking_confidence=0.5)
         pm = mp.solutions.pose.Pose(model_complexity=0, min_detection_confidence=0.5)
         n, fps_t, fps = 0, time.monotonic(), 0.0
         self._last_pose, self._last_hr_t, self._hr = None, 0.0, (None, 0.0, [])
-        t0 = last_frame = time.monotonic()
+        t0 = time.monotonic()
+        src, last_frame = None, time.monotonic()
         try:
             while not self.stop.is_set():
-                ok, bgr, depth, K = src.read()
-                if ok:
+                if src is None:  # (re)connect, keep trying: the phone may start streaming later
+                    src = self._open_source()
+                    if src is None:
+                        time.sleep(1.5)
+                        continue
+                    self.depth_source = src.name
                     last_frame = time.monotonic()
-                elif self.source_kind == "record3d" and time.monotonic() - last_frame > 4:
-                    # Record3D sends nothing after a previous client left until record is pressed again
-                    with self.lock:
-                        self.state = {"status": "waiting", "error": "connected, but the iPhone sends no frames: in Record3D "
-                                      "tap the red button to stop, then tap it again to start streaming"}
-                    src.stopped = True
+                ok, bgr, depth, K = src.read()
                 if not ok:
-                    if getattr(src, "stopped", False):  # Record3D stream stopped: reconnect
-                        src.release()
-                        with self.lock:
-                            if self.state.get("status") != "waiting":
-                                self.state = {"status": "waiting", "error": "stream stopped: in Record3D tap the red button to start streaming again"}
+                    silent = time.monotonic() - last_frame
+                    if getattr(src, "stopped", False) or (self.source_kind == "record3d" and silent > 4):
+                        # stream stopped on the phone (red button) or a stale connection: drop it and reconnect
+                        self._waiting("no frames from the iPhone: in Record3D tap the red button once so it shows "
+                                      "'Started, Waiting for Connection'; LYRA reconnects by itself")
+                        threading.Thread(target=src.release, daemon=True).start()  # disconnect may block too
                         src = None
-                        while src is None and not self.stop.is_set():
-                            time.sleep(2)
-                            try:
-                                src = Record3DSource()
-                            except Exception as e:
-                                with self.lock:
-                                    self.state = {"status": "waiting", "error": str(e)}
-                        if src is None:
-                            return
-                        last_frame = time.monotonic()
+                        time.sleep(1.0)
+                    elif silent > 4:
+                        self._waiting("camera sends no frames")
                     else:
                         time.sleep(0.01)
                     continue
+                last_frame = time.monotonic()
                 now = time.monotonic() - t0
                 n += 1
                 if n % 15 == 0:
