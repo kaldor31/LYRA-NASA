@@ -28,6 +28,7 @@ def fake_face(scale=1.0, t=0.0):
         put(p2, x0 - 0.005, 0.415); put(p3, x0 + 0.005, 0.415); put(p5, x0 + 0.005, 0.425); put(p6, x0 - 0.005, 0.425)
     put(F.MOUTH_TOP, 0.5, 0.5); put(F.MOUTH_BOTTOM, 0.5, 0.505); put(F.MOUTH_L, 0.48, 0.5); put(F.MOUTH_R, 0.52, 0.5)
     put(F.ROI_FOREHEAD, 0.5, 0.36); put(F.ROI_CHEEK_L, 0.46, 0.47); put(F.ROI_CHEEK_R, 0.54, 0.47)
+    put(live.CHEEKBONE_L, 0.5 - 0.1 * scale, 0.45); put(live.CHEEKBONE_R, 0.5 + 0.1 * scale, 0.45)
     return pts
 
 
@@ -40,7 +41,16 @@ class NoPose:
     def process(self, rgb): return types.SimpleNamespace(pose_landmarks=None)
 
 
-def run_scan(L, kind, scale, bpm=72.0):
+def fake_depth():
+    """Portrait TrueDepth-like map: face plane at 0.40 m, nose tip 20 mm closer. K for this size."""
+    d = np.full((640, 480), 0.40, np.float32)
+    v, u = int(0.47 * 640), int(0.5 * 480)
+    d[v - 6:v + 7, u - 6:u + 7] = 0.38
+    K = np.array([[500.0, 0, 240.0], [0, 500.0, 320.0], [0, 0, 1]])
+    return d, K
+
+
+def run_scan(L, kind, scale, bpm=72.0, depth=None):
     L.start_scan(kind)
     fps = 30.0
     t0 = L.scan["t0"]
@@ -49,7 +59,8 @@ def run_scan(L, kind, scale, bpm=72.0):
         img = np.full((720, 1280, 3), 128, np.uint8)
         ph = math.sin(2 * math.pi * bpm / 60 * t)  # skin pulse: strongest in green (BGR order)
         img[..., 1] = np.uint8(round(128 + 3 * ph)); img[..., 2] = np.uint8(round(150 + 1 * ph))
-        L._frame(cv2, FakeMesh(scale), NoPose(), img, t, i + 1, fps)
+        d, K = (None, None) if depth is None else depth
+        L._frame(cv2, FakeMesh(scale), NoPose(), img, t, i + 1, fps, d, K)
     return L.last_scan
 
 
@@ -81,3 +92,29 @@ def test_gate_and_classify_retry():
     assert status == "retry" and "Measurement not confirmed" in why
     m = live.metric((70.0, 0.1), 0.35, "bpm")
     assert m["value"] is None and m["note"] == "Measurement not confirmed"
+
+
+def test_truedepth_lift_and_metrics():
+    d, K = fake_depth()
+    xy = np.array([(q.x, q.y) for q in fake_face(1.0)])
+    P = live.lift_to_3d(xy, d, K)
+    m = live.face_3d_metrics(P)
+    assert m is not None
+    assert abs(m["face_width_mm"] - 0.2 * 480 * 0.40 / 500 * 1000) < 1.0   # 76.8 mm
+    assert abs(m["nose_depth_mm"] - 20.0) < 1.0
+    assert abs(m["distance_cm"] - 38.0) < 0.5
+    # background behind the face is rejected
+    d2 = d.copy(); d2[:, :int(0.42 * 480)] = 1.4
+    assert live.face_3d_metrics(live.lift_to_3d(xy, d2, K)) is None
+
+
+def test_scan_with_depth_uses_measured_width():
+    L = live.Live(camera=-1)
+    L._last_pose, L._last_hr_t, L._hr = None, 0.0, (None, 0.0, [])
+    L.state = {"t": 0.0}
+    base = run_scan(L, "baseline", 1.0, depth=fake_depth())
+    assert base["status"] == "baseline" and base["metrics"]["face_width_mm"]["value"] is not None
+    wide = run_scan(L, "scan", 1.06, depth=fake_depth())
+    assert wide["status"] == "red" and "IR depth" in wide["why"] and wide["face_width_change_pct"] > 4
+    st, mesh, _, _ = L.snapshot()
+    assert st["depth"] and st["mesh_measured"] and "face_width_mm" in st

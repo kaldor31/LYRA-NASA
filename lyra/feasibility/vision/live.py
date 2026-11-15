@@ -3,12 +3,20 @@
     .venv/bin/pip install -r lyra/feasibility/requirements.txt
     .venv/bin/python -m lyra.feasibility.vision.live            # auto-picks the highest-resolution camera
     .venv/bin/python -m lyra.feasibility.vision.live --camera 1 --port 8780 --host 0.0.0.0
+    .venv/bin/python -m lyra.feasibility.vision.live --source record3d   # iPhone TrueDepth (Face ID camera) via USB
+
+Two sources:
+  camera    any webcam; an iPhone through macOS Continuity Camera gives only its REAR camera (RGB, no IR depth).
+  record3d  the FRONT TrueDepth camera (IR dot projector + IR camera, the Face ID hardware) through the Record3D
+            app's USB streaming (pip install record3d; enable "USB Streaming mode" in the app, press record).
+            Face landmarks are then lifted to real 3D with the measured IR depth: face width, interpupillary
+            distance and nose depth in millimetres, distance to the camera.
 
 Open http://127.0.0.1:8780 (with --host 0.0.0.0 also from a phone on the same Wi-Fi).
 
 What runs live (MediaPipe Face Mesh + Pose on RGB video, rPPG by the POS method):
-  quality gate (face visible, facing the mirror, light level, holding still), 3D face landmarks (478 points; depth
-  is estimated from RGB by MediaPipe, not measured by an IR projector), face-width / interpupillary-distance ratio
+  quality gate (face visible, facing the mirror, light level, holding still), 3D face landmarks (478 points; with
+  --source camera depth is estimated from RGB by MediaPipe, with record3d it is measured), face-width / IPD ratio
   ("puffiness" proxy), blink rate, shoulder tilt, camera pulse with a quality score.
 A 15 s scan summarizes these with quality; the first scan becomes the personal baseline (memory only) and the
 next scans are compared with it. Video frames are never stored or sent anywhere. Screening demo, not a diagnosis.
@@ -56,11 +64,110 @@ def pick_camera(max_index: int = 4) -> int:
     return best
 
 
+class OpenCVSource:
+    """Webcam / Continuity Camera through OpenCV. read() -> (ok, bgr, depth_m | None, K | None)."""
+    name = "camera"
+
+    def __init__(self, index: int):
+        import cv2
+        self.cap = cv2.VideoCapture(index, cv2.CAP_AVFOUNDATION) if hasattr(cv2, "CAP_AVFOUNDATION") else cv2.VideoCapture(index)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        self.cap.set(cv2.CAP_PROP_FPS, 30)
+        if not self.cap.isOpened():
+            raise RuntimeError(f"camera {index} failed to open")
+
+    def read(self):
+        ok, bgr = self.cap.read()
+        return ok, bgr, None, None
+
+    def release(self):
+        self.cap.release()
+
+
+class Record3DSource:
+    """iPhone front TrueDepth camera (Face ID hardware) through the Record3D app, USB streaming mode.
+    Depth is in metres; K is the 3x3 intrinsic matrix reported by the app."""
+    name = "truedepth"
+
+    def __init__(self, device: int = 0):
+        from record3d import Record3DStream
+        devs = Record3DStream.get_connected_devices()
+        if not devs:
+            raise RuntimeError("no Record3D device: connect the iPhone by USB, open Record3D, "
+                               "Settings: enable USB Streaming mode, then press the record button")
+        self.ev = threading.Event()
+        self.stopped = False
+        self.s = Record3DStream()
+        self.s.on_new_frame = self.ev.set
+        self.s.on_stream_stopped = self._stopped
+        self.s.connect(devs[device])
+        self.device_type = self.s.get_device_type()  # 0 = TrueDepth (front), 1 = LiDAR (rear)
+        if self.device_type != 0:
+            self.name = "lidar"
+
+    def _stopped(self):
+        self.stopped = True
+        self.ev.set()
+
+    def read(self):
+        import cv2
+        if not self.ev.wait(1.0) or self.stopped:
+            return False, None, None, None
+        self.ev.clear()
+        depth = np.array(self.s.get_depth_frame(), dtype=np.float32)
+        rgb = np.array(self.s.get_rgb_frame())
+        c = self.s.get_intrinsic_mat()
+        K = np.array([[c.fx, 0, c.tx], [0, c.fy, c.ty], [0, 0, 1]], dtype=float)
+        return True, cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR), depth, K
+
+    def release(self):
+        try:
+            self.s.disconnect()
+        except Exception:
+            pass
+
+
+# Landmarks for depth metrics: inside the face, away from the silhouette edge where depth jumps to the background
+CHEEKBONE_L, CHEEKBONE_R = 123, 352
+DEPTH_KEYS = (face.NOSE_TIP, face.IRIS_L, face.IRIS_R, CHEEKBONE_L, CHEEKBONE_R, face.ROI_CHEEK_L, face.ROI_CHEEK_R)
+
+
+def lift_to_3d(xy_norm: np.ndarray, depth: np.ndarray, K: np.ndarray, flipped: bool = True) -> np.ndarray:
+    """Normalized landmark positions (N, 2) in the (mirrored) frame -> camera-space points (N, 3) in metres
+    using the measured depth map (median of a 5x5 patch). Points without valid depth are NaN.
+    The intrinsics are rescaled to the depth map size (principal point assumed near the image centre)."""
+    dh, dw = depth.shape[:2]
+    scale = dw / (2 * K[0, 2]) if K[0, 2] > 0 else 1.0
+    fx, fy, cx, cy = K[0, 0] * scale, K[1, 1] * scale, K[0, 2] * scale, K[1, 2] * scale
+    if flipped:
+        cx = dw - cx
+    u = np.clip((xy_norm[:, 0] * dw).astype(int), 2, dw - 3)
+    v = np.clip((xy_norm[:, 1] * dh).astype(int), 2, dh - 3)
+    z = np.array([np.nanmedian(depth[b - 2:b + 3, a - 2:a + 3]) for a, b in zip(u, v)], dtype=float)
+    z[(z < 0.1) | (z > 1.5) | ~np.isfinite(z)] = np.nan
+    ref = np.nanmedian(z[list(DEPTH_KEYS)]) if np.isfinite(z[list(DEPTH_KEYS)]).any() else np.nan
+    z[np.abs(z - ref) > 0.08] = np.nan  # background or hair behind the face
+    return np.stack([(u - cx) * z / fx, (v - cy) * z / fy, z], axis=1)
+
+
+def face_3d_metrics(P: np.ndarray) -> dict | None:
+    """Millimetre metrics from lifted landmarks; None if the key points have no depth."""
+    if not np.isfinite(P[list(DEPTH_KEYS)]).all():
+        return None
+    d = lambda a, b: float(np.linalg.norm(P[a] - P[b]) * 1000)
+    cheek_z = (P[face.ROI_CHEEK_L, 2] + P[face.ROI_CHEEK_R, 2]) / 2
+    return {"face_width_mm": d(CHEEKBONE_L, CHEEKBONE_R), "ipd_mm": d(face.IRIS_L, face.IRIS_R),
+            "nose_depth_mm": float((cheek_z - P[face.NOSE_TIP, 2]) * 1000),
+            "distance_cm": float(P[face.NOSE_TIP, 2] * 100)}
+
+
 class Live:
     """Camera loop in a background thread; the web layer reads snapshots from it."""
 
-    def __init__(self, camera: int):
+    def __init__(self, camera: int, source: str = "camera"):
         self.camera = camera
+        self.source_kind = source
         self.lock = threading.Lock()
         self.jpeg: bytes | None = None
         self.state: dict = {"status": "starting"}
@@ -78,14 +185,13 @@ class Live:
     def _run(self):
         import cv2
         import mediapipe as mp
-        cap = cv2.VideoCapture(self.camera, cv2.CAP_AVFOUNDATION) if hasattr(cv2, "CAP_AVFOUNDATION") else cv2.VideoCapture(self.camera)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-        cap.set(cv2.CAP_PROP_FPS, 30)
-        if not cap.isOpened():
+        try:
+            src = Record3DSource() if self.source_kind == "record3d" else OpenCVSource(self.camera)
+        except Exception as e:
             with self.lock:
-                self.state = {"status": "error", "error": f"camera {self.camera} failed to open"}
+                self.state = {"status": "error", "error": str(e)}
             return
+        self.depth_source = src.name
         fm = mp.solutions.face_mesh.FaceMesh(max_num_faces=1, refine_landmarks=True,
                                              min_detection_confidence=0.5, min_tracking_confidence=0.5)
         pm = mp.solutions.pose.Pose(model_complexity=0, min_detection_confidence=0.5)
@@ -94,7 +200,7 @@ class Live:
         t0 = time.monotonic()
         try:
             while not self.stop.is_set():
-                ok, bgr = cap.read()
+                ok, bgr, depth, K = src.read()
                 if not ok:
                     time.sleep(0.01)
                     continue
@@ -104,17 +210,19 @@ class Live:
                     t = time.monotonic()
                     fps, fps_t = 15 / (t - fps_t), t
                 try:
-                    self._frame(cv2, fm, pm, bgr, now, n, fps)
+                    self._frame(cv2, fm, pm, bgr, now, n, fps, depth, K)
                 except Exception as e:  # keep the camera loop alive; show the error on the page
                     with self.lock:
                         self.state = dict(self.state, error=f"{type(e).__name__}: {e}")
         finally:
-            cap.release()
+            src.release()
             fm.close()
             pm.close()
 
-    def _frame(self, cv2, fm, pm, bgr, now, n, fps):
+    def _frame(self, cv2, fm, pm, bgr, now, n, fps, depth=None, K=None):
         bgr = cv2.flip(bgr, 1)  # mirror view
+        if depth is not None:
+            depth = cv2.flip(depth, 1)
         if bgr.shape[1] > PROC_W:
             bgr = cv2.resize(bgr, (PROC_W, int(bgr.shape[0] * PROC_W / bgr.shape[1])), interpolation=cv2.INTER_AREA)
         h, w = bgr.shape[:2]
@@ -125,7 +233,8 @@ class Live:
             pr = pm.process(rgb)
             self._last_pose = pose.frame_metrics(pr.pose_landmarks.landmark, w, h) if pr.pose_landmarks else None
 
-        st = {"status": "ok", "fps": round(fps, 1), "t": round(now, 2), "w": w, "h": h, "face": False}
+        st = {"status": "ok", "fps": round(fps, 1), "t": round(now, 2), "w": w, "h": h, "face": False,
+              "source": getattr(self, "depth_source", "camera"), "depth": depth is not None}
         if fr.multi_face_landmarks:
             lm = fr.multi_face_landmarks[0].landmark
             p = face.to_px(lm, w, h)
@@ -150,9 +259,21 @@ class Live:
                       ear=round(m["ear"], 3), frontal=bool(m["frontal"]), yaw=round(float(yaw), 3),
                       luma=round(luma, 1), motion=round(motion, 4))
             mesh = [[round(q.x - 0.5, 4), round(q.y - 0.5, 4), round(q.z, 4)] for q in lm[:468]]
+            m3 = None
+            if depth is not None and K is not None:
+                P = lift_to_3d(np.array([(q.x, q.y) for q in lm]), depth, K)
+                m3 = face_3d_metrics(P)
+                if m3:
+                    st.update({k: round(v, 1) for k, v in m3.items()})
+                    c3 = np.nanmean(P[:468], axis=0)
+                    mesh = [[round(float(x - c3[0]), 4), round(float(y - c3[1]), 4), round(float(z - c3[2]), 4)]
+                            if np.isfinite(z) else [None, None, None] for x, y, z in P[:468]]
+                st["mesh_measured"] = m3 is not None
             self._draw(cv2, bgr, p, m)
             if self.scan is not None:
                 self.scan["face"].append(dict(m, t=now))
+                if depth is not None:
+                    self.scan["d3"].append(m3)
                 if c is not None:
                     self.scan["rgb"].append(c)
                     self.scan["rgb_t"].append(now)
@@ -181,6 +302,14 @@ class Live:
             st["scan"] = {"kind": self.scan["kind"], "progress": round(min(el / SCAN_S, 1), 3)}
             if el >= SCAN_S:
                 self._finish_scan(now)
+        if depth is not None:  # small IR depth inset, top right: near = warm
+            d = np.nan_to_num(depth, nan=1.5)
+            d8 = (255 * (1 - np.clip((d - 0.2) / 0.8, 0, 1))).astype(np.uint8)
+            iw = w // 4
+            inset = cv2.applyColorMap(cv2.resize(d8, (iw, int(d8.shape[0] * iw / d8.shape[1]))), cv2.COLORMAP_TURBO)
+            ih = min(inset.shape[0], h - 10)
+            bgr[10:10 + ih, w - iw - 10:w - 10] = inset[:ih]
+            cv2.putText(bgr, "IR depth (TrueDepth)", (w - iw - 8, 26 + ih), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (240, 240, 240), 1, cv2.LINE_AA)
         ok, buf = cv2.imencode(".jpg", bgr, [cv2.IMWRITE_JPEG_QUALITY, 75])
         with self.lock:
             self.jpeg = buf.tobytes() if ok else self.jpeg
@@ -230,7 +359,7 @@ class Live:
     def start_scan(self, kind: str):
         with self.lock:
             self.scan = {"kind": kind, "t0": self.state.get("t", 0.0), "face": [], "rgb": [], "rgb_t": [],
-                         "pose": [], "luma": [], "motion": [], "n": 0}
+                         "pose": [], "luma": [], "motion": [], "d3": [], "n": 0}
 
     def _finish_scan(self, now):
         s, self.scan = self.scan, None
@@ -257,6 +386,12 @@ class Live:
             "blink_rate": metric(fsum["blink_rate"], 0.5, unit="/min"),
             "shoulder_tilt": metric(psum["shoulder_tilt"], 0.4, unit="deg"),
         }
+        if s["d3"]:  # measured IR depth (TrueDepth)
+            ok3 = [x for x in s["d3"] if x]
+            q3 = len(ok3) / len(s["d3"])
+            for k, unit in (("face_width_mm", "mm"), ("nose_depth_mm", "mm"), ("ipd_mm", "mm"), ("distance_cm", "cm")):
+                v = float(np.median([x[k] for x in ok3])) if ok3 else None
+                res["metrics"][k] = metric((v, q3), MIN_FACE_Q, unit=unit)
         res["quality"] = {"light": round(light, 1), "motion": round(motion, 4), "reasons": reasons}
         res["status"], res["why"] = classify(res, self.baseline)
         if s["kind"] == "baseline" and not reasons and res["metrics"]["face_ratio"]["value"] is not None:
@@ -294,10 +429,18 @@ def classify(res: dict, base: dict | None) -> tuple[str, str]:
         return "retry", "Measurement not confirmed: face ratio quality too low. Repeat the scan."
     if base is None:
         return "no_baseline", "No baseline yet: take a baseline scan first."
-    b = base["metrics"]["face_ratio"]["value"]
-    pct = 100 * (cur - b) / b
-    res["face_ratio_change_pct"] = round(pct, 2)
-    txt = f"Face width / IPD ratio {pct:+.1f}% vs your baseline (demo thresholds {PUFF_REPEAT_PCT:.0f}% / {PUFF_REFER_PCT:.0f}%)."
+    w_now = res["metrics"].get("face_width_mm", {}).get("value")
+    w_base = base["metrics"].get("face_width_mm", {}).get("value")
+    if w_now is not None and w_base is not None:  # measured IR depth wins over the 2D ratio
+        pct = 100 * (w_now - w_base) / w_base
+        res["face_width_change_pct"] = round(pct, 2)
+        what = f"Face width (IR depth) {w_now:.1f} mm, {pct:+.1f}% vs your baseline {w_base:.1f} mm"
+    else:
+        b = base["metrics"]["face_ratio"]["value"]
+        pct = 100 * (cur - b) / b
+        what = f"Face width / IPD ratio {pct:+.1f}% vs your baseline"
+    res["face_ratio_change_pct"] = round(100 * (cur - base["metrics"]["face_ratio"]["value"]) / base["metrics"]["face_ratio"]["value"], 2)
+    txt = f"{what} (demo thresholds {PUFF_REPEAT_PCT:.0f}% / {PUFF_REFER_PCT:.0f}%)."
     if abs(pct) < PUFF_REPEAT_PCT:
         return "green", txt
     if abs(pct) < PUFF_REFER_PCT:
@@ -350,13 +493,19 @@ def make_app(live: Live):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--source", choices=("camera", "record3d"), default="camera",
+                    help="camera: webcam / Continuity Camera (rear, RGB); record3d: iPhone front TrueDepth (IR depth) via USB")
     ap.add_argument("--camera", type=int, default=None, help="camera index (default: highest resolution, usually the iPhone)")
     ap.add_argument("--host", default="127.0.0.1", help="0.0.0.0 to open the page from a phone on the same Wi-Fi")
     ap.add_argument("--port", type=int, default=8780)
     a = ap.parse_args()
-    cam = pick_camera() if a.camera is None else a.camera
-    print(f"using camera {cam}")
-    live = Live(cam)
+    if a.source == "record3d":
+        cam = -1
+        print("using Record3D (iPhone TrueDepth over USB)")
+    else:
+        cam = pick_camera() if a.camera is None else a.camera
+        print(f"using camera {cam}")
+    live = Live(cam, a.source)
     live.thread.start()
     import uvicorn
     print(f"LYRA live demo: http://{'127.0.0.1' if a.host in ('127.0.0.1', 'localhost') else a.host}:{a.port}")

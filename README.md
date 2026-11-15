@@ -155,9 +155,25 @@ Open http://127.0.0.1:8780. The page shows the mirrored video with face landmark
 facing the mirror, light level, holding still), live camera pulse with a quality score, blink rate, face width /
 IPD ratio, shoulder tilt and the 478 face landmarks in 3D. "Baseline scan" (15 s) stores your personal baseline in
 memory; "Compare scan" returns Within baseline / Repeat measurement / Refer to specialist / Measurement not
-confirmed with the reason. Frames are processed locally and never stored. Depth here is estimated from RGB by
-MediaPipe; the real IR depth channel (iPhone TrueDepth, the same dot projector + IR camera idea as the mirror face
-module) needs a small iOS app and is a next step. `--host 0.0.0.0` makes the page reachable from a phone on the
+confirmed with the reason. Frames are processed locally and never stored. Continuity Camera only streams the
+iPhone's **rear** RGB camera, so in this mode depth is estimated from RGB by MediaPipe.
+
+**Real IR depth: iPhone TrueDepth (the Face ID camera) through Record3D.** Face ID itself is closed to apps, but
+the TrueDepth camera behind it (IR dot projector + IR camera, the same principle as the LYRA mirror face module)
+streams RGB + measured depth through the Record3D app:
+
+1. Install **Record3D** (App Store) on a Face ID iPhone; buy the in-app option that unlocks **USB Streaming**
+   (the app's Wi-Fi streaming is lossy and not used here).
+2. In Record3D: Settings, enable **USB Streaming mode**; choose the front (selfie / TrueDepth) camera; connect the
+   iPhone to the Mac by cable, tap "Trust" on the phone, press the record button.
+3. On the Mac:
+   ```bash
+   .venv/bin/pip install record3d        # builds a small native library (needs cmake: brew install cmake)
+   .venv/bin/python -m lyra.feasibility.vision.live --source record3d
+   ```
+The page then says "iPhone TrueDepth (IR depth)", shows an IR depth inset over the video, lifts the face landmarks
+to real 3D and reports face width, nose depth and interpupillary distance in millimetres and the distance to the
+camera; scans compare the measured face width with your baseline. `--host 0.0.0.0` makes the page reachable from a phone on the
 same Wi-Fi, which also exposes the camera stream to that network: use it only on a trusted network.
 If MediaPipe cannot download its pose model on first run, fetch it once:
 `curl -o .venv/lib/python3.12/site-packages/mediapipe/modules/pose_landmark/pose_landmark_lite.tflite https://storage.googleapis.com/mediapipe-assets/pose_landmark_lite.tflite`.

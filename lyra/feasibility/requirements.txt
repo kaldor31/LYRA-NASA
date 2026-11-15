@@ -4,3 +4,4 @@ scipy>=1.11
 opencv-python>=4.9
 mediapipe==0.10.14   # version with the mp.solutions API, Python 3.9 to 3.12
 pyserial>=3.5
+record3d>=1.4      # optional: iPhone TrueDepth (IR depth) via the Record3D app, USB streaming; needs cmake
