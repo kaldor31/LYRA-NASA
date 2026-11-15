@@ -70,8 +70,7 @@ Desktop.ini
 ~$*.xlsx
 .~lock.*#
 
-# ---- AI tooling (local only) ----
-# Keep the shared preview launch config, ignore installed skills and local settings
-.claude/*
-!.claude/launch.json
+# ---- AI tooling (local only, not part of the project) ----
+.claude/
 _bmad/
+_bmad-output/

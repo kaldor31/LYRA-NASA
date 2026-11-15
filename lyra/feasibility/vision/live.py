@@ -32,7 +32,10 @@ import warnings
 
 import numpy as np
 
-from . import face, pose
+# MediaPipe 0.10.14 calls a deprecated protobuf API on every frame: harmless, but it floods the terminal
+warnings.filterwarnings("ignore", message=r"SymbolDatabase\.GetPrototype\(\) is deprecated")
+
+from . import face, pose  # noqa: E402
 from .rppg import FS, HIGH_HZ, LOW_HZ, estimate_hr, pos, resample
 
 HERE = os.path.dirname(os.path.abspath(__file__))

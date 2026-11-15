@@ -103,6 +103,7 @@ Every result is labelled with its **provenance**: **team recording**, **open dat
 | NASA neutral body posture and anthropometry (HIDH, NASA-STD-3001 Vol. 2, NTRS studies), HRP hazards and risks | NASA material | Environment-mode rules, risk cards, expected adaptation corridors |
 | CameraVitals (COHFACE): RGB video synced with cardiac and respiratory signals, 160 one-minute sequences, 40 participants | Open dataset | rPPG validation on Earth (not microgravity) |
 | Team recordings on the mirror mock-up | Team recording | Mirror demo: rest, talking, head turn, exercise, recovery, lighting, distances; split by person |
+| Live team self-test on iPhone TrueDepth (IR dot projector + IR camera, the Face ID hardware) via Record3D, not stored | Team recording | Feasibility of the face channel: IR-depth face metrics in mm, rPPG with quality, quality gate, baseline vs compare scan (`lyra.feasibility.vision.live`) |
 | Simulated crew in the web app | Simulation | Live demo time series |
 
 **No single NASA dataset contains IR face points, RGB video, 3D posture and medical references together.** LYRA is therefore a prototype that requires validation, and we never claim it is trained on NASA data.
@@ -111,7 +112,7 @@ Every result is labelled with its **provenance**: **team recording**, **open dat
 
 1. Position check: feet, torso and palms on the mirror contours; quality check.
 2. Face: RGB, IR dots, depth map, point cloud, mesh.
-3. Three posture views (front, side, back) and the skeleton.
+3. Three synced pillar views (two front, one back) and the skeleton; the crew member does not turn.
 4. Comparison with the previous measurement, personal baseline and environment mode.
 5. One of three statuses + explanation (indicator, reliability, action); report queued to Earth with the communication delay (ISS under 1 s, Moon about 1 to 2 s, Mars 3 to 20 min one way).
 

@@ -12,6 +12,13 @@ const DRAWINGS = path.join(__dirname, '..', '..', 'drawings', 'png');  // docs/d
 const SHOTS = process.env.LYRA_SCREENSHOTS || path.join(PRES_DIR, 'screenshots'); // app screenshots (optional)
 const OUT = path.join(PRES_DIR, 'LYRA_deck.pptx');
 const DRAWING_FILES = { 1: '01_general_view.png', 2: '02_front_side_views.png', 3: '03_doppler_cassette.png', 4: '04_face_pipeline.png', 5: '05_system_ai.png' };
+// 3D renders of the station (Blender model, docs/model)
+const RENDERS = path.join(__dirname, '..', '..', 'model', 'renders');
+const render = name => {
+  const p = path.join(RENDERS, name);
+  if (!fs.existsSync(p)) throw new Error('missing render: ' + p);
+  return p;
+};
 const img = n => {
   const p = path.join(DRAWINGS, DRAWING_FILES[n]);
   if (!fs.existsSync(p)) throw new Error('missing drawing: ' + p);
@@ -58,6 +65,7 @@ pres.defineSlideMaster({ title: 'CONTENT', background: { color: C.background1 },
 
 const T = (s, text, o) => s.addText(text, Object.assign({ isTextBox: true, fontSize: 14, color: C.text1, valign: 'top', margin: 0 }, o));
 const SI = (s, x, y, w, c) => T(s, 'AI (SI) assisted drawing: LYRA concept, dimensions approximate', { x, y, w, h: 0.25, fontSize: 10, color: c || C.accent6, italic: true });
+const SIR = (s, x, y, w, c) => T(s, 'AI (SI) assisted 3D render: LYRA station concept (v3)', { x, y, w, h: 0.25, fontSize: 10, color: c || C.accent6, italic: true });
 
 const SHOT_NOTE = 'App screenshot, simulated crew data (app code written with AI (SI) assistance)';
 // Place a screenshot (fit, top-aligned) or fall back to a drawing; returns the bottom y of what was placed.
@@ -80,8 +88,8 @@ function placeShot(s, name, fallbackDrawing, x, y, w, h, label) {
 // 1 Title
 pres.addSection({ title: 'Intro' });
 let s = pres.addSlide({ masterName: 'TITLE', sectionTitle: 'Intro' });
-s.addImage({ path: img(1), x: 7.3, y: 0.9, w: 5.5, h: 3.89, objectName: 'General view drawing' });
-SI(s, 7.3, 4.85, 5.5);
+s.addImage(Object.assign({ path: render('V2_Human_Cam_Hero.png'), objectName: 'Station render with crew member' }, fit(render('V2_Human_Cam_Hero.png'), 7.0, 0.9, 5.85, 3.3)));
+SIR(s, 7.0, 4.25, 5.85);
 s.addText('LYRA', { placeholder: 'title' });
 T(s, [
   { text: 'Life-signs & Yield-based Readiness Analytics', options: { breakLine: true } },
@@ -93,7 +101,7 @@ T(s, [
   { text: 'Team: ', options: { bold: true } }, { text: 'LYRA', options: { breakLine: true } },
   { text: 'Members: ', options: { bold: true } }, { text: 'Alina Dmitriyeva, Daniil Shabalin' }
 ], { x: 0.6, y: 4.6, w: 6.5, h: 1.5, fontSize: 16, color: C.background1, paraSpaceAfter: 6 });
-T(s, 'A touch mirror with three camera pillars for contactless crew readiness checks. It detects change and checks its own measurement quality; it does not diagnose.', { x: 7.3, y: 5.3, w: 5.5, h: 1.0, fontSize: 15, color: C.background2 });
+T(s, 'A touch mirror with three camera pillars for contactless crew readiness checks. It detects change and checks its own measurement quality; it does not diagnose. Face channel already tested live on iPhone TrueDepth (the Face ID IR camera).', { x: 7.0, y: 4.75, w: 5.85, h: 1.4, fontSize: 15, color: C.background2 });
 
 // 2 Problem
 pres.addSection({ title: 'Problem' });
@@ -185,7 +193,7 @@ s.addTable([
   [{ text: 'NASA Life Sciences Portal (LSDA), NASA Open Data Portal, OSDR', options: cell }, tag('NASA material', 'B35C00'), { text: 'Human research in flight and ground analogs since 1961: context and indicator choice', options: cell }],
   [{ text: 'NASA neutral body posture and anthropometry (HIDH, NASA-STD-3001, NTRS); HRP risks; CSA', options: cell }, tag('NASA / CSA', 'B35C00'), { text: 'Microgravity posture reference, spine elongation, risk cards, expected-adaptation corridors', options: cell }],
   [{ text: 'CameraVitals (COHFACE): RGB video with PPG and breathing, 160 one-minute clips, 40 people', options: cell }, tag('Open dataset', '1F7A3A'), { text: 'rPPG validation on Earth (not microgravity)', options: cell }],
-  [{ text: 'Team recordings on a mirror mock-up', options: cell }, tag('Team recording', '2E5AA8'), { text: 'Pose check, face and posture demo', options: cell }],
+  [{ text: 'Team live tests: iPhone TrueDepth (IR dot projector + IR camera) and RGB video, not stored', options: cell }, tag('Team recording', '2E5AA8'), { text: 'Face depth in mm, rPPG with quality, quality gate, baseline vs compare scan', options: cell }],
   [{ text: 'LYRA web app crew', options: cell }, tag('Simulation', '6B3FA0'), { text: 'Live demo time series', options: cell }]],
   { x: 6.85, y: 1.4, w: 5.9, colW: [2.75, 1.0, 2.15], rowH: 0.3, border: { type: 'solid', pt: 0.5, color: 'C9D3DD' }, margin: 0.05, objectName: 'Data provenance table' });
 T(s, 'No single NASA dataset holds IR face points, RGB video, 3D posture and medical references together, so LYRA is a prototype that needs validation.', { x: 6.85, y: 6.1, w: 5.9, h: 0.7, fontSize: 12, color: C.text2, italic: true });
@@ -216,17 +224,20 @@ if (shot('06_scan_pipeline.png')) { usedShots.push('06_scan_pipeline.png'); cons
 // 7 Research module, limits, roadmap
 pres.addSection({ title: 'Roadmap' });
 s = pres.addSlide({ masterName: 'DARK', sectionTitle: 'Roadmap' });
-s.addText('Honest limits, a research option, and what comes next', { placeholder: 'title' });
-s.addImage({ path: img(3), x: 7.3, y: 1.5, w: 5.45, h: 3.85, objectName: 'Doppler grip and hydrogel cassette drawing' });
-SI(s, 7.3, 5.42, 5.45);
+s.addText('Tested live, honest limits, and what comes next', { placeholder: 'title' });
+s.addImage(Object.assign({ path: render('V1_Empty_Cam_Hero.png'), objectName: 'Station render' }, fit(render('V1_Empty_Cam_Hero.png'), 7.3, 1.5, 5.45, 3.07)));
+SIR(s, 7.3, 4.62, 5.45);
+T(s, '3D model of the v3 station (Blender, glTF in the repository): touch mirror with the face module, two front pillars and one back pillar with camera modules at head, torso and leg height.', { x: 7.3, y: 4.95, w: 5.45, h: 1.0, fontSize: 12, color: C.background2 });
 T(s, [
+  { text: 'Tested live (feasibility): ', options: { bold: true, color: C.accent1 } },
+  { text: 'an iPhone TrueDepth camera, the same IR dot projector + IR camera as Face ID and as the LYRA face module, streams into our pipeline: a real IR-depth face mesh (interpupillary distance and face width in mm), camera pulse with a quality score, the quality gate, and baseline vs compare scans. Frames are never stored.', options: { breakLine: true } },
   { text: 'Optional research module: ', options: { bold: true, color: C.accent1 } },
-  { text: 'ultrasound Doppler in vertical grips on the mirror stand legs, coupled by a 4-part solid hydrogel cassette (holder, thin replaceable pad, soft rim, membrane). Demo: a mock cassette and a signal path diagram. A real transducer only after a phantom or ground test. Not part of the contactless core; no heart or vein claims through the palm.', options: { breakLine: true } },
+  { text: 'Doppler in vertical grips on the mirror stand legs with a solid hydrogel cassette; only after a phantom test, never part of the status.', options: { breakLine: true } },
   { text: 'LYRA does not: ', options: { bold: true, color: C.accent1 } },
   { text: 'diagnose, or measure bone density, discs, muscle strength or radiation. The medical team decides.', options: { breakLine: true } },
   { text: 'Next: ', options: { bold: true, color: C.accent1 } },
   { text: 'mirror mock-up and team recordings, rPPG check on CameraVitals, posture baselines in analogs (bed rest, parabolic flight), then Moon, Mars, rovers, and Earth clinics.' }
-], { x: 0.6, y: 1.5, w: 6.4, h: 4.6, fontSize: 14, color: C.background1, paraSpaceAfter: 10 });
+], { x: 0.6, y: 1.5, w: 6.4, h: 4.7, fontSize: 13, color: C.background1, paraSpaceAfter: 9 });
 T(s, 'Step in. Scan. Know.', { x: 0.6, y: 6.3, w: 6.4, h: 0.5, fontSize: 22, italic: true, bold: true, color: C.accent1, fontFace: THEME.headFontFace });
 
 (async () => {
