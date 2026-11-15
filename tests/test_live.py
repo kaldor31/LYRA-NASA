@@ -118,3 +118,15 @@ def test_scan_with_depth_uses_measured_width():
     assert wide["status"] == "red" and "IR depth" in wide["why"] and wide["face_width_change_pct"] > 4
     st, mesh, _, _ = L.snapshot()
     assert st["depth"] and st["mesh_measured"] and "face_width_mm" in st
+
+
+def test_depth_holes_on_eyes_and_nan_safe_json():
+    d, K = fake_depth()
+    pts = fake_face(1.0)
+    for i in (live.face.IRIS_L, live.face.IRIS_R):  # TrueDepth often has no depth on the eyes
+        v, u = int(pts[i].y * 640), int((1 - pts[i].x) * 480)
+        d[v - 8:v + 9, u - 8:u + 9] = 0.0
+    m = live.face_3d_metrics(live.lift_to_3d(np.array([(q.x, q.y) for q in pts]), d, K))
+    assert m is not None and m["ipd_mm"] is None and m["face_width_mm"] > 0
+    out = live.clean({"a": float("nan"), "b": [np.float32(1.5), np.int64(2), np.bool_(True)]})
+    assert out == {"a": None, "b": [1.5, 2, True]}

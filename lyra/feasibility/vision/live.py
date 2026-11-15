@@ -28,6 +28,7 @@ import collections
 import os
 import threading
 import time
+import warnings
 
 import numpy as np
 
@@ -42,6 +43,7 @@ PROC_W = 1280            # processing width (frames are downscaled to this)
 # Demo thresholds for the face-width ratio vs the personal baseline (percent). Team estimate for the demo only.
 PUFF_REPEAT_PCT, PUFF_REFER_PCT = 2.0, 4.0
 MIN_FACE_Q, MIN_HR_Q = 0.6, 0.35
+MAX_MOTION = 0.06        # nose spread over ~0.5 s, in interpupillary distances
 
 
 def pick_camera(max_index: int = 4) -> int:
@@ -130,7 +132,8 @@ class Record3DSource:
 
 # Landmarks for depth metrics: inside the face, away from the silhouette edge where depth jumps to the background
 CHEEKBONE_L, CHEEKBONE_R = 123, 352
-DEPTH_KEYS = (face.NOSE_TIP, face.IRIS_L, face.IRIS_R, CHEEKBONE_L, CHEEKBONE_R, face.ROI_CHEEK_L, face.ROI_CHEEK_R)
+# Required for the millimetre metrics. The irises are optional: TrueDepth often has holes on the eyes.
+DEPTH_KEYS = (face.NOSE_TIP, CHEEKBONE_L, CHEEKBONE_R, face.ROI_CHEEK_L, face.ROI_CHEEK_R)
 
 
 def lift_to_3d(xy_norm: np.ndarray, depth: np.ndarray, K: np.ndarray, flipped: bool = True) -> np.ndarray:
@@ -142,9 +145,12 @@ def lift_to_3d(xy_norm: np.ndarray, depth: np.ndarray, K: np.ndarray, flipped: b
     fx, fy, cx, cy = K[0, 0] * scale, K[1, 1] * scale, K[0, 2] * scale, K[1, 2] * scale
     if flipped:
         cx = dw - cx
-    u = np.clip((xy_norm[:, 0] * dw).astype(int), 2, dw - 3)
-    v = np.clip((xy_norm[:, 1] * dh).astype(int), 2, dh - 3)
-    z = np.array([np.nanmedian(depth[b - 2:b + 3, a - 2:a + 3]) for a, b in zip(u, v)], dtype=float)
+    depth = np.where(depth > 0, depth, np.nan)  # 0 = no depth at this pixel
+    u = np.clip((xy_norm[:, 0] * dw).astype(int), 3, dw - 4)
+    v = np.clip((xy_norm[:, 1] * dh).astype(int), 3, dh - 4)
+    with warnings.catch_warnings():  # all-NaN patches are expected (holes in the depth map)
+        warnings.simplefilter("ignore", RuntimeWarning)
+        z = np.array([np.nanmedian(depth[b - 3:b + 4, a - 3:a + 4]) for a, b in zip(u, v)], dtype=float)
     z[(z < 0.1) | (z > 1.5) | ~np.isfinite(z)] = np.nan
     ref = np.nanmedian(z[list(DEPTH_KEYS)]) if np.isfinite(z[list(DEPTH_KEYS)]).any() else np.nan
     z[np.abs(z - ref) > 0.08] = np.nan  # background or hair behind the face
@@ -157,7 +163,8 @@ def face_3d_metrics(P: np.ndarray) -> dict | None:
         return None
     d = lambda a, b: float(np.linalg.norm(P[a] - P[b]) * 1000)
     cheek_z = (P[face.ROI_CHEEK_L, 2] + P[face.ROI_CHEEK_R, 2]) / 2
-    return {"face_width_mm": d(CHEEKBONE_L, CHEEKBONE_R), "ipd_mm": d(face.IRIS_L, face.IRIS_R),
+    ipd = d(face.IRIS_L, face.IRIS_R) if np.isfinite(P[[face.IRIS_L, face.IRIS_R]]).all() else None
+    return {"face_width_mm": d(CHEEKBONE_L, CHEEKBONE_R), "ipd_mm": ipd,
             "nose_depth_mm": float((cheek_z - P[face.NOSE_TIP, 2]) * 1000),
             "distance_cm": float(P[face.NOSE_TIP, 2] * 100)}
 
@@ -283,7 +290,8 @@ class Live:
             x1, y1 = np.clip(p.max(0).astype(int), 0, [w - 1, h - 1])
             luma = float(cv2.cvtColor(bgr[y0:y1 + 1, x0:x1 + 1], cv2.COLOR_BGR2GRAY).mean()) if x1 > x0 and y1 > y0 else 0.0
             self.nose.append(p[face.NOSE_TIP] / max(m["ipd"], 1e-6))
-            motion = float(np.linalg.norm(np.diff(np.array(self.nose), axis=0), axis=1).mean()) if len(self.nose) > 3 else 0.0
+            # steadiness: spread of the nose position over the last ~0.5 s, in IPD units (landmark jitter averages out)
+            motion = float(np.linalg.norm(np.array(self.nose).std(axis=0))) if len(self.nose) > 5 else 0.0
             if c is not None:
                 self.rgb.append((now, *c))
             self.ear.append((now, m["ear"]))
@@ -302,7 +310,7 @@ class Live:
                 P = lift_to_3d(np.array([(q.x, q.y) for q in lm]), depth, K)
                 m3 = face_3d_metrics(P)
                 if m3:
-                    st.update({k: round(v, 1) for k, v in m3.items()})
+                    st.update({k: (round(v, 1) if v is not None else None) for k, v in m3.items()})
                     c3 = np.nanmean(P[:468], axis=0)
                     mesh = [[round(float(x - c3[0]), 4), round(float(y - c3[1]), 4), round(float(z - c3[2]), 4)]
                             if np.isfinite(z) else [None, None, None] for x, y, z in P[:468]]
@@ -416,7 +424,7 @@ class Live:
             reasons.append("not facing the mirror for most of the scan")
         if not 50 <= light <= 220:
             reasons.append("light level out of range")
-        if motion > 0.03:
+        if motion > MAX_MOTION:
             reasons.append("too much motion")
         res["metrics"] = {
             "face_ratio": metric(fsum["face_puffiness"], MIN_FACE_Q),
@@ -428,7 +436,8 @@ class Live:
             ok3 = [x for x in s["d3"] if x]
             q3 = len(ok3) / len(s["d3"])
             for k, unit in (("face_width_mm", "mm"), ("nose_depth_mm", "mm"), ("ipd_mm", "mm"), ("distance_cm", "cm")):
-                v = float(np.median([x[k] for x in ok3])) if ok3 else None
+                vals = [x[k] for x in ok3 if x[k] is not None]
+                v = float(np.median(vals)) if vals else None
                 res["metrics"][k] = metric((v, q3), MIN_FACE_Q, unit=unit)
         res["quality"] = {"light": round(light, 1), "motion": round(motion, 4), "reasons": reasons}
         res["status"], res["why"] = classify(res, self.baseline)
@@ -447,7 +456,7 @@ def gate(st: dict) -> dict:
     if not st.get("face"):
         return {"face": False, "frontal": False, "light": False, "still": False, "ok": False}
     g = {"face": True, "frontal": bool(st.get("frontal")), "light": 50 <= st.get("luma", 0) <= 220,
-         "still": st.get("motion", 1) <= 0.03}
+         "still": st.get("motion", 1) <= MAX_MOTION}
     g["ok"] = all(g.values())
     return g
 
@@ -486,6 +495,21 @@ def classify(res: dict, base: dict | None) -> tuple[str, str]:
     return "red", txt + " Change persists: the medical team reviews it."
 
 
+def clean(x):
+    """JSON-safe: NaN / inf -> None (browsers reject NaN in JSON), numpy scalars -> Python."""
+    if isinstance(x, dict):
+        return {k: clean(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [clean(v) for v in x]
+    if isinstance(x, (float, np.floating)):
+        return float(x) if np.isfinite(x) else None
+    if isinstance(x, np.integer):
+        return int(x)
+    if isinstance(x, np.bool_):
+        return bool(x)
+    return x
+
+
 def make_app(live: Live):
     from fastapi import FastAPI
     from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
@@ -511,7 +535,7 @@ def make_app(live: Live):
     @app.get("/api/live")
     def api_live():
         st, mesh, last, has_base = live.snapshot()
-        return JSONResponse({"state": st, "mesh": mesh, "last_scan": last, "has_baseline": has_base})
+        return JSONResponse(clean({"state": st, "mesh": mesh, "last_scan": last, "has_baseline": has_base}))
 
     @app.post("/api/scan/{kind}")
     def api_scan(kind: str):

@@ -42,7 +42,7 @@ def frame_metrics(p: np.ndarray) -> dict:
         "puffiness": width / (ipd + 1e-9),
         "ear": (eye_aspect_ratio(p, LEFT_EYE) + eye_aspect_ratio(p, RIGHT_EYE)) / 2,
         "mar": _d(p, MOUTH_TOP, MOUTH_BOTTOM) / (_d(p, MOUTH_L, MOUTH_R) + 1e-9),
-        "frontal": 0.4 <= yaw <= 0.6,
+        "frontal": 0.35 <= yaw <= 0.65,  # about +/-15 deg of head turn
     }
 
 
