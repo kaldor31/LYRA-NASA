@@ -225,9 +225,17 @@ if (shot('06_scan_pipeline.png')) { usedShots.push('06_scan_pipeline.png'); cons
 pres.addSection({ title: 'Roadmap' });
 s = pres.addSlide({ masterName: 'DARK', sectionTitle: 'Roadmap' });
 s.addText('Tested live, honest limits, and what comes next', { placeholder: 'title' });
-s.addImage(Object.assign({ path: render('V1_Empty_Cam_Hero.png'), objectName: 'Station render' }, fit(render('V1_Empty_Cam_Hero.png'), 7.3, 1.5, 5.45, 3.07)));
-SIR(s, 7.3, 4.62, 5.45);
-T(s, '3D model of the v3 station (Blender, glTF in the repository): touch mirror with the face module, two front pillars and one back pillar with camera modules at head, torso and leg height.', { x: 7.3, y: 4.95, w: 5.45, h: 1.0, fontSize: 12, color: C.background2 });
+// Live feasibility test on iPhone TrueDepth (team recording); falls back to the station render if missing
+const live = shot('08_live_truedepth.png');
+if (live) {
+  usedShots.push('08_live_truedepth.png');
+  const box = fit(live, 7.3, 1.5, 5.45, 3.5);
+  s.addImage(Object.assign({ path: live, objectName: 'Live TrueDepth test screenshot' }, box));
+  T(s, 'Team recording, live, not stored: iPhone TrueDepth (IR depth) into the LYRA pipeline. Baseline vs compare scan: face width 121.0 to 121.9 mm (+0.8%), Within baseline; camera pulse "Measurement not confirmed" (low signal quality), as designed.', { x: 7.3, y: box.y + box.h + 0.08, w: 5.45, h: 0.95, fontSize: 11, color: C.background2, italic: true });
+} else {
+  s.addImage(Object.assign({ path: render('V1_Empty_Cam_Hero.png'), objectName: 'Station render' }, fit(render('V1_Empty_Cam_Hero.png'), 7.3, 1.5, 5.45, 3.07)));
+  SIR(s, 7.3, 4.62, 5.45);
+}
 T(s, [
   { text: 'Tested live (feasibility): ', options: { bold: true, color: C.accent1 } },
   { text: 'an iPhone TrueDepth camera, the same IR dot projector + IR camera as Face ID and as the LYRA face module, streams into our pipeline: a real IR-depth face mesh (interpupillary distance and face width in mm), camera pulse with a quality score, the quality gate, and baseline vs compare scans. Frames are never stored.', options: { breakLine: true } },
