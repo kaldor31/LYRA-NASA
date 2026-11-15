@@ -51,7 +51,7 @@ td{padding:4px 0;border-top:1px solid var(--line)} td:nth-child(n+2){text-align:
   <span class="tag" id="cam">camera: connecting…</span></header>
 <main>
   <div class="col">
-    <div class="card video"><img id="video" src="/video" alt="Live camera with face landmarks">
+    <div class="card video"><img id="video" alt="Live camera with face landmarks">
       <div class="msg" id="prompt">Look at the camera</div></div>
     <div class="card">
       <h2>Scan</h2>
@@ -138,7 +138,7 @@ async function tick() {
   try {
     const r = await (await fetch("/api/live")).json(), s = r.state;
     const src = s.source === "truedepth" ? "iPhone TrueDepth (IR depth)" : s.source === "lidar" ? "LiDAR depth" : "RGB camera";
-    $("cam").textContent = s.status === "ok" ? `${src} · ${fmt(s.fps, 0)} fps · ${s.w}×${s.h}${s.error ? " · " + s.error : ""}` : (s.error || s.status);
+    $("cam").textContent = s.status === "waiting" ? "waiting for the camera: " + (s.error || "") : s.status === "ok" ? `${src} · ${fmt(s.fps, 0)} fps · ${s.w}×${s.h}${s.error ? " · " + s.error : ""}` : (s.error || s.status);
     $("d3").hidden = !s.depth;
     $("fw").textContent = fmt(s.face_width_mm, 1); $("nd").textContent = fmt(s.nose_depth_mm, 1);
     $("ipdmm").textContent = fmt(s.ipd_mm, 1); $("dist").textContent = fmt(s.distance_cm, 0);
@@ -176,6 +176,13 @@ function showResult(L) {
 $("b-base").onclick = () => fetch("/api/scan/baseline", { method: "POST" });
 $("b-scan").onclick = () => fetch("/api/scan/scan", { method: "POST" });
 $("b-reset").onclick = () => fetch("/api/baseline/reset", { method: "POST" });
+// video: poll the latest frame (Safari does not keep MJPEG streams reliably)
+(function poll() {
+  const img = new Image();
+  img.onload = () => { $("video").src = img.src; setTimeout(poll, 30); };
+  img.onerror = () => setTimeout(poll, 300);
+  img.src = "/frame.jpg?t=" + Date.now();
+})();
 tick();
 </script>
 </body>

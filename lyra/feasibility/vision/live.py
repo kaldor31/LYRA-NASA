@@ -185,11 +185,15 @@ class Live:
     def _run(self):
         import cv2
         import mediapipe as mp
-        try:
-            src = Record3DSource() if self.source_kind == "record3d" else OpenCVSource(self.camera)
-        except Exception as e:
-            with self.lock:
-                self.state = {"status": "error", "error": str(e)}
+        src = None
+        while src is None and not self.stop.is_set():  # keep retrying: the phone may start streaming later
+            try:
+                src = Record3DSource() if self.source_kind == "record3d" else OpenCVSource(self.camera)
+            except Exception as e:
+                with self.lock:
+                    self.state = {"status": "waiting", "error": str(e)}
+                time.sleep(2)
+        if src is None:
             return
         self.depth_source = src.name
         fm = mp.solutions.face_mesh.FaceMesh(max_num_faces=1, refine_landmarks=True,
@@ -197,12 +201,37 @@ class Live:
         pm = mp.solutions.pose.Pose(model_complexity=0, min_detection_confidence=0.5)
         n, fps_t, fps = 0, time.monotonic(), 0.0
         self._last_pose, self._last_hr_t, self._hr = None, 0.0, (None, 0.0, [])
-        t0 = time.monotonic()
+        t0 = last_frame = time.monotonic()
         try:
             while not self.stop.is_set():
                 ok, bgr, depth, K = src.read()
+                if ok:
+                    last_frame = time.monotonic()
+                elif self.source_kind == "record3d" and time.monotonic() - last_frame > 4:
+                    # Record3D sends nothing after a previous client left until record is pressed again
+                    with self.lock:
+                        self.state = {"status": "waiting", "error": "connected, but the iPhone sends no frames: in Record3D "
+                                      "tap the red button to stop, then tap it again to start streaming"}
+                    src.stopped = True
                 if not ok:
-                    time.sleep(0.01)
+                    if getattr(src, "stopped", False):  # Record3D stream stopped: reconnect
+                        src.release()
+                        with self.lock:
+                            if self.state.get("status") != "waiting":
+                                self.state = {"status": "waiting", "error": "stream stopped: in Record3D tap the red button to start streaming again"}
+                        src = None
+                        while src is None and not self.stop.is_set():
+                            time.sleep(2)
+                            try:
+                                src = Record3DSource()
+                            except Exception as e:
+                                with self.lock:
+                                    self.state = {"status": "waiting", "error": str(e)}
+                        if src is None:
+                            return
+                        last_frame = time.monotonic()
+                    else:
+                        time.sleep(0.01)
                     continue
                 now = time.monotonic() - t0
                 n += 1
@@ -215,7 +244,8 @@ class Live:
                     with self.lock:
                         self.state = dict(self.state, error=f"{type(e).__name__}: {e}")
         finally:
-            src.release()
+            if src is not None:
+                src.release()
             fm.close()
             pm.close()
 
@@ -454,9 +484,21 @@ def make_app(live: Live):
 
     app = FastAPI(title="LYRA live camera demo")
 
+    NOCACHE = {"Cache-Control": "no-store"}
+
     @app.get("/")
     def index():
-        return FileResponse(os.path.join(HERE, "live.html"))
+        return FileResponse(os.path.join(HERE, "live.html"), headers=NOCACHE)
+
+    @app.get("/frame.jpg")
+    def frame():
+        """Latest annotated frame. The page polls this (works in every browser, unlike MJPEG in Safari)."""
+        from fastapi import Response
+        with live.lock:
+            j = live.jpeg
+        if j is None:
+            return Response(status_code=204, headers=NOCACHE)
+        return Response(content=j, media_type="image/jpeg", headers=NOCACHE)
 
     @app.get("/api/live")
     def api_live():
